@@ -1,0 +1,65 @@
+# Godot 4+ generated
+.godot/
+
+# Godot 3/4 import cache and exports
+.import/
+export.cfg
+export_presets.cfg
+
+# Mono / .NET
+.mono/
+data_*/
+mono_crash.*.json
+*.csproj
+*.sln
+
+# Build / export outputs
+bin/
+build/
+exports/
+builds/
+*.pck
+*.zip
+*.apk
+*.aab
+*.exe
+*.app
+
+# Godot logs and user data during dev
+*.log
+logs/
+
+# Steam / GodotSteam
+# The redistributable steam_api*.dll / .so / .dylib from Steamworks SDK
+# are typically placed in the project (addons/godotsteam/...) and committed.
+# Do NOT commit your personal steam_appid.txt for published builds (Valve recommends against it).
+# Keep a steam_appid.txt.example instead.
+steam_appid.txt
+
+# Large binary assets - consider Git LFS for these in real production
+# *.glb
+# *.gltf
+# *.ogg
+# *.wav
+# *.png (large textures)
+# *.jpg
+
+# OS generated
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary / backup
+*~
+*.bak
+*.tmp
+
+# Project-specific
+# Add your own large asset dirs or generated files here if needed

@@ -1,0 +1,20 @@
+# Auto detect text files and normalize to LF
+* text=auto
+
+# Godot scenes and resources - treat as text for better diffs where possible
+*.tscn text
+*.tres text
+*.godot text
+
+# Binary assets - use Git LFS for large ones in future
+# *.glb filter=lfs diff=lfs merge=lfs -text
+# *.png filter=lfs diff=lfs merge=lfs -text
+# *.ogg filter=lfs diff=lfs merge=lfs -text
+
+# Explicitly keep scripts as text
+*.gd text
+*.cs text
+*.gdextension text
+
+# Ignore whitespace diffs in some files
+*.import -diff
