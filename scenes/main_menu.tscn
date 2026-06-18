@@ -54,5 +54,7 @@ offset_right = 200.0
 offset_bottom = -40.0
 grow_horizontal = 2
 grow_vertical = 0
-text = "See docs/PRD.md and README.md\nReplace this stub with real UI"
+text = "Test arena is now the main scene for iteration.
+See docs/PRD.md for roadmap.
+WASD + Mouse to move. Left click to shoot (next)."
 horizontal_alignment = 1
