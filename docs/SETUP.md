@@ -7,13 +7,51 @@ Pin to a specific 4.4.x or newer stable. Update this file when the project stand
 
 ## 2. GodotSteam (Core Dependency)
 
-Follow the latest instructions at https://godotsteam.com/
+You have successfully installed the GodotSteam GDExtension (I can see the full `addons/godotsteam/` folder with platform binaries and `godotsteam.gdextension`).
 
-Typical flow:
-1. Install the GDExtension via AssetLib or release zip.
-2. The `.gdextension` file should be present and configured.
-3. Copy Steam API binaries from the official Steamworks SDK (you need partner access for full use).
-4. Test initialization using the `scripts/steamworks.gd` autoload (add it in Project Settings > Autoload).
+Follow the latest instructions at https://godotsteam.com/ for any updates.
+
+Key points for Godot 4.6:
+
+1. The GDExtension should automatically make the global `Steam` class available after you restart the editor.
+2. You do **not** need to manually autoload the core `Steam` object.
+3. The custom wrapper script (`scripts/steamworks.gd`) is still useful for clean initialization and running callbacks.
+
+### How to add the Steam manager as an Autoload (Godot 4.6)
+
+**Correct path:**
+
+1. Go to **Project → Project Settings**
+2. In the left sidebar click **Globals**
+3. Select the **Autoload** section (or use the search bar at the top of the window and type `autoload`)
+4. Click the folder icon
+5. Choose `res://scripts/steamworks.gd`
+6. Set the **Name** to `SteamManager` (recommended) or `Steamworks`
+7. Click **Add**
+
+The script is now updated for Godot 4.6 + current GodotSteam GDExtension. It:
+- Uses `steamInitEx()`
+- Emits signals (`steam_initialized`)
+- Runs callbacks safely in `_process`
+- Includes useful helper methods (rich presence, achievements, etc.)
+- Has clear error messages
+
+The `[steam]` section in `project.godot` can help with some auto behavior in newer GodotSteam, but the autoload gives you explicit control and better logging.
+
+### Verifying that GodotSteam is working
+
+Create a temporary test script (or use the console) and try:
+
+```gdscript
+func _ready():
+    if Engine.has_singleton("Steam"):
+        print("Steam singleton exists!")
+        print(Steam.getPersonaName())   # Should work if Steam client is running
+    else:
+        print("Steam not registered yet")
+```
+
+`Steam` is usually provided automatically by the GDExtension. Your `Steamworks` autoload is mainly for managing init + `_process` callbacks.
 
 ### Development App ID
 Use **480** (Spacewar) until you have a real App ID.

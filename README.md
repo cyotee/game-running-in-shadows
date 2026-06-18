@@ -48,14 +48,21 @@ Repo name and branding deliberately avoid direct trademarks.
    - For local development with App ID 480 (Spacewar), the editor can often work with the plugin-provided libraries.
    - When you have real SDK access, copy the required `steam_api*.dll` / `.so` / `.dylib` into the appropriate addon subfolders (follow GodotSteam docs exactly).
 
-5. For running outside Steam (dev):
+5. For running outside Steam during development:
    - Create a file named `steam_appid.txt` in the project root containing just:
      ```
      480
      ```
-   - **Do not commit this file** (it is gitignored). Use `steam_appid.txt.example` if you want to share the convention.
+   - **Do not commit this file** (it is gitignored).
 
-6. Run the project. The game should initialize Steam (or fall back gracefully).
+6. **Add the Steam manager autoload** (required):
+   - Go to **Project > Project Settings > Globals > Autoload**
+   - Add `res://scripts/steamworks.gd` with the name `SteamManager` (recommended)
+
+7. Restart the Godot editor after installing or updating the GodotSteam GDExtension.
+8. Launch the project while the Steam client is running. Watch the Output panel for the initialization message.
+
+The SteamManager script has been updated specifically for Godot 4.6 + latest GodotSteam.
 
 ### Verifying Steam Works
 - You should see your Steam persona name or successful init logs.
