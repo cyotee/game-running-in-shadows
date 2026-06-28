@@ -17,7 +17,7 @@ Repo name and branding deliberately avoid direct trademarks.
 
 ## Tech Stack
 
-- **Engine:** Godot 4.4+
+- **Engine:** Godot 4.6+
 - **Language:** GDScript (primary)
 - **Steam Integration:** GodotSteam GDExtension + SteamMultiplayerPeer
 - **Networking:** Godot High-Level Multiplayer (P2P via Steam + dedicated server path)
@@ -26,7 +26,7 @@ Repo name and branding deliberately avoid direct trademarks.
 ## Quick Start (Development)
 
 ### Prerequisites
-1. Godot 4.4 or newer (editor).
+1. Godot 4.6 or newer (editor).
 2. A Steam client running in the background (for full features).
 3. (Optional but recommended for real Steam features later) Steamworks partner account + App ID.
 

@@ -5,10 +5,10 @@
 
 **Project Codename / Repo:** game-running-in-shadows  
 **Working Title:** Running in Shadows  
-**Status:** Draft v0.1 (Initial)  
-**Date:** 2026-06-17  
+**Status:** Draft v0.2  
+**Date:** 2026-06-28  
 **Owner:** [Project Lead]  
-**Engine:** Godot 4.4+  
+**Engine:** Godot 4.6+  
 **Distribution:** Steam (primary)
 
 ---
@@ -111,7 +111,7 @@ This is a **spiritual successor using original IP**.
 ## 6. Feature Roadmap (Phased)
 
 **Phase 0 — Foundation (Current)**
-- Godot 4.4+ project + GodotSteam GDExtension integrated.
+- Godot 4.6+ project + GodotSteam GDExtension integrated.
 - Basic FPS controller (CharacterBody3D + mouse look, sprint, crouch, jump, weapon switching).
 - Weapon system (hitscan + projectiles, recoil, spread).
 - Simple ability framework (fireball spell, cyber dash, hack pulse, etc.).
@@ -153,7 +153,7 @@ This is a **spiritual successor using original IP**.
 ## 7. Technical Architecture & Constraints
 
 ### Engine & Core
-- **Godot 4.4 or newer** (GDExtension support, improved 3D, Multiplayer API).
+- **Godot 4.6 or newer** (GDExtension support, improved 3D, Multiplayer API).
 - Primary language: GDScript (fast iteration). Evaluate C# for performance-critical netcode later if needed.
 - 3D rendering: Forward+ or Mobile renderer as appropriate. Target 60+ fps on mid-range hardware + Steam Deck.
 - Physics: Godot 3D physics (or Jolt if addon provides better determinism).
@@ -168,7 +168,7 @@ This is a **spiritual successor using original IP**.
 - Anti-cheat: Server authority for damage/score. Consider future Easy Anti-Cheat or custom + player reports. VAC requires additional integration work.
 
 ### Steam Infrastructure
-- **GodotSteam GDExtension** (current recommended: 4.19+ or latest compatible with Godot 4.4+).
+- **GodotSteam GDExtension** (current recommended: 4.19+ or latest compatible with Godot 4.6+).
 - Required Steamworks features (roadmap):
   - Steam Overlay
   - Lobbies & Matchmaking (via lobbies + P2P)
@@ -202,7 +202,7 @@ This is a **spiritual successor using original IP**.
 See also `README.md` for step-by-step.
 
 **Minimum for contributors:**
-1. Godot 4.4+ (or exact version pinned in project).
+1. Godot 4.6+ (or exact version pinned in project).
 2. Clone repo.
 3. Add GodotSteam GDExtension (AssetLib or manual from godotsteam releases).
 4. Obtain Steamworks SDK redistributables (after partner access) and place per GodotSteam docs.
@@ -273,6 +273,69 @@ Use shorter milestones in actual project tracking (GitHub issues, project board)
 - Shadowrun lore (for inspiration only): Use wikis and books for tone/feel, never copy protected text or names.
 - Git best practices: Godot official version control docs + github/gitignore Godot template.
 
+**Source Game Research — Shadowrun (2007 FPS) mechanics** (see Appendix 12.A for the full breakdown):
+- Shadowrun 2007 FPS — Shadowrun Wiki (Fandom): https://shadowrun.fandom.com/wiki/Shadowrun_2007_FPS
+- Shadowrun (2007 video game) — Wikipedia: https://en.wikipedia.org/wiki/Shadowrun_(2007_video_game)
+- Shadowrun (2007) — Hardcore Gaming 101: https://www.hardcoregaming101.net/shadowrun-2007/
+- Shadowrun Q&A: Magical Races, Abilities, and Technology — GameSpot: https://www.gamespot.com/articles/shadowrun-qanda-magical-races-abilities-and-technology/1100-6165066/
+
+---
+
+## 12.A Source Game Mechanics Reference — Shadowrun (2007 FPS)
+
+> **Purpose:** A verified reference of the mechanics from the original **Shadowrun (2007)** FASA Studio FPS, captured to inform our own original-IP designs. This is research/inspiration only — names and exact values here are the *source game's*, not ours. Reproduce the *feel and structure*, not protected terminology. Sources are cited at the end of this appendix.
+
+### Core Resource — Essence (the load-bearing mechanic)
+Essence is the unifying resource that ties races, magic, and tech together:
+- Magic costs **essence** to cast, and essence also drives **health regeneration**.
+- Using **Tech consumes/penalizes essence** — creating a deliberate magic-vs-chrome tension separate from the money economy.
+- Each **race** has a different essence pool, regen behavior, and tech penalty, which defines its identity.
+
+**Design takeaway:** Essence is the spine. Our equivalent resource (see GDD) should be designed first, since races, magic, tech, and regen all hang off it.
+
+### Playable Races
+| Race | Strengths | Trade-offs |
+|------|-----------|------------|
+| **Human** | 2nd fastest, 2nd most health, **no essence penalty for using Tech** | No special ability, no health regeneration. The chrome/tech-friendly race. |
+| **Elf** | Fastest movement, fastest essence regen; heals via essence when not under fire | Fragile; magic-leaning. |
+| **Dwarf** | **Immune to headshots**, most essence, **saps essence** from enemies and magical objects | — |
+| **Troll** | Most health; **defense increases the more it is hit** | Increasing defense **slows it further**; least essence; poor caster. |
+
+### Magic Abilities
+- **Resurrection** — revive dead allies (the defining mechanic; bodies can be destroyed to deny it — see modes).
+- **Tree of Life** — summon a tree that heals anyone beneath it.
+- **Teleport** — blink through walls, floors, ceilings, and enemies.
+- **Smoke** — become smoke; weapon fire passes through you.
+- **Gust** — push characters, objects, and projectiles away.
+- **Summon** — call an astral creature to fight for you.
+- **Strangle** — grow crystals that block movement and trap characters.
+
+### Tech / Cyberware
+- **Smart Link** — increased accuracy, zoom on every weapon, prevents friendly fire.
+- **Wired Reflexes** — permanent speed boost.
+- **Enhanced Vision** — see nearby enemies through walls for a short time.
+- **Glider** — backpack wings: jump higher, fall slower, high maneuverability.
+- **Anti-Magic Generator** — suppresses enemy magic (the tech counter to casters).
+
+### Weapons
+Mostly conventional FPS armaments: **pistol** (sidearm), **SMG**, **rifle**, **shotgun**, **sniper rifle**, **minigun**, **rocket launcher**, plus the standout **Katana** (switches to third-person; can deflect attacks and backstab).
+
+### Game Modes
+- **Attrition** — team deathmatch. The **artifact is the only thing that can destroy bodies**; a destroyed body cannot be resurrected.
+- **Raid** — one team defends the artifact, the other attacks.
+- **Extraction** — both teams race to grab the artifact and carry it to their extraction point.
+
+### Economy (Counter-Strike-style)
+- Base **wage** earned each round; **winners earn more than losers**, compounding advantage.
+- Buy **weapons, Tech, and Magic** with limited funds before each round.
+- **Drop your weapon on death**; **pick up** enemies' dropped weapons.
+
+### Sources
+- Shadowrun 2007 FPS — Shadowrun Wiki (Fandom): https://shadowrun.fandom.com/wiki/Shadowrun_2007_FPS
+- Shadowrun (2007 video game) — Wikipedia: https://en.wikipedia.org/wiki/Shadowrun_(2007_video_game)
+- Shadowrun (2007) — Hardcore Gaming 101: https://www.hardcoregaming101.net/shadowrun-2007/
+- Shadowrun Q&A: Magical Races, Abilities, and Technology — GameSpot: https://www.gamespot.com/articles/shadowrun-qanda-magical-races-abilities-and-technology/1100-6165066/
+
 **Related Internal Docs (to create)**
 - Technical Design / Architecture doc
 - Game Design Document (GDD) with detailed archetype kits, map specs, economy
@@ -287,3 +350,4 @@ This document will evolve. Update version history below.
 
 **Version History**
 - v0.1 — 2026-06-17 — Initial draft after research and requirement clarification. Focused on PvP starting point, Steam + Godot, spiritual successor approach, realistic scope warnings.
+- v0.2 — 2026-06-28 — Added Appendix 12.A: verified Source Game Mechanics Reference for Shadowrun (2007 FPS) — essence resource, races, magic, tech, weapons, modes, and economy — with cited sources, to inform original-IP mechanics design.

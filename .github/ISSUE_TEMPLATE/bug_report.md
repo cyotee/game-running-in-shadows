@@ -23,7 +23,7 @@ What you expected to happen.
 If applicable, add screenshots or paste relevant log output.
 
 **Environment:**
- - Godot version: [e.g. 4.4.1]
+ - Godot version: [e.g. 4.6]
  - OS: [e.g. Windows 11, Linux, macOS]
  - Steam client version:
  - Branch / Commit:

@@ -3,7 +3,7 @@
 This document complements the README and PRD.
 
 ## 1. Godot Version
-Pin to a specific 4.4.x or newer stable. Update this file when the project standard changes.
+Pin to a specific 4.6.x or newer stable. Update this file when the project standard changes.
 
 ## 2. GodotSteam (Core Dependency)
 
