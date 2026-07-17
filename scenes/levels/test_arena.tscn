@@ -1,7 +1,8 @@
-[gd_scene load_steps=8 format=3 uid="uid://testarenastub"]
+[gd_scene load_steps=9 format=3 uid="uid://testarenastub"]
 
 [ext_resource type="PackedScene" uid="uid://fpscontrollerstub" path="res://scenes/player/fps_controller.tscn" id="1_player"]
 [ext_resource type="Script" path="res://scenes/levels/steam_status.gd" id="2_steamstatus_script"]
+[ext_resource type="Script" path="res://scripts/levels/test_arena.gd" id="3_arena_script"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_Floor"]
 size = Vector3(60, 1, 60)
@@ -22,6 +23,7 @@ size = Vector3(3, 6, 3)
 size = Vector3(3, 6, 3)
 
 [node name="TestArena" type="Node3D"]
+script = ExtResource("3_arena_script")
 
 [node name="Floor" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
@@ -38,28 +40,28 @@ shape = SubResource("BoxShape_Floor")
 [node name="Wall1" type="StaticBody3D" parent="Walls"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25, 3, 0)
 
-[node name="Mesh" type="MeshInstance3D" parent="Wall1"]
+[node name="Mesh" type="MeshInstance3D" parent="Walls/Wall1"]
 mesh = SubResource("BoxMesh_Wall")
 
-[node name="Collision" type="CollisionShape3D" parent="Wall1"]
+[node name="Collision" type="CollisionShape3D" parent="Walls/Wall1"]
 shape = SubResource("BoxShape_Wall")
 
 [node name="Wall2" type="StaticBody3D" parent="Walls"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 3, 0)
 
-[node name="Mesh" type="MeshInstance3D" parent="Wall2"]
+[node name="Mesh" type="MeshInstance3D" parent="Walls/Wall2"]
 mesh = SubResource("BoxMesh_Wall")
 
-[node name="Collision" type="CollisionShape3D" parent="Wall2"]
+[node name="Collision" type="CollisionShape3D" parent="Walls/Wall2"]
 shape = SubResource("BoxShape_Wall")
 
 [node name="Pillar" type="StaticBody3D" parent="Walls"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -15)
 
-[node name="Mesh" type="MeshInstance3D" parent="Pillar"]
+[node name="Mesh" type="MeshInstance3D" parent="Walls/Pillar"]
 mesh = SubResource("BoxMesh_Pillar")
 
-[node name="Collision" type="CollisionShape3D" parent="Pillar"]
+[node name="Collision" type="CollisionShape3D" parent="Walls/Pillar"]
 shape = SubResource("BoxShape_Pillar")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
