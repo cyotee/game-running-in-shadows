@@ -137,9 +137,11 @@ the client's player and asserts the host observes it. Caveats:
 - The `NetworkSimulator` self-disables when `CI`, `NETFOX_CI`, or
   `NETFOX_NO_AUTOCONNECT` is non-empty — the driver clears them for its
   child processes. Keep them cleared in any CI job that runs the E2E.
-- Do NOT re-register `NetworkSimulator` as an autoload (the netfox.extras
-  plugin adds one on enable; it was removed deliberately). Two simulators in
-  one process race for the host port and the loser overwrites
-  `multiplayer.multiplayer_peer` with a dangling client peer.
+- The netfox.extras plugin re-registers the `NetworkSimulator` autoload on
+  every editor load, so that autoload is THE simulator — never add a second
+  `NetworkSimulator` node to a scene. Two simulators in one process race for
+  the host port and the loser overwrites `multiplayer.multiplayer_peer` with
+  a dangling client peer. `net_test.gd` configures the autoload via
+  `ProjectSettings.set_setting()` in `_enter_tree` and connects its signals.
 - `net_test.gd` connects `server_created` deferred: the simulator emits it
   before assigning `multiplayer.multiplayer_peer`.

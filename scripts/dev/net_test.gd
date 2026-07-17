@@ -22,9 +22,11 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	spawner.spawn_function = _spawn_player
-	var simulator: Node = $NetworkSimulator
-	# Deferred: the simulator emits server_created before it assigns
-	# multiplayer.multiplayer_peer; spawning must wait for the real peer.
+	# The netfox.extras plugin re-registers the NetworkSimulator autoload on
+	# every editor load, so that instance is THE simulator — a scene-local
+	# copy would race it for the host port. Deferred: the simulator emits
+	# server_created before it assigns multiplayer.multiplayer_peer.
+	var simulator: Node = get_node("/root/NetworkSimulator")
 	simulator.server_created.connect(_on_server_created, CONNECT_DEFERRED)
 
 

@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://bsl7mm21mr04q"]
 
 [ext_resource type="Script" path="res://scripts/dev/net_test.gd" id="1_nettest"]
-[ext_resource type="Script" path="res://addons/netfox.extras/network-simulator.gd" id="2_netsim"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_Floor"]
 size = Vector3(60, 1, 60)
@@ -11,9 +10,6 @@ size = Vector3(60, 1, 60)
 
 [node name="NetTest" type="Node3D"]
 script = ExtResource("1_nettest")
-
-[node name="NetworkSimulator" type="Node" parent="."]
-script = ExtResource("2_netsim")
 
 [node name="Floor" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
