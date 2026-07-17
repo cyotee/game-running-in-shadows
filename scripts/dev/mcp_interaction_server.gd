@@ -19,12 +19,18 @@ func _ready() -> void:
 	# Ensure MCP server keeps processing even when game is paused
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_init_key_map()
+	# Local divergence from upstream godot-mcp: port override so multiple
+	# instances (e.g. netcode E2E tests) can each expose a control server.
+	var port := PORT
+	var port_env := OS.get_environment("GODOT_MCP_PORT")
+	if port_env != "" and port_env.is_valid_int():
+		port = int(port_env)
 	_server = TCPServer.new()
-	var err: int = _server.listen(PORT, "127.0.0.1")
+	var err: int = _server.listen(port, "127.0.0.1")
 	if err != OK:
-		push_error("McpInteractionServer: Failed to listen on port %d, error: %d" % [PORT, err])
+		push_error("McpInteractionServer: Failed to listen on port %d, error: %d" % [port, err])
 		return
-	print("McpInteractionServer: Listening on 127.0.0.1:%d" % PORT)
+	print("McpInteractionServer: Listening on 127.0.0.1:%d" % port)
 
 
 func _process(_delta: float) -> void:

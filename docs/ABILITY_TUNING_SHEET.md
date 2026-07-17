@@ -297,6 +297,9 @@ Current prototype has basic raycast hitscan. Need real damage, spread, recoil, e
 
 ## 9. Investigations & Playtest Tracker
 
+**Netfox rebuild behavior note (2026-07-17)**
+- Glide now cancels on floor contact **only while descending** (`velocity.y <= 0.01`), so a ground-level Repulse + Glide combo keeps glide active through the upward launch. This is a deliberate change from the pre-netfox prototype, where a grounded launch silently dropped glide. Validate feel in playtests.
+
 **High Priority Tests**
 - [ ] Resonance resource + reservation UI in prototype.
 - [ ] Repulse ground + Glide launch timing and power.

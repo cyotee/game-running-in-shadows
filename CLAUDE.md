@@ -49,6 +49,7 @@ GODOT_BIN=/Applications/Godot.app/Contents/MacOS/Godot \
 ```
 
 - Use **SceneRunner** (`scene_runner(...)` + `simulate_action_press` / `await_input_processed`) for gameplay behavior — see `tests/player/test_fps_controller.gd` for the pattern (it verifies the Repulse + Glide combo via simulated input).
+- Gameplay simulation is tick-based under netfox: never use wall-clock time (`Time.get_unix_time_from_system()`) or `_input`-driven state changes in gameplay code — simulation runs in `_rollback_tick`, durations are tick counts. New per-tick state must be registered in `RollbackSynchronizer.state_properties` in `fps_controller.tscn`; new inputs go through `PlayerInput` (`scripts/player/player_input.gd`) and `input_properties`. Two-instance latency E2E: `python3 tests/e2e/net_smoke.py`.
 - Headless runs have no Steam client; tests must tolerate failed Steam init.
 - Reports go to `reports/` (gitignored). Exit code is non-zero on failure.
 - The `godot` MCP server (`.mcp.json`, project scope) provides live-game interaction: run the project, then use `game_input_action` / `game_key_press` / `game_eval` / `game_get_property` / `game_screenshot` etc. to drive and inspect it. The game-side half is the `McpInteractionServer` autoload (`scripts/dev/mcp_interaction_server.gd`, TCP on 127.0.0.1:9090 — dev only, must not ship in release builds). The Node server is vendored gitignored at `tools/godot-mcp/`; rebuild with `npm install && npm run build` there. See `docs/TESTING.md`.

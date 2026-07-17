@@ -97,3 +97,49 @@ errors, and inspect state while the game runs.
 
 Fallback without MCP: run the game from a shell, capture stdout (scripts
 `print` hits, Repulse casts, combo launches), kill after a timeout.
+
+## Netcode Testing (netfox)
+
+Gameplay simulation runs on netfox's tick loop, which changes how tests are
+written:
+
+- **Start/stop the loop per test:** `NetworkTime.start()` in `before_test`,
+  `NetworkTime.stop()` in `after_test` (see `tests/player/`). The "offline
+  peer" warning is expected in tests.
+- **Effects land on network ticks, not frames.** After injecting input,
+  `await runner.simulate_frames(N)` (or `await_millis`) before asserting.
+- **Edge-triggered input in tests:** use `Input.action_press("x")`, hold it
+  across a few simulated frames, then `Input.action_release("x")`. A press
+  released after a single frame can slip between the scene's `_process`
+  callbacks and never be observed. (`PlayerInput` latches edges from polled
+  state transitions, not `is_action_just_pressed`, for the same reason.)
+- **Rollback state resists external mutation:** `transform`/`velocity` etc.
+  are restored from recorded state each tick, so `game_eval` teleports are
+  overwritten. Drive the game through inputs instead (jump, then glide).
+- **MCP input:** prefer the action form of `key_press`
+  (`{"action": "glide", "pressed": true/false}`) — raw key events are
+  auto-released after one frame and can collapse into a single buffered
+  flush that gameplay code never sees.
+
+### Two-instance E2E (simulated latency)
+
+```bash
+python3 tests/e2e/net_smoke.py                    # 50 ms latency default
+NET_TEST_LATENCY_MS=100 python3 tests/e2e/net_smoke.py
+```
+
+The driver launches `scenes/dev/net_test.tscn` twice: the first instance
+hosts on 127.0.0.1:9999 (netfox `NetworkSimulator` autoconnect), the second
+joins through a UDP latency proxy on port 10000. Each instance exposes an
+MCP control server (`GODOT_MCP_PORT` 9191/9192); the driver moves and glides
+the client's player and asserts the host observes it. Caveats:
+
+- The `NetworkSimulator` self-disables when `CI`, `NETFOX_CI`, or
+  `NETFOX_NO_AUTOCONNECT` is non-empty — the driver clears them for its
+  child processes. Keep them cleared in any CI job that runs the E2E.
+- Do NOT re-register `NetworkSimulator` as an autoload (the netfox.extras
+  plugin adds one on enable; it was removed deliberately). Two simulators in
+  one process race for the host port and the loser overwrites
+  `multiplayer.multiplayer_peer` with a dangling client peer.
+- `net_test.gd` connects `server_created` deferred: the simulator emits it
+  before assigning `multiplayer.multiplayer_peer`.

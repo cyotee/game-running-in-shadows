@@ -27,7 +27,7 @@
 | GdUnit4 + SceneRunner suite passing | ✅ Done | `tests/player/test_fps_controller.gd` (5 tests) |
 | godot-mcp live-game interaction | ✅ Done | `.mcp.json`, `scripts/dev/mcp_interaction_server.gd` |
 | Six subsystem plans written | ✅ Done | this directory |
-| **Any subsystem plan executed** | ❌ Not started | controller code predates netfox; no netfox autoloads in `project.godot` |
+| **Any subsystem plan executed** | ✅ Plan 1 done (2026-07-17) | netfox vendored + autoloads live; controller on `_rollback_tick`; `tests/e2e/net_smoke.py` passes at 50 ms |
 | CI (headless test runs) | ❌ Missing | no `.github/workflows/` test job — PRD Phase 0 item, see Gap G0 |
 
 ---
@@ -48,7 +48,7 @@ GODOT_BIN=/Applications/Godot.app/Contents/MacOS/Godot \
 
 | # | Plan file | Delivers | Status |
 |---|-----------|----------|--------|
-| 1 | `2026-07-15-netfox-integration.md` | netfox v1.35.3 vendored; FPS controller rebuilt on `_rollback_tick` + `PlayerInput` (BaseNetInput); tick-based combo; NetworkSimulator dev scene; two-instance simulated-latency E2E | ☐ |
+| 1 | `2026-07-15-netfox-integration.md` | netfox v1.35.3 vendored; FPS controller rebuilt on `_rollback_tick` + `PlayerInput` (BaseNetInput); tick-based combo; NetworkSimulator dev scene; two-instance simulated-latency E2E | ✅ DONE (2026-07-17) |
 | 2 | `2026-07-16-controller-support.md` | Joypad bindings for all actions (+ new `weapon_swap`/`menu`/`scoreboard` actions), stick look, contextual A (jump→glide), slowdown-on-target | ☐ |
 | 3 | `2026-07-16-resonance-system.md` | `MatchConfig` autoload (all tunables); `ResonancePool` as rollback state; costs on Repulse/Glide; health + damage attribution; archetype stats; Dwarf drain; Elf auto-heal | ☐ |
 | 4 | `2026-07-16-weapon-system.md` | `WeaponBase`/`WeaponRig`, 2 slots, mags+reserve, hit zones, hybrid recoil, lag-compensated hitscan; Pistol, SMG, Shotgun, Rifle, Sniper | ☐ |
