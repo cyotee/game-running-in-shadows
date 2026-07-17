@@ -68,6 +68,97 @@ func test_yaw_input_rotates_body() -> void:
 	var controller: FPSController = runner.scene()
 
 	controller.input.local_yaw = 0.9
-	await runner.simulate_frames(5)
+	# TickInterpolator blends the displayed transform between ticks, so give
+	# the rotation a few extra frames to converge on the target yaw.
+	await runner.simulate_frames(15)
 
 	assert_float(controller.rotation.y).is_equal_approx(0.9, 0.05)
+
+
+func test_glide_without_combo_gives_no_launch() -> void:
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+	controller.input.local_pitch = PITCH_DOWN
+
+	Input.action_press("glide")
+	await runner.simulate_frames(3)
+	Input.action_release("glide")
+	await runner.simulate_frames(5)
+
+	assert_bool(controller.is_gliding).is_true()
+	assert_float(controller.velocity.y).is_less(controller.combo_launch_velocity * 0.5)
+
+
+func test_down_repulse_then_glide_triggers_combo_launch() -> void:
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+	controller.input.local_pitch = PITCH_DOWN
+
+	Input.action_press("repulse")
+	await runner.simulate_frames(3)
+	Input.action_release("repulse")
+	await runner.simulate_frames(3)
+	Input.action_press("glide")
+	await runner.simulate_frames(3)
+	Input.action_release("glide")
+	await runner.simulate_frames(2)
+
+	assert_bool(controller.is_gliding).is_true()
+	# A few ticks of reduced glide gravity may have shaved a little off.
+	assert_float(controller.velocity.y).is_greater(controller.combo_launch_velocity * 0.7)
+
+
+func test_combo_launch_keeps_glide_active_while_rising() -> void:
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+	controller.input.local_pitch = PITCH_DOWN
+
+	Input.action_press("repulse")
+	await runner.simulate_frames(3)
+	Input.action_release("repulse")
+	await runner.simulate_frames(3)
+	Input.action_press("glide")
+	await runner.simulate_frames(1)
+	Input.action_release("glide")
+	await runner.simulate_frames(20)
+
+	# Still rising or floating mid-launch: glide must not self-cancel.
+	assert_bool(controller.is_gliding).is_true()
+
+
+func test_level_repulse_does_not_arm_combo() -> void:
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+	controller.input.local_pitch = PITCH_LEVEL
+
+	Input.action_press("repulse")
+	await runner.simulate_frames(3)
+	Input.action_release("repulse")
+	await runner.simulate_frames(3)
+	controller.input.local_pitch = PITCH_DOWN
+	Input.action_press("glide")
+	await runner.simulate_frames(3)
+	Input.action_release("glide")
+	await runner.simulate_frames(2)
+
+	assert_bool(controller.is_gliding).is_true()
+	assert_float(controller.velocity.y).is_less(controller.combo_launch_velocity * 0.5)
+
+
+func test_combo_expires_after_window() -> void:
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+	controller.input.local_pitch = PITCH_DOWN
+
+	Input.action_press("repulse")
+	await runner.simulate_frames(3)
+	Input.action_release("repulse")
+	await runner.simulate_frames(3)
+	await await_millis(int(controller.combo_window * 1000) + 300)
+	Input.action_press("glide")
+	await runner.simulate_frames(3)
+	Input.action_release("glide")
+	await runner.simulate_frames(2)
+
+	assert_bool(controller.is_gliding).is_true()
+	assert_float(controller.velocity.y).is_less(controller.combo_launch_velocity * 0.5)

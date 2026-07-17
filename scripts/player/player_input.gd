@@ -27,6 +27,15 @@ var _pending_repulse: bool = false
 var _pending_glide: bool = false
 var _pending_fire: bool = false
 
+# Previous polled state for manual edge detection: is_action_just_pressed is
+# only true within the exact engine frame of the press, which races against
+# node process order (and simulated input in tests). Polling pressed-state
+# transitions is order-independent.
+var _held_jump: bool = false
+var _held_repulse: bool = false
+var _held_glide: bool = false
+var _held_fire: bool = false
+
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_multiplayer_authority():
@@ -44,10 +53,18 @@ func _unhandled_input(event: InputEvent) -> void:
 func _process(_delta: float) -> void:
 	if not is_multiplayer_authority():
 		return
-	_pending_jump = _pending_jump or Input.is_action_just_pressed("jump")
-	_pending_repulse = _pending_repulse or Input.is_action_just_pressed("repulse")
-	_pending_glide = _pending_glide or Input.is_action_just_pressed("glide")
-	_pending_fire = _pending_fire or Input.is_action_just_pressed("fire_primary")
+	var jump_now := Input.is_action_pressed("jump")
+	var repulse_now := Input.is_action_pressed("repulse")
+	var glide_now := Input.is_action_pressed("glide")
+	var fire_now := Input.is_action_pressed("fire_primary")
+	_pending_jump = _pending_jump or (jump_now and not _held_jump)
+	_pending_repulse = _pending_repulse or (repulse_now and not _held_repulse)
+	_pending_glide = _pending_glide or (glide_now and not _held_glide)
+	_pending_fire = _pending_fire or (fire_now and not _held_fire)
+	_held_jump = jump_now
+	_held_repulse = repulse_now
+	_held_glide = glide_now
+	_held_fire = fire_now
 
 
 func _gather() -> void:

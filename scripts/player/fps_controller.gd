@@ -118,11 +118,60 @@ func _try_shoot() -> void:
 		print("Shot fired (miss)")
 
 
-# --- Abilities (implemented in Task 4) ---
+func _cast_repulse(tick: int, is_fresh: bool) -> void:
+	var looking_down := input.aim_pitch < -0.65
+	if looking_down:
+		last_down_repulse_tick = tick
 
-func _cast_repulse(_tick: int, _is_fresh: bool) -> void:
-	pass
+	var aim := Basis(Vector3.UP, input.aim_yaw) * Basis(Vector3.RIGHT, input.aim_pitch)
+	var cast_dir := aim * Vector3.FORWARD
+
+	# Self push (predicted; velocity is rollback state).
+	velocity += cast_dir * (repulse_strength * 0.4)
+	if looking_down:
+		velocity.y -= 6.0
+
+	# World side effects run once, on fresh ticks only — never re-applied
+	# during rollback re-simulation.
+	if is_fresh:
+		_push_nearby_bodies(cast_dir)
+		print("Repulse cast (downward=%s, tick=%d)" % [looking_down, tick])
 
 
-func _try_deploy_glide(_tick: int) -> void:
-	pass
+func _push_nearby_bodies(cast_dir: Vector3) -> void:
+	var space_state := get_world_3d().direct_space_state
+	var sphere := SphereShape3D.new()
+	sphere.radius = repulse_range
+
+	var query := PhysicsShapeQueryParameters3D.new()
+	query.shape = sphere
+	query.transform = global_transform.translated(cast_dir * 4.0)
+	query.collide_with_bodies = true
+
+	var results := space_state.intersect_shape(query)
+	for res in results:
+		var body = res["collider"]
+		if body and body != self:
+			var push_dir = (body.global_position - global_position).normalized()
+			if body is CharacterBody3D:
+				body.velocity += push_dir * repulse_strength + Vector3(0, 4, 0)
+			elif body is RigidBody3D:
+				body.apply_central_impulse(push_dir * repulse_strength * 3.0)
+
+
+func _try_deploy_glide(tick: int) -> void:
+	var window_ticks := int(roundf(combo_window * NetworkTime.tickrate))
+	var is_combo := (tick - last_down_repulse_tick <= window_ticks) and input.aim_pitch < -0.4
+
+	is_gliding = true
+	glide_ticks_remaining = int(roundf(glide_duration * NetworkTime.tickrate))
+
+	if is_combo:
+		velocity.y = combo_launch_velocity
+		print(">>> GLIDE LAUNCH COMBO! (tick=%d)" % tick)
+	else:
+		if not is_on_floor():
+			velocity.y = maxf(velocity.y, 8.0)
+		if velocity.y < 0:
+			velocity.y *= 0.3
+		print("Glide deployed (tick=%d)" % tick)
