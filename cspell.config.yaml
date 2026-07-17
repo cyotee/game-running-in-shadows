@@ -1,5 +1,8 @@
 version: "0.2"
-ignorePaths: []
+# Implementation plans are code-heavy working documents (GDScript identifiers
+# everywhere) and are retired after execution - not worth dictionary noise.
+ignorePaths:
+  - "docs/superpowers/plans/**"
 dictionaryDefinitions:
   - name: custom-dictionary
     path: ./.cspell/custom-dictionary.txt

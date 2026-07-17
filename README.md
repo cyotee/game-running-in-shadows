@@ -1,4 +1,4 @@
-# Running in Shadows
+# CounterSpell
 
 **A spiritual successor to the Shadowrun FPS experience — built in Godot with Steam infrastructure.**
 
@@ -17,7 +17,7 @@ Repo name and branding deliberately avoid direct trademarks.
 
 ## Tech Stack
 
-- **Engine:** Godot 4.6+
+- **Engine:** Godot 4.7.1 (pinned)
 - **Language:** GDScript (primary)
 - **Steam Integration:** GodotSteam GDExtension + SteamMultiplayerPeer
 - **Networking:** Godot High-Level Multiplayer (P2P via Steam + dedicated server path)
@@ -26,7 +26,7 @@ Repo name and branding deliberately avoid direct trademarks.
 ## Quick Start (Development)
 
 ### Prerequisites
-1. Godot 4.6 or newer (editor).
+1. Godot 4.7.1 (editor) — the pinned project version, see `docs/SETUP.md`.
 2. A Steam client running in the background (for full features).
 3. (Optional but recommended for real Steam features later) Steamworks partner account + App ID.
 
@@ -62,7 +62,7 @@ Repo name and branding deliberately avoid direct trademarks.
 7. Restart the Godot editor after installing or updating the GodotSteam GDExtension.
 8. Launch the project while the Steam client is running. Watch the Output panel for the initialization message.
 
-The SteamManager script has been updated specifically for Godot 4.6 + latest GodotSteam.
+The SteamManager script has been updated specifically for Godot 4.7 + latest GodotSteam.
 
 ### Verifying Steam Works
 - You should see your Steam persona name or successful init logs.
@@ -103,11 +103,12 @@ We follow Godot best practices: scene-per-folder where practical, clear autoload
 
 1. Solid Godot + GodotSteam foundation in this repo.
 2. Responsive FPS prototype (movement + shooting).
-3. Multiplayer core (Steam P2P lobbies + basic replication).
-4. First two modes: Arena + Capture the Flag.
-5. Steam features: Overlay, achievements, cloud, rich presence.
+3. Core mechanics foundation (Anima resource + signature combos from MECHANICS_REFERENCE.md).
+4. Multiplayer core (Steam P2P lobbies + basic replication).
+5. First two modes: Arena + Capture the Flag.
+6. Steam features: Overlay, achievements, cloud, rich presence.
 
-See the [PRD](docs/PRD.md) for full roadmap, risks (especially netcode), and scope guidance.
+See the [PRD](docs/PRD.md) for vision/roadmap, [docs/MECHANICS_REFERENCE.md](docs/MECHANICS_REFERENCE.md) for detailed mechanics, and [docs/ABILITY_TUNING_SHEET.md](docs/ABILITY_TUNING_SHEET.md) for the active tuning scratch pad and investigations.
 
 ## Contributing
 
@@ -123,12 +124,12 @@ All names, lore, mechanics, and content here are original or generically inspire
 
 ## Next Steps for the Team
 
-- Finish reading [docs/PRD.md](docs/PRD.md).
-- Initialize the actual Godot `project.godot` and first scenes (FPS controller + test level).
-- Set up a basic Steam autoload and verify initialization.
-- Prototype a single weapon + one magic ability.
-- Create first networked test (two players in same map moving around).
-- Expand the docs with architecture decisions and playtest notes.
+- Finish reading [docs/PRD.md](docs/PRD.md) and [docs/MECHANICS_REFERENCE.md](docs/MECHANICS_REFERENCE.md).
+- Review and lock core names (Anima, archetypes, key abilities) from the Mechanics Reference.
+- Prototype the signature movement combo (Repulse + Glide launch) + basic Anima resource.
+- Continue building the FPS prototype (one weapon + one Manifestation/Augment).
+- Create first networked test.
+- Expand docs with architecture decisions and playtest notes.
 
 ---
 

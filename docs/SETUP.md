@@ -3,7 +3,7 @@
 This document complements the README and PRD.
 
 ## 1. Godot Version
-Pin to a specific 4.6.x or newer stable. Update this file when the project standard changes.
+Pinned: **Godot 4.7.1 stable**. Update this file when the project standard changes.
 
 ## 2. GodotSteam (Core Dependency)
 
@@ -11,13 +11,13 @@ You have successfully installed the GodotSteam GDExtension (I can see the full `
 
 Follow the latest instructions at https://godotsteam.com/ for any updates.
 
-Key points for Godot 4.6:
+Key points for Godot 4.7:
 
 1. The GDExtension should automatically make the global `Steam` class available after you restart the editor.
 2. You do **not** need to manually autoload the core `Steam` object.
 3. The custom wrapper script (`scripts/steamworks.gd`) is still useful for clean initialization and running callbacks.
 
-### How to add the Steam manager as an Autoload (Godot 4.6)
+### How to add the Steam manager as an Autoload (Godot 4.7)
 
 **Correct path:**
 
@@ -29,7 +29,7 @@ Key points for Godot 4.6:
 6. Set the **Name** to `SteamManager` (recommended) or `Steamworks`
 7. Click **Add**
 
-The script is now updated for Godot 4.6 + current GodotSteam GDExtension. It:
+The script is now updated for Godot 4.7 + current GodotSteam GDExtension. It:
 - Uses `steamInitEx()`
 - Emits signals (`steam_initialized`)
 - Runs callbacks safely in `_process`

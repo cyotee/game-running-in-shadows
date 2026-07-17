@@ -1,0 +1,1472 @@
+[
+  {
+    "pack": "scifi_modular_guns",
+    "category": "weapons",
+    "source": "https://poly.pizza/bundle/TbRddR9Fsu",
+    "author": "Quaternius",
+    "license": "CC0 1.0",
+    "models": [
+      {
+        "title": "Scifi Grenade Launcher",
+        "file": "weapons/scifi_modular_guns/Scifi_Grenade_Launcher.glb",
+        "public_id": "r10Gkf9yDs",
+        "resource_id": "56c40fc2-5927-4c6b-ae60-7145d5055e34",
+        "tris": 1979,
+        "bytes": 70832,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/r10Gkf9yDs"
+      },
+      {
+        "title": "Scifi Grenade",
+        "file": "weapons/scifi_modular_guns/Scifi_Grenade.glb",
+        "public_id": "uooNRUiCa9",
+        "resource_id": "a9a3bdc1-1fca-4b91-a079-ee3d459864d6",
+        "tris": 884,
+        "bytes": 31904,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/uooNRUiCa9"
+      },
+      {
+        "title": "Scifi Pistol",
+        "file": "weapons/scifi_modular_guns/Scifi_Pistol.glb",
+        "public_id": "TuHM3CURcC",
+        "resource_id": "d65f40a0-25a1-4f74-b657-2dbe5e621b09",
+        "tris": 2348,
+        "bytes": 71524,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/TuHM3CURcC"
+      },
+      {
+        "title": "Scifi Pistol",
+        "file": "weapons/scifi_modular_guns/Scifi_Pistol_uw4B33Mm0d.glb",
+        "public_id": "uw4B33Mm0d",
+        "resource_id": "2bbc65b1-4d71-411c-a32f-7c09de3dbbc9",
+        "tris": 1689,
+        "bytes": 55712,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/uw4B33Mm0d"
+      },
+      {
+        "title": "Scifi Pistol",
+        "file": "weapons/scifi_modular_guns/Scifi_Pistol_U0Q1BrKL1y.glb",
+        "public_id": "U0Q1BrKL1y",
+        "resource_id": "f5fbbeae-7e3f-4185-a262-3f457fdf9202",
+        "tris": 2614,
+        "bytes": 88464,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/U0Q1BrKL1y"
+      },
+      {
+        "title": "Scifi Sniper",
+        "file": "weapons/scifi_modular_guns/Scifi_Sniper.glb",
+        "public_id": "VU7QiZYae0",
+        "resource_id": "507de067-5d8a-4495-b711-774cd816a2fc",
+        "tris": 2526,
+        "bytes": 84024,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/VU7QiZYae0"
+      },
+      {
+        "title": "Scifi Smg",
+        "file": "weapons/scifi_modular_guns/Scifi_Smg.glb",
+        "public_id": "NHYaHnTNIM",
+        "resource_id": "cc2ce213-28b2-4aed-a6f7-4b9cf8f80568",
+        "tris": 2816,
+        "bytes": 91088,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/NHYaHnTNIM"
+      },
+      {
+        "title": "Scifi AR",
+        "file": "weapons/scifi_modular_guns/Scifi_AR.glb",
+        "public_id": "MJmAjTeT9h",
+        "resource_id": "73e58ec6-5eeb-49b4-8848-a7a1c55cecfb",
+        "tris": 3187,
+        "bytes": 104100,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/MJmAjTeT9h"
+      },
+      {
+        "title": "Scifi Assault Rifle",
+        "file": "weapons/scifi_modular_guns/Scifi_Assault_Rifle.glb",
+        "public_id": "jEw0ArUz9R",
+        "resource_id": "f5fd4b30-9ce6-4c07-bca7-61c047a161a3",
+        "tris": 3004,
+        "bytes": 98500,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/jEw0ArUz9R"
+      },
+      {
+        "title": "Scifi Assault Rifle",
+        "file": "weapons/scifi_modular_guns/Scifi_Assault_Rifle_JqdHbURERk.glb",
+        "public_id": "JqdHbURERk",
+        "resource_id": "db8391de-0f90-43f9-9a8f-ec28850d91c7",
+        "tris": 4091,
+        "bytes": 105456,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/JqdHbURERk"
+      },
+      {
+        "title": "Scifi Assault Rifle",
+        "file": "weapons/scifi_modular_guns/Scifi_Assault_Rifle_RGtBoJNn3N.glb",
+        "public_id": "RGtBoJNn3N",
+        "resource_id": "827008d1-1b1b-422a-96b5-c7f5754d7739",
+        "tris": 3536,
+        "bytes": 98232,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/RGtBoJNn3N"
+      },
+      {
+        "title": "Scifi Assault Rifle",
+        "file": "weapons/scifi_modular_guns/Scifi_Assault_Rifle_j40c8VDdAQ.glb",
+        "public_id": "j40c8VDdAQ",
+        "resource_id": "78846e47-3be2-48f2-a7ce-6b50c09358bb",
+        "tris": 0,
+        "bytes": 195268,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/j40c8VDdAQ"
+      },
+      {
+        "title": "Scifi Sniper",
+        "file": "weapons/scifi_modular_guns/Scifi_Sniper_46615JyFm7.glb",
+        "public_id": "46615JyFm7",
+        "resource_id": "a9b24fa0-ebec-4656-ada6-dc324bae779d",
+        "tris": 4898,
+        "bytes": 143004,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/46615JyFm7"
+      }
+    ]
+  },
+  {
+    "pack": "scifi_gun_pack",
+    "category": "weapons",
+    "source": "https://poly.pizza/bundle/rBroUbKkqM",
+    "author": "Quaternius",
+    "license": "CC0 1.0",
+    "models": [
+      {
+        "title": "Pistol",
+        "file": "weapons/scifi_gun_pack/Pistol.glb",
+        "public_id": "1vBdqOfUNd",
+        "resource_id": "01cd757e-2fbc-4a2d-a96f-505a6fbd6924",
+        "tris": 1748,
+        "bytes": 82016,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/1vBdqOfUNd"
+      },
+      {
+        "title": "Long Pistol",
+        "file": "weapons/scifi_gun_pack/Long_Pistol.glb",
+        "public_id": "rpMoBgTqhB",
+        "resource_id": "7248fc2d-4feb-49e2-9f7d-ee053053e045",
+        "tris": 2773,
+        "bytes": 150020,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/rpMoBgTqhB"
+      },
+      {
+        "title": "Long Pistol (Small)",
+        "file": "weapons/scifi_gun_pack/Long_Pistol_Small.glb",
+        "public_id": "Glk3nFUUQr",
+        "resource_id": "ec0a238a-c842-4f0a-a5f8-a342665f50ae",
+        "tris": 2709,
+        "bytes": 146484,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/Glk3nFUUQr"
+      },
+      {
+        "title": "Rifle",
+        "file": "weapons/scifi_gun_pack/Rifle.glb",
+        "public_id": "cCAgiMOQow",
+        "resource_id": "55ae5e9a-5e18-41b7-a352-dbcfc3c60854",
+        "tris": 2836,
+        "bytes": 149380,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/cCAgiMOQow"
+      },
+      {
+        "title": "Sniper Rifle",
+        "file": "weapons/scifi_gun_pack/Sniper_Rifle.glb",
+        "public_id": "Nq5dnqeh0k",
+        "resource_id": "0f18e856-8c71-430f-a239-6c992c8f36fd",
+        "tris": 2104,
+        "bytes": 116836,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/Nq5dnqeh0k"
+      },
+      {
+        "title": "Lightning Gun",
+        "file": "weapons/scifi_gun_pack/Lightning_Gun.glb",
+        "public_id": "Nl8qWErOw2",
+        "resource_id": "8a1950c4-4bda-46ae-a9e3-baacddca5d59",
+        "tris": 2678,
+        "bytes": 139076,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/Nl8qWErOw2"
+      },
+      {
+        "title": "Ray Gun",
+        "file": "weapons/scifi_gun_pack/Ray_Gun.glb",
+        "public_id": "DIcib0mihf",
+        "resource_id": "bbff65c0-4ae8-41d5-8666-f88500a82c13",
+        "tris": 3157,
+        "bytes": 173636,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/DIcib0mihf"
+      }
+    ]
+  },
+  {
+    "pack": "cyberpunk_game_kit",
+    "category": "cyberpunk",
+    "source": "https://poly.pizza/bundle/Hkfxa8K8zF",
+    "author": "Quaternius",
+    "license": "CC0 1.0",
+    "models": [
+      {
+        "title": "TV",
+        "file": "cyberpunk/cyberpunk_game_kit/TV.glb",
+        "public_id": "mBGTVozH1u",
+        "resource_id": "a7137235-d218-45f8-ae8d-5c78e5cc75eb",
+        "tris": 312,
+        "bytes": 26712,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/mBGTVozH1u"
+      },
+      {
+        "title": "TV",
+        "file": "cyberpunk/cyberpunk_game_kit/TV_tdXTODKZlx.glb",
+        "public_id": "tdXTODKZlx",
+        "resource_id": "ca849cc2-09f7-49f9-a0e1-b821bac32cc2",
+        "tris": 336,
+        "bytes": 28140,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/tdXTODKZlx"
+      },
+      {
+        "title": "Turret Teleporter",
+        "file": "cyberpunk/cyberpunk_game_kit/Turret_Teleporter.glb",
+        "public_id": "aNhGga1jGX",
+        "resource_id": "4b1fa9d2-f99f-4545-957c-0b967717e375",
+        "tris": 1136,
+        "bytes": 64868,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/aNhGga1jGX"
+      },
+      {
+        "title": "Cable",
+        "file": "cyberpunk/cyberpunk_game_kit/Cable.glb",
+        "public_id": "aoNcGMnNiG",
+        "resource_id": "6a159a24-2595-42fa-a823-c83a9e836498",
+        "tris": 384,
+        "bytes": 8812,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/aoNcGMnNiG"
+      },
+      {
+        "title": "Collectible Gear",
+        "file": "cyberpunk/cyberpunk_game_kit/Collectible_Gear.glb",
+        "public_id": "1tgrqxAQia",
+        "resource_id": "35b7626f-c4ff-4532-8720-679ccd105861",
+        "tris": 440,
+        "bytes": 16352,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/1tgrqxAQia"
+      },
+      {
+        "title": "Antenna",
+        "file": "cyberpunk/cyberpunk_game_kit/Antenna.glb",
+        "public_id": "l5Oc9swvKk",
+        "resource_id": "c958f28b-bcea-4b96-81ab-1eb01914bb73",
+        "tris": 88,
+        "bytes": 6452,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/l5Oc9swvKk"
+      },
+      {
+        "title": "Turret Gun",
+        "file": "cyberpunk/cyberpunk_game_kit/Turret_Gun.glb",
+        "public_id": "hThPXDCbwl",
+        "resource_id": "730a54af-3785-4d23-8efc-1560ed61e0d3",
+        "tris": 1504,
+        "bytes": 84856,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/hThPXDCbwl"
+      },
+      {
+        "title": "Turret Cannon",
+        "file": "cyberpunk/cyberpunk_game_kit/Turret_Cannon.glb",
+        "public_id": "mNJ6poH7Cp",
+        "resource_id": "5669a490-372e-41a6-ac5f-b8ca5b69e4a5",
+        "tris": 1318,
+        "bytes": 74416,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/mNJ6poH7Cp"
+      },
+      {
+        "title": "Turret Gun",
+        "file": "cyberpunk/cyberpunk_game_kit/Turret_Gun_ekTQhbJId7.glb",
+        "public_id": "ekTQhbJId7",
+        "resource_id": "58ce64fc-b698-4b78-af75-05bb2dfad2ed",
+        "tris": 1182,
+        "bytes": 68932,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/ekTQhbJId7"
+      },
+      {
+        "title": "Collectible Board",
+        "file": "cyberpunk/cyberpunk_game_kit/Collectible_Board.glb",
+        "public_id": "qaVbbKkil7",
+        "resource_id": "5539c7ea-9dbe-4b3b-9926-d1137038aff5",
+        "tris": 280,
+        "bytes": 19984,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/qaVbbKkil7"
+      },
+      {
+        "title": "Antenna",
+        "file": "cyberpunk/cyberpunk_game_kit/Antenna_OuHQCigiUR.glb",
+        "public_id": "OuHQCigiUR",
+        "resource_id": "08f832ca-e268-4834-9711-d03986f042e8",
+        "tris": 412,
+        "bytes": 15380,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/OuHQCigiUR"
+      },
+      {
+        "title": "Door",
+        "file": "cyberpunk/cyberpunk_game_kit/Door.glb",
+        "public_id": "LbrIuy3mMR",
+        "resource_id": "ec05b3f9-a62d-4c54-8406-aff898ecb495",
+        "tris": 324,
+        "bytes": 23696,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/LbrIuy3mMR"
+      },
+      {
+        "title": "Lootbox",
+        "file": "cyberpunk/cyberpunk_game_kit/Lootbox.glb",
+        "public_id": "LNQWE3LzNf",
+        "resource_id": "50fd1cd3-a351-4514-9ab7-55b713651d8b",
+        "tris": 940,
+        "bytes": 48716,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/LNQWE3LzNf"
+      },
+      {
+        "title": "Streetlight",
+        "file": "cyberpunk/cyberpunk_game_kit/Streetlight.glb",
+        "public_id": "Bq1Qj4DAre",
+        "resource_id": "7576487c-00cd-43cd-93a7-d2c217fa8c25",
+        "tris": 520,
+        "bytes": 19332,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/Bq1Qj4DAre"
+      },
+      {
+        "title": "Air Conditioner",
+        "file": "cyberpunk/cyberpunk_game_kit/Air_Conditioner.glb",
+        "public_id": "0MdE89Ijtt",
+        "resource_id": "84fe2fe4-9b0b-48ef-ba8e-84bfbcaebac0",
+        "tris": 924,
+        "bytes": 32568,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/0MdE89Ijtt"
+      },
+      {
+        "title": "Light Square",
+        "file": "cyberpunk/cyberpunk_game_kit/Light_Square.glb",
+        "public_id": "PSoamNnBPO",
+        "resource_id": "b3679d4f-0144-40e7-9cb7-b0e2f29bbf3f",
+        "tris": 148,
+        "bytes": 11776,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/PSoamNnBPO"
+      },
+      {
+        "title": "Computer",
+        "file": "cyberpunk/cyberpunk_game_kit/Computer.glb",
+        "public_id": "emxvTSMKnt",
+        "resource_id": "44246bf0-aec9-494c-b4b0-47da40dfc40d",
+        "tris": 987,
+        "bytes": 36092,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/emxvTSMKnt"
+      },
+      {
+        "title": "Air Conditioner",
+        "file": "cyberpunk/cyberpunk_game_kit/Air_Conditioner_amFuyE3IF6.glb",
+        "public_id": "amFuyE3IF6",
+        "resource_id": "75029333-e7b5-4170-8183-a75dfa0b54e6",
+        "tris": 946,
+        "bytes": 38900,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/amFuyE3IF6"
+      }
+    ]
+  },
+  {
+    "pack": "ultimate_modular_men",
+    "category": "characters",
+    "source": "https://poly.pizza/bundle/ZiH8muWqwQ",
+    "author": "Quaternius",
+    "license": "CC0 1.0",
+    "models": [
+      {
+        "title": "Adventurer",
+        "file": "characters/ultimate_modular_men/Adventurer.glb",
+        "public_id": "5EGWBMpuXq",
+        "resource_id": "bbe369ee-a686-42c7-adad-14356f5f2f15",
+        "tris": 3388,
+        "bytes": 1944116,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/5EGWBMpuXq"
+      },
+      {
+        "title": "King",
+        "file": "characters/ultimate_modular_men/King.glb",
+        "public_id": "I1gTjmuK2m",
+        "resource_id": "29a3436b-3b06-4dbf-a236-bcec18f3351a",
+        "tris": 6098,
+        "bytes": 2004432,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/I1gTjmuK2m"
+      },
+      {
+        "title": "Farmer",
+        "file": "characters/ultimate_modular_men/Farmer.glb",
+        "public_id": "7pn3R6hPvE",
+        "resource_id": "81f2f0cf-6f53-4b57-92ea-dba0928620f2",
+        "tris": 3716,
+        "bytes": 1370524,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/7pn3R6hPvE"
+      },
+      {
+        "title": "Hoodie Character",
+        "file": "characters/ultimate_modular_men/Hoodie_Character.glb",
+        "public_id": "gKLBoRsyKe",
+        "resource_id": "bcd66ec5-5e81-4901-a222-47abc875fe2a",
+        "tris": 4318,
+        "bytes": 1456760,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/gKLBoRsyKe"
+      },
+      {
+        "title": "Beach Character",
+        "file": "characters/ultimate_modular_men/Beach_Character.glb",
+        "public_id": "DojKLcO34E",
+        "resource_id": "f771a536-1c18-4a47-bb56-ceea4b603455",
+        "tris": 3964,
+        "bytes": 1505104,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/DojKLcO34E"
+      },
+      {
+        "title": "Casual Character",
+        "file": "characters/ultimate_modular_men/Casual_Character.glb",
+        "public_id": "kZ3DmIoGip",
+        "resource_id": "90a9e2d4-053f-42f1-99a2-8f5e1180ea7f",
+        "tris": 3350,
+        "bytes": 1430660,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/kZ3DmIoGip"
+      },
+      {
+        "title": "Worker",
+        "file": "characters/ultimate_modular_men/Worker.glb",
+        "public_id": "Yg2bQZO6Hj",
+        "resource_id": "3a5f3056-ffe6-42eb-bd52-122afcbd22b2",
+        "tris": 3350,
+        "bytes": 1344928,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/Yg2bQZO6Hj"
+      },
+      {
+        "title": "Punk",
+        "file": "characters/ultimate_modular_men/Punk.glb",
+        "public_id": "BTALZymknF",
+        "resource_id": "e56f23b5-3270-406f-8924-f77cad980c43",
+        "tris": 3530,
+        "bytes": 1374172,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/BTALZymknF"
+      },
+      {
+        "title": "SWAT",
+        "file": "characters/ultimate_modular_men/SWAT.glb",
+        "public_id": "Btfn3G5Xv4",
+        "resource_id": "713f6535-f4f3-4367-a4c6-ced126ae0936",
+        "tris": 5444,
+        "bytes": 1560900,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/Btfn3G5Xv4"
+      },
+      {
+        "title": "Business Man",
+        "file": "characters/ultimate_modular_men/Business_Man.glb",
+        "public_id": "JFrLIKqvCH",
+        "resource_id": "e599abbe-7d73-488c-9d7e-3ead281e705c",
+        "tris": 4162,
+        "bytes": 1529248,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/JFrLIKqvCH"
+      },
+      {
+        "title": "Astronaut",
+        "file": "characters/ultimate_modular_men/Astronaut.glb",
+        "public_id": "3hC2i0CTuO",
+        "resource_id": "0076345b-bbea-42d5-931c-4a5ad2050b18",
+        "tris": 5324,
+        "bytes": 1944976,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/3hC2i0CTuO"
+      }
+    ]
+  },
+  {
+    "pack": "animated_men",
+    "category": "characters",
+    "source": "https://poly.pizza/bundle/DAC9SDgMQT",
+    "author": "Quaternius",
+    "license": "CC0 1.0",
+    "models": [
+      {
+        "title": "Man in Suit",
+        "file": "characters/animated_men/Man_in_Suit.glb",
+        "public_id": "mQnGoME1ez",
+        "resource_id": "66b57880-bcb0-479a-8d72-5c3e88afaa39",
+        "tris": 0,
+        "bytes": 583416,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/mQnGoME1ez"
+      },
+      {
+        "title": "Man",
+        "file": "characters/animated_men/Man.glb",
+        "public_id": "HMnuH5geEG",
+        "resource_id": "3746be88-6799-4817-929b-6bc067c47caa",
+        "tris": 1216,
+        "bytes": 493196,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/HMnuH5geEG"
+      },
+      {
+        "title": "Man",
+        "file": "characters/animated_men/Man_fjHyMd5Wxw.glb",
+        "public_id": "fjHyMd5Wxw",
+        "resource_id": "985eacbf-9dde-44b7-9270-4e35c8400b13",
+        "tris": 0,
+        "bytes": 498160,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/fjHyMd5Wxw"
+      },
+      {
+        "title": "Man in Long Sleeves",
+        "file": "characters/animated_men/Man_in_Long_Sleeves.glb",
+        "public_id": "DLptRuewTn",
+        "resource_id": "e6019b9f-aed0-400c-8df4-ce5b648e9b82",
+        "tris": 0,
+        "bytes": 503988,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/DLptRuewTn"
+      }
+    ]
+  },
+  {
+    "pack": "ultimate_rpg_items",
+    "category": "props",
+    "source": "https://poly.pizza/bundle/h8mhlZ0dG8",
+    "author": "Quaternius",
+    "license": "CC0 1.0",
+    "models": [
+      {
+        "title": "Shield",
+        "file": "props/ultimate_rpg_items/Shield.glb",
+        "public_id": "srN1KGAO7f",
+        "resource_id": "60cc7b8e-0589-4f4b-a354-f6fef73a44bd",
+        "tris": 1272,
+        "bytes": 63424,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/srN1KGAO7f"
+      },
+      {
+        "title": "Shield Celtic Golden",
+        "file": "props/ultimate_rpg_items/Shield_Celtic_Golden.glb",
+        "public_id": "neNWPt8WAx",
+        "resource_id": "3543f36f-1135-4ece-9c4e-666ce413b330",
+        "tris": 0,
+        "bytes": 47584,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/neNWPt8WAx"
+      },
+      {
+        "title": "Shield Round",
+        "file": "props/ultimate_rpg_items/Shield_Round.glb",
+        "public_id": "UKXj8qjiF8",
+        "resource_id": "4bb64755-4617-4081-99d4-5e1ade52e966",
+        "tris": 0,
+        "bytes": 69492,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/UKXj8qjiF8"
+      },
+      {
+        "title": "Shield Round",
+        "file": "props/ultimate_rpg_items/Shield_Round_lWajrVXcnA.glb",
+        "public_id": "lWajrVXcnA",
+        "resource_id": "f0c77485-abcd-47ed-8fab-5b5130a25f85",
+        "tris": 0,
+        "bytes": 60448,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/lWajrVXcnA"
+      },
+      {
+        "title": "Knife",
+        "file": "props/ultimate_rpg_items/Knife.glb",
+        "public_id": "0g8M6yYtE4",
+        "resource_id": "608f8557-c46b-4bf4-9cb7-cd80c39532a1",
+        "tris": 0,
+        "bytes": 40368,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/0g8M6yYtE4"
+      },
+      {
+        "title": "Shield",
+        "file": "props/ultimate_rpg_items/Shield_xoHSnOjsBG.glb",
+        "public_id": "xoHSnOjsBG",
+        "resource_id": "21ae2d91-300c-43e0-b140-d119ef00ea9d",
+        "tris": 1948,
+        "bytes": 97820,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/xoHSnOjsBG"
+      },
+      {
+        "title": "Scythe",
+        "file": "props/ultimate_rpg_items/Scythe.glb",
+        "public_id": "yE9TKCewO8",
+        "resource_id": "99977274-4591-4a0c-8326-0d441264cffe",
+        "tris": 0,
+        "bytes": 75252,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/yE9TKCewO8"
+      },
+      {
+        "title": "Claymore",
+        "file": "props/ultimate_rpg_items/Claymore.glb",
+        "public_id": "BBhN1O6TOL",
+        "resource_id": "91388f84-ac26-48b5-9d7f-6c4b0181a830",
+        "tris": 0,
+        "bytes": 54980,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/BBhN1O6TOL"
+      },
+      {
+        "title": "Spear",
+        "file": "props/ultimate_rpg_items/Spear.glb",
+        "public_id": "fH1zmvjPNx",
+        "resource_id": "85591d23-e537-4562-8b28-80c30c0e696d",
+        "tris": 0,
+        "bytes": 69892,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/fH1zmvjPNx"
+      },
+      {
+        "title": "Padlock",
+        "file": "props/ultimate_rpg_items/Padlock.glb",
+        "public_id": "2ZSHgKVr3F",
+        "resource_id": "492d2859-724c-42a4-86a2-5502214de10c",
+        "tris": 0,
+        "bytes": 33852,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/2ZSHgKVr3F"
+      },
+      {
+        "title": "Parchment",
+        "file": "props/ultimate_rpg_items/Parchment.glb",
+        "public_id": "IrjGNYRB3f",
+        "resource_id": "9fc51588-8949-44f4-be2d-5e2f4a947b93",
+        "tris": 0,
+        "bytes": 33000,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/IrjGNYRB3f"
+      },
+      {
+        "title": "Skull",
+        "file": "props/ultimate_rpg_items/Skull.glb",
+        "public_id": "YgmRBtFlcF",
+        "resource_id": "931c0503-c6c8-48bb-86cd-092710a32160",
+        "tris": 0,
+        "bytes": 20408,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/YgmRBtFlcF"
+      }
+    ]
+  },
+  {
+    "pack": "toon_shooter_kit",
+    "category": "characters",
+    "source": "https://poly.pizza/bundle/qraiSXoAru",
+    "author": "Quaternius",
+    "license": "CC0 1.0",
+    "models": [
+      {
+        "title": "Character Soldier",
+        "file": "characters/toon_shooter_kit/Character_Soldier.glb",
+        "public_id": "PpLF4rt4ah",
+        "resource_id": "1083c1d3-d1d4-4682-adf6-bc516d06ac84",
+        "tris": 7929,
+        "bytes": 1333700,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/PpLF4rt4ah"
+      },
+      {
+        "title": "Character Hazmat",
+        "file": "characters/toon_shooter_kit/Character_Hazmat.glb",
+        "public_id": "z3TSQYx1Kn",
+        "resource_id": "484450a4-b76c-4e76-95d2-352337bb41e8",
+        "tris": 12118,
+        "bytes": 1401712,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/z3TSQYx1Kn"
+      },
+      {
+        "title": "Character Enemy",
+        "file": "characters/toon_shooter_kit/Character_Enemy.glb",
+        "public_id": "mdGe4IN31v",
+        "resource_id": "6d2fe602-2adf-43d2-aa20-00e68165497d",
+        "tris": 12096,
+        "bytes": 1552600,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/mdGe4IN31v"
+      },
+      {
+        "title": "Water Tank",
+        "file": "characters/toon_shooter_kit/Water_Tank.glb",
+        "public_id": "XVB8vUbnZb",
+        "resource_id": "90ce7828-ec94-4b41-9e44-e524af7aafa5",
+        "tris": 864,
+        "bytes": 35380,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/XVB8vUbnZb"
+      },
+      {
+        "title": "Cardboard Boxes",
+        "file": "characters/toon_shooter_kit/Cardboard_Boxes.glb",
+        "public_id": "bs6ikOeTrR",
+        "resource_id": "bc840809-78e7-4111-bd38-73151ee20c4a",
+        "tris": 108,
+        "bytes": 7532,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/bs6ikOeTrR"
+      },
+      {
+        "title": "Cardboard Boxes",
+        "file": "characters/toon_shooter_kit/Cardboard_Boxes_rdKKO0DvMG.glb",
+        "public_id": "rdKKO0DvMG",
+        "resource_id": "c1267150-6cb1-4626-9426-f754ca08fa88",
+        "tris": 108,
+        "bytes": 7520,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/rdKKO0DvMG"
+      },
+      {
+        "title": "Cardboard Boxes",
+        "file": "characters/toon_shooter_kit/Cardboard_Boxes_V9KbWC8Vd6.glb",
+        "public_id": "V9KbWC8Vd6",
+        "resource_id": "0ecf2159-df40-4397-ad80-b832b3b82b19",
+        "tris": 432,
+        "bytes": 25280,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/V9KbWC8Vd6"
+      },
+      {
+        "title": "Container Small",
+        "file": "characters/toon_shooter_kit/Container_Small.glb",
+        "public_id": "B79i6fHgVU",
+        "resource_id": "2e1f581e-5f9d-42ff-9ef9-600b1cfde0a6",
+        "tris": 920,
+        "bytes": 40124,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/B79i6fHgVU"
+      },
+      {
+        "title": "Debris Papers",
+        "file": "characters/toon_shooter_kit/Debris_Papers.glb",
+        "public_id": "PTvW67lIoU",
+        "resource_id": "ee9a1739-287c-45d2-a8d9-4f43ad82631d",
+        "tris": 12,
+        "bytes": 2400,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/PTvW67lIoU"
+      },
+      {
+        "title": "Sign",
+        "file": "characters/toon_shooter_kit/Sign.glb",
+        "public_id": "4MSsNFk5fc",
+        "resource_id": "c8fdcd5a-875a-4196-841c-df2cd6ebdc52",
+        "tris": 284,
+        "bytes": 16576,
+        "license": "CC0 1.0",
+        "url": "https://poly.pizza/m/4MSsNFk5fc"
+      }
+    ]
+  },
+  {
+    "pack": "props/magic",
+    "category": "props",
+    "source": "poly.pizza curated",
+    "author": "Quaternius",
+    "license": "CC0 1.0",
+    "models": [
+      {
+        "title": "Staff",
+        "file": "props/magic/Staff.glb",
+        "public_id": "PnGRvO4Lwd",
+        "resource_id": "18031dd6-1a26-4fa1-bd09-53c45bd31880",
+        "tris": 220,
+        "bytes": 13276,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Potion Bottle",
+        "file": "props/magic/Potion_Bottle_A.glb",
+        "public_id": "WJxYta4Z96",
+        "resource_id": "7cee3dd7-29f1-4ec7-b57b-cecc748860f7",
+        "tris": 0,
+        "bytes": 32444,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Potion Bottle",
+        "file": "props/magic/Potion_Bottle_B.glb",
+        "public_id": "7qbuf1TS8C",
+        "resource_id": "64997fc4-2420-4dec-aa29-b4cd7ef2bcec",
+        "tris": 0,
+        "bytes": 31340,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Crystal",
+        "file": "props/magic/Crystal.glb",
+        "public_id": "nBlnK8G6xw",
+        "resource_id": "3b886302-8856-461c-9472-dc34459a21de",
+        "tris": 264,
+        "bytes": 17988,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Big Crystal",
+        "file": "props/magic/Big_Crystal.glb",
+        "public_id": "pf5lzmgr2J",
+        "resource_id": "f2bbae6a-f84c-493e-8a39-7498e90fbd49",
+        "tris": 590,
+        "bytes": 33576,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Crystal Block",
+        "file": "props/magic/Crystal_Block.glb",
+        "public_id": "fGL74AXC4o",
+        "resource_id": "6c321988-8786-458a-8eec-392012f2c3a4",
+        "tris": 1651,
+        "bytes": 126092,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Wizard",
+        "file": "props/magic/Wizard.glb",
+        "public_id": "tabnmuxQBl",
+        "resource_id": "3df4bc4f-54a7-43e4-a35d-35d05610d0eb",
+        "tris": 6227,
+        "bytes": 297096,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Lightning Wizard",
+        "file": "props/magic/Lightning_Wizard.glb",
+        "public_id": "ZCGVHzSvQD",
+        "resource_id": "a036ff10-fca1-4117-be30-fb8ea593daf7",
+        "tris": 11290,
+        "bytes": 497852,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Wizard",
+        "file": "props/magic/Wizard_B.glb",
+        "public_id": "o87Upt5uHX",
+        "resource_id": "d206c071-7934-40eb-9091-35ebdf93c317",
+        "tris": 1674,
+        "bytes": 89464,
+        "license": "CC0 1.0"
+      }
+    ]
+  },
+  {
+    "pack": "cyberpunk/robots_mechs",
+    "category": "cyberpunk",
+    "source": "poly.pizza curated",
+    "author": "Quaternius",
+    "license": "CC0 1.0",
+    "models": [
+      {
+        "title": "Animated Robot",
+        "file": "cyberpunk/robots_mechs/Animated_Robot.glb",
+        "public_id": "QCm7qe9uNJ",
+        "resource_id": "7d95dbce-8c73-489b-8298-f430b1f0dbdf",
+        "tris": 1425,
+        "bytes": 401024,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Robot Enemy",
+        "file": "cyberpunk/robots_mechs/Robot_Enemy.glb",
+        "public_id": "1gNo5ezvmr",
+        "resource_id": "9c45ab2b-c46a-4319-bc2a-88d6dbbc8e42",
+        "tris": 4380,
+        "bytes": 563656,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Robot Enemy Large Gun",
+        "file": "cyberpunk/robots_mechs/Robot_Enemy_Large_Gun.glb",
+        "public_id": "mWojM4i2IH",
+        "resource_id": "78e23275-cb6a-4ba3-ae5e-48a9b4ee2e65",
+        "tris": 6902,
+        "bytes": 711592,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Robot Enemy Legs Gun",
+        "file": "cyberpunk/robots_mechs/Robot_Enemy_Legs_Gun.glb",
+        "public_id": "lFZfDh2hzP",
+        "resource_id": "c320ce4a-25be-4704-bda9-b67e1aa97a70",
+        "tris": 4702,
+        "bytes": 324096,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Robot Enemy Flying Gun",
+        "file": "cyberpunk/robots_mechs/Robot_Enemy_Flying_Gun.glb",
+        "public_id": "UDTM6X1y9a",
+        "resource_id": "6d0889f1-0c3f-4f98-b011-fbcf6c79a93b",
+        "tris": 4582,
+        "bytes": 324204,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Robot Enemy Flying",
+        "file": "cyberpunk/robots_mechs/Robot_Enemy_Flying.glb",
+        "public_id": "lF3jeRJwiH",
+        "resource_id": "abb31ff6-3e2d-43a6-bf13-dba39b0c596d",
+        "tris": 4544,
+        "bytes": 298324,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Robot Enemy Large",
+        "file": "cyberpunk/robots_mechs/Robot_Enemy_Large.glb",
+        "public_id": "mPDR0L5uKx",
+        "resource_id": "86da7c34-9196-43b3-975d-db2325c83a65",
+        "tris": 4256,
+        "bytes": 430964,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Mech",
+        "file": "cyberpunk/robots_mechs/Mech_A.glb",
+        "public_id": "o3Ps8z8ByP",
+        "resource_id": "a242e73b-6a40-4bd9-bfa9-ed1d8e49ea21",
+        "tris": 5846,
+        "bytes": 672456,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Mech",
+        "file": "cyberpunk/robots_mechs/Mech_B.glb",
+        "public_id": "tLs9mFVCSU",
+        "resource_id": "6f884100-f3e8-4302-b74a-10965c14956a",
+        "tris": 4086,
+        "bytes": 426804,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Mech",
+        "file": "cyberpunk/robots_mechs/Mech_C.glb",
+        "public_id": "4UvIHxnoSR",
+        "resource_id": "dab7180d-5393-4cb1-aa8f-b56154b0d724",
+        "tris": 6756,
+        "bytes": 500952,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Mech",
+        "file": "cyberpunk/robots_mechs/Mech_D.glb",
+        "public_id": "D5wW2jDO42",
+        "resource_id": "750173d2-53aa-4318-95dc-5f8e6d2dcad2",
+        "tris": 4008,
+        "bytes": 419864,
+        "license": "CC0 1.0"
+      }
+    ]
+  },
+  {
+    "pack": "cyberpunk/extra",
+    "category": "cyberpunk",
+    "source": "poly.pizza curated",
+    "author": "Quaternius",
+    "license": "CC0 1.0",
+    "models": [
+      {
+        "title": "Alien",
+        "file": "cyberpunk/extra/Alien_A.glb",
+        "public_id": "RRliSQBP7r",
+        "resource_id": "b048d82a-7fc2-4631-b859-4bde0ed19b59",
+        "tris": 6020,
+        "bytes": 480976,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Alien",
+        "file": "cyberpunk/extra/Alien_B.glb",
+        "public_id": "sUTLXji0aL",
+        "resource_id": "0bb74be9-e9d1-4321-aedb-a9eccecb04a1",
+        "tris": 2592,
+        "bytes": 125076,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Cyberpunk Platform",
+        "file": "cyberpunk/extra/Cyberpunk_Platform_A.glb",
+        "public_id": "J3AJSwqmBJ",
+        "resource_id": "849e064f-424a-4a1c-a44a-094c2f500d60",
+        "tris": 12052,
+        "bytes": 802160,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Cyberpunk Signs",
+        "file": "cyberpunk/extra/Cyberpunk_Signs.glb",
+        "public_id": "rsZJjigt1X",
+        "resource_id": "44299e58-2793-47f6-8245-fba288fd2bfd",
+        "tris": 652,
+        "bytes": 402680,
+        "license": "CC0 1.0"
+      }
+    ]
+  },
+  {
+    "pack": "weapons/ultimate_guns_sample",
+    "category": "weapons",
+    "source": "poly.pizza curated",
+    "author": "Quaternius",
+    "license": "CC0 1.0",
+    "models": [
+      {
+        "title": "Pistol",
+        "file": "weapons/ultimate_guns_sample/Pistol.glb",
+        "public_id": "Yp4GwKdHHO",
+        "resource_id": "580a61fb-bc2a-44b4-860d-8c83cf9ff749",
+        "tris": 1446,
+        "bytes": 70240,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Rifle",
+        "file": "weapons/ultimate_guns_sample/Rifle.glb",
+        "public_id": "KjHL5JJrxU",
+        "resource_id": "875d7c7c-188f-4447-8cf8-bc6da771c25a",
+        "tris": 2103,
+        "bytes": 107656,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Shotgun",
+        "file": "weapons/ultimate_guns_sample/Shotgun.glb",
+        "public_id": "8Z4HaN1NyS",
+        "resource_id": "2739ab8d-2dd4-4d97-b05b-2c804d81276c",
+        "tris": 1542,
+        "bytes": 76768,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Axe Rifle",
+        "file": "weapons/ultimate_guns_sample/Axe_Rifle.glb",
+        "public_id": "sGuWpQTufc",
+        "resource_id": "c71629e5-622e-4ed4-9272-14bc50eef31f",
+        "tris": 1408,
+        "bytes": 58128,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Shotgun",
+        "file": "weapons/ultimate_guns_sample/Shotgun_Full.glb",
+        "public_id": "DcNE0HVdW8",
+        "resource_id": "032e6589-3188-41bc-b92b-e25528344275",
+        "tris": 0,
+        "bytes": 43684,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Sniper Rifle",
+        "file": "weapons/ultimate_guns_sample/Sniper_Rifle.glb",
+        "public_id": "ASOMZIErq3",
+        "resource_id": "f03e21b7-e3b7-49fd-b47d-d1908649fcee",
+        "tris": 0,
+        "bytes": 76652,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Submachine Gun",
+        "file": "weapons/ultimate_guns_sample/SMG.glb",
+        "public_id": "7ehatxr7FY",
+        "resource_id": "fb8ae707-d5b9-4eb8-ab8c-1c78d3c1f710",
+        "tris": 0,
+        "bytes": 70976,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Flare Gun",
+        "file": "weapons/ultimate_guns_sample/Flare_Gun.glb",
+        "public_id": "44H9OBUqTC",
+        "resource_id": "9ec52cda-c918-43f0-b7af-354e7fe96c37",
+        "tris": 540,
+        "bytes": 31312,
+        "license": "CC0 1.0"
+      }
+    ]
+  },
+  {
+    "pack": "weapons/ultimate_guns_pack",
+    "category": "weapons",
+    "source": "https://poly.pizza/bundle/cpgUfI4t2F",
+    "author": "Quaternius",
+    "license": "CC0 1.0",
+    "models": [
+      {
+        "title": "Bipod",
+        "file": "weapons/ultimate_guns_pack/Bipod.glb",
+        "public_id": "Ugy8tjR3Ju",
+        "resource_id": "ec8b842c-4dc4-4a81-9fb1-b18cd99c601e",
+        "tris": 476,
+        "bytes": 27300,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Bayonet",
+        "file": "weapons/ultimate_guns_pack/Bayonet.glb",
+        "public_id": "D81P2smzCy",
+        "resource_id": "e1d818e1-c3b2-41cd-b2bb-293de2c556ae",
+        "tris": 0,
+        "bytes": 17448,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Scope",
+        "file": "weapons/ultimate_guns_pack/Scope.glb",
+        "public_id": "Y9DSevnvGq",
+        "resource_id": "4d8fd75b-9b1d-45cc-ba3e-403b633a91f2",
+        "tris": 0,
+        "bytes": 28488,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Shotgun",
+        "file": "weapons/ultimate_guns_pack/Shotgun.glb",
+        "public_id": "DcNE0HVdW8",
+        "resource_id": "032e6589-3188-41bc-b92b-e25528344275",
+        "tris": 0,
+        "bytes": 43684,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Tripod",
+        "file": "weapons/ultimate_guns_pack/Tripod.glb",
+        "public_id": "sVTKUSz3m2",
+        "resource_id": "0bf83614-f70b-4b16-826e-246b04320b62",
+        "tris": 0,
+        "bytes": 36396,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Assault Rifle",
+        "file": "weapons/ultimate_guns_pack/Assault_Rifle.glb",
+        "public_id": "K2lXTYFSLC",
+        "resource_id": "b3e6be61-0299-4866-a227-58f5f3fe610b",
+        "tris": 0,
+        "bytes": 74028,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Assault Rifle",
+        "file": "weapons/ultimate_guns_pack/Assault_Rifle_fpLucho45C.glb",
+        "public_id": "fpLucho45C",
+        "resource_id": "db2d564c-63b2-4316-a89e-0f7d7a2416c9",
+        "tris": 0,
+        "bytes": 78616,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Pistol",
+        "file": "weapons/ultimate_guns_pack/Pistol.glb",
+        "public_id": "Jyn9qex4ba",
+        "resource_id": "3b53f0fe-f86e-451c-816d-6ab9bd265cdc",
+        "tris": 0,
+        "bytes": 60144,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Pistol",
+        "file": "weapons/ultimate_guns_pack/Pistol_J3i9KDQ3kt.glb",
+        "public_id": "J3i9KDQ3kt",
+        "resource_id": "f5a88c73-af97-49ca-8650-4bde579d2f80",
+        "tris": 968,
+        "bytes": 53776,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Revolver",
+        "file": "weapons/ultimate_guns_pack/Revolver.glb",
+        "public_id": "9C26wSpMS0",
+        "resource_id": "9e728565-67a3-44db-9567-982320abff09",
+        "tris": 0,
+        "bytes": 79988,
+        "license": "CC0 1.0"
+      }
+    ]
+  },
+  {
+    "pack": "cyberpunk/ultimate_space_kit",
+    "category": "cyberpunk",
+    "source": "https://poly.pizza/bundle/YWh743lqGX",
+    "author": "Quaternius",
+    "license": "CC0 1.0",
+    "models": [
+      {
+        "title": "Spaceship",
+        "file": "cyberpunk/ultimate_space_kit/Spaceship.glb",
+        "public_id": "uCeLfsdmNP",
+        "resource_id": "e8817981-bfc4-448d-822f-5b76a5983675",
+        "tris": 1614,
+        "bytes": 107296,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Spaceship",
+        "file": "cyberpunk/ultimate_space_kit/Spaceship_Jqfed124pQ.glb",
+        "public_id": "Jqfed124pQ",
+        "resource_id": "fb4a47c7-5453-433d-959d-0d3903b578e3",
+        "tris": 2814,
+        "bytes": 161668,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Spaceship",
+        "file": "cyberpunk/ultimate_space_kit/Spaceship_VSxUAFhzbA.glb",
+        "public_id": "VSxUAFhzbA",
+        "resource_id": "9dd50f84-345d-418f-bb58-0cb63fd091e6",
+        "tris": 3376,
+        "bytes": 188464,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Enemy Small",
+        "file": "cyberpunk/ultimate_space_kit/Enemy_Small.glb",
+        "public_id": "4LjT020LQh",
+        "resource_id": "4d23d8b4-4e88-4e88-9fd8-176e1abb66c0",
+        "tris": 0,
+        "bytes": 102852,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Rover",
+        "file": "cyberpunk/ultimate_space_kit/Rover.glb",
+        "public_id": "tzOLXetacM",
+        "resource_id": "7992e6b4-8add-45a9-86fd-f208237d293c",
+        "tris": 5242,
+        "bytes": 331288,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Rover",
+        "file": "cyberpunk/ultimate_space_kit/Rover_WRd1piJOfh.glb",
+        "public_id": "WRd1piJOfh",
+        "resource_id": "d2dd449f-dd0b-440f-9c62-bfa7e6039a43",
+        "tris": 2772,
+        "bytes": 361576,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Spaceship",
+        "file": "cyberpunk/ultimate_space_kit/Spaceship_u105mYHLHU.glb",
+        "public_id": "u105mYHLHU",
+        "resource_id": "0843ab59-1800-4d96-9cc7-b4d6afbecf21",
+        "tris": 6208,
+        "bytes": 265104,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Round Rover",
+        "file": "cyberpunk/ultimate_space_kit/Round_Rover.glb",
+        "public_id": "ejdkcNgMpr",
+        "resource_id": "0fb7588d-c494-49aa-b76f-84f31e45e028",
+        "tris": 0,
+        "bytes": 306996,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Enemy Flying",
+        "file": "cyberpunk/ultimate_space_kit/Enemy_Flying.glb",
+        "public_id": "kzpT6fNmM5",
+        "resource_id": "45d716f2-a942-404f-82f6-73c24e013a27",
+        "tris": 3820,
+        "bytes": 205104,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Mech",
+        "file": "cyberpunk/ultimate_space_kit/Mech.glb",
+        "public_id": "tLs9mFVCSU",
+        "resource_id": "6f884100-f3e8-4302-b74a-10965c14956a",
+        "tris": 4086,
+        "bytes": 426804,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Mech",
+        "file": "cyberpunk/ultimate_space_kit/Mech_D5wW2jDO42.glb",
+        "public_id": "D5wW2jDO42",
+        "resource_id": "750173d2-53aa-4318-95dc-5f8e6d2dcad2",
+        "tris": 4008,
+        "bytes": 419864,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Mech",
+        "file": "cyberpunk/ultimate_space_kit/Mech_o3Ps8z8ByP.glb",
+        "public_id": "o3Ps8z8ByP",
+        "resource_id": "a242e73b-6a40-4bd9-bfa9-ed1d8e49ea21",
+        "tris": 5846,
+        "bytes": 672456,
+        "license": "CC0 1.0"
+      }
+    ]
+  },
+  {
+    "pack": "characters/ultimate_modular_women",
+    "category": "characters",
+    "source": "https://poly.pizza/bundle/aCBDXDdTNN",
+    "author": "Quaternius",
+    "license": "CC0 1.0",
+    "models": [
+      {
+        "title": "Sci Fi Character",
+        "file": "characters/ultimate_modular_women/Sci_Fi_Character.glb",
+        "public_id": "4pUXv5V8kq",
+        "resource_id": "a8624e73-27bd-4878-a17b-f5d9af209c85",
+        "tris": 3824,
+        "bytes": 1681600,
+        "license": "CC-BY 3.0"
+      },
+      {
+        "title": "Witch",
+        "file": "characters/ultimate_modular_women/Witch.glb",
+        "public_id": "QBEOV9ZUT8",
+        "resource_id": "a43d6661-8a89-4818-a7eb-40e1e8430a4c",
+        "tris": 3892,
+        "bytes": 1589544,
+        "license": "CC-BY 3.0"
+      },
+      {
+        "title": "Worker",
+        "file": "characters/ultimate_modular_women/Worker.glb",
+        "public_id": "E8079Ahx7k",
+        "resource_id": "c0253218-85f2-4d67-b3f2-a4611a7901fe",
+        "tris": 3422,
+        "bytes": 1499720,
+        "license": "CC-BY 3.0"
+      },
+      {
+        "title": "Suit",
+        "file": "characters/ultimate_modular_women/Suit.glb",
+        "public_id": "sOUciDsoVV",
+        "resource_id": "1bd7759c-ab76-4178-8fe6-7706dffa7d5f",
+        "tris": 3956,
+        "bytes": 1537776,
+        "license": "CC-BY 3.0"
+      },
+      {
+        "title": "Soldier",
+        "file": "characters/ultimate_modular_women/Soldier.glb",
+        "public_id": "oAArCNHjFB",
+        "resource_id": "66a55d04-4286-44a3-b289-0d774c27db5b",
+        "tris": 4400,
+        "bytes": 1703996,
+        "license": "CC-BY 3.0"
+      },
+      {
+        "title": "Animated Woman",
+        "file": "characters/ultimate_modular_women/Animated_Woman.glb",
+        "public_id": "nIItLV9nxS",
+        "resource_id": "46d6db5a-3c9f-4238-8cdf-8eb7194498dc",
+        "tris": 3282,
+        "bytes": 1491780,
+        "license": "CC0 1.0"
+      }
+    ]
+  },
+  {
+    "pack": "characters/animated_enemies",
+    "category": "characters",
+    "source": "https://poly.pizza/bundle/a53OJwHrhh",
+    "author": "Quaternius",
+    "license": "CC0 1.0",
+    "models": [
+      {
+        "title": "Snake",
+        "file": "characters/animated_enemies/Snake.glb",
+        "public_id": "x9x0viZs8V",
+        "resource_id": "0f3a551e-743e-48f5-936f-804c6c3b88bd",
+        "tris": 0,
+        "bytes": 216696,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Wasp",
+        "file": "characters/animated_enemies/Wasp.glb",
+        "public_id": "3aQgc75sUR",
+        "resource_id": "71cadefd-8e65-423a-9a95-3cdf7e012586",
+        "tris": 0,
+        "bytes": 441256,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Rat",
+        "file": "characters/animated_enemies/Rat.glb",
+        "public_id": "iltq5bVNaV",
+        "resource_id": "64cb7150-8031-44ab-a0c9-e1529a572b23",
+        "tris": 0,
+        "bytes": 550764,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Spider",
+        "file": "characters/animated_enemies/Spider.glb",
+        "public_id": "yRYJiAJyiM",
+        "resource_id": "4259fbdb-afb5-4d40-9108-363625dd6b6e",
+        "tris": 0,
+        "bytes": 449008,
+        "license": "CC0 1.0"
+      },
+      {
+        "title": "Frog",
+        "file": "characters/animated_enemies/Frog.glb",
+        "public_id": "9Z2V8fpazF",
+        "resource_id": "08416495-b056-4ed7-b23b-5a10e82277a0",
+        "tris": 0,
+        "bytes": 587360,
+        "license": "CC0 1.0"
+      }
+    ]
+  }
+]

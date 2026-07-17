@@ -1,14 +1,14 @@
 # Product Requirements Document (PRD)
-## Running in Shadows
+## CounterSpell
 
 **A spiritual successor FPS inspired by Shadowrun — cyberpunk meets urban fantasy.**
 
 **Project Codename / Repo:** game-running-in-shadows  
-**Working Title:** Running in Shadows  
-**Status:** Draft v0.2  
-**Date:** 2026-06-28  
+**Working Title:** CounterSpell (named 2026-07-16 — a play on our Counter-Strike inspiration and the counter-web design)  
+**Status:** Draft v0.7  
+**Date:** 2026-07-16  
 **Owner:** [Project Lead]  
-**Engine:** Godot 4.6+  
+**Engine:** Godot 4.7.1 (pinned)  
 **Distribution:** Steam (primary)
 
 ---
@@ -22,7 +22,10 @@ Fast-paced first-person shooter set in a gritty near-future where magic has retu
 The unique tension of Shadowrun: high-tech guns and chrome against spells, spirits, and the supernatural. A world of neon, rain, corporations, and street-level operators who get the dirty work done.
 
 **Why Now:**  
-The 2007 official Shadowrun FPS had passionate fans but limited content and is now a preservation project. The modern Shadowrun experience is almost entirely turn-based tactical RPGs. There is strong demand for a modern, fluid FPS take on the genre. Godot + GodotSteam makes a high-quality Steam release achievable for a small team without Unity/Unreal licensing friction.
+The 2007 official Shadowrun FPS had passionate fans but limited content and is now a preservation project. The modern Shadowrun experience is almost entirely turn-based tactical RPGs. There is strong demand for a modern, fluid FPS take on the genre. Godot + GodotSteam makes a high-quality Steam release achievable without Unity/Unreal licensing friction — and AI-assisted development (implementation + automated testing agents) makes the scope tractable for a solo developer.
+
+**Team Reality (v0.4):**  
+This is a **solo project built with AI agents** (Claude Code performs implementation and automated testing against the running game). Scope, timeline, and success metrics throughout this document are calibrated to that reality: quality-gated milestones over calendar dates, playtest quality over player counts, and ruthless content scoping.
 
 **Success Vision:**  
 - Ship a polished, replayable competitive PvP experience on Steam as Early Access.  
@@ -50,12 +53,12 @@ This is a **spiritual successor using original IP**.
 ## 3. Goals & Success Metrics
 
 **Primary Goals (MVP / First EA Release)**
-- Deliver responsive, fun FPS core gameplay (movement, gunplay, basic abilities).
-- Implement 2–3 competitive modes (Arena/Deathmatch + Capture the Flag as stated priority).
-- Robust multiplayer foundation supporting both Steam P2P (lobbies/friends) and dedicated servers.
+- Deliver responsive, fun FPS core gameplay (movement, gunplay, basic abilities) with **client prediction from day one** — movement tech is a pillar, so networked feel is non-negotiable.
+- Implement 2 competitive modes: Arena/Deathmatch + Capture the Flag.
+- Multiplayer foundation on Steam P2P (lobbies/friends); dedicated servers deferred to Phase 2.
 - Full Steam integration: overlay, achievements, stats, cloud, rich presence.
 - Polished enough for paid or "Coming Soon" Steam page + playtests with real players.
-- Professional, maintainable Git repository and Godot project structure.
+- Professional, maintainable Git repository and Godot project structure with automated test coverage (GdUnit4 + live-game agent testing).
 
 **Post-EA / 1–3 Year Vision**
 - PvE co-op "shadowruns" (mission-based, extraction or objective).
@@ -65,13 +68,14 @@ This is a **spiritual successor using original IP**.
 - Steam Deck verified + controller support.
 - Sustainable revenue on Steam.
 
-**Measurable Success Criteria (Examples)**
-- 4–8 maps/modes in first EA release.
-- Sub-100ms responsive feel on good connections (with prediction/reconciliation where needed).
-- >100 concurrent players during launch window or consistent playtests.
+**Measurable Success Criteria (rightsized for solo + AI, v0.4)**
+- 2–4 maps and 2 modes in first EA release, each polished rather than numerous.
+- Sub-100ms responsive feel on good connections (client prediction + reconciliation).
+- A recurring playtest cohort (8–16 players) that comes back voluntarily; positive qualitative feedback on movement/combat feel.
+- The signature movement tech (Repulse + Glide launch) is cited by playtesters as a highlight.
 - High "would recommend" or positive review rate in EA.
 - Zero major legal/IP complaints.
-- Clean, documented codebase that new contributors or future team members can onboard into.
+- Clean, documented codebase with automated tests that new contributors or future team members can onboard into.
 
 ---
 
@@ -87,10 +91,10 @@ This is a **spiritual successor using original IP**.
 ## 5. Gameplay Overview & Pillars
 
 ### Core Pillars
-1. **Gun + Magic + Chrome:** Primary weapons feel great. Spells are impactful but have costs/risks (essence, cooldowns, line-of-sight, counters). Cyberware grants powerful active or passive abilities with trade-offs.
-2. **Asymmetric Fantasy Roles:** Archetypes (Street Samurai, Combat Mage, Decker, Rigger, Shaman, etc.) that play differently but can be viable in the same match.
-3. **Tactical Mobility & Verticality:** Wall-running, grappling, spirit leaps, drone assists, hacking doors/terrain — movement is part of the power fantasy.
-4. **The Grid Matters:** Hacking is not just a minigame on the side — deckers can influence the physical fight (disable cameras, open doors, stun enemies, create distractions) in real time or parallel.
+1. **Gun + Magic + Chrome:** Primary weapons feel great. Manifestations are impactful but have costs/risks (Resonance, cooldowns, line-of-sight, counters). Augments grant powerful active or passive abilities with trade-offs.
+2. **Asymmetric Lineages, Open Builds:** Four lineages (Human, Elf, Dwarf, Troll) with distinct passives and stats — but abilities and weapons are bought per round by anyone, so roles emerge from purchases, not locked classes. Loadouts are shopping-list shortcuts, never restrictions (see "Loadouts" below and MECHANICS_REFERENCE.md).
+3. **Tactical Mobility & Verticality:** Repulse launches, glide descents, blinks, leaps — movement tech is part of the power fantasy and a core skill expression.
+4. **The Grid Matters (Post-EA):** Hacking that influences the physical fight (disable cameras, open doors, stun enemies, create distractions) remains a defining long-term pillar, but ships **no earlier than Phase 3**. EA contains no Grid mechanics; the Decker archetype and Grid systems are designed then.
 5. **Gritty Noir Tone:** Dark, stylish, with humor. Rain-slicked streets, corporate brutality, runner camaraderie.
 
 ### Launch Modes (Prioritized)
@@ -99,40 +103,56 @@ This is a **spiritual successor using original IP**.
 - Later: King of the Hill / Payload / Extraction variants, then full PvE runs.
 
 ### Early Access Scope (High-Level Features)
-- 3–5 archetypes with distinct gun + ability kits.
-- 4–6 maps (mix of close-quarters and larger objective maps).
-- Basic loadout / cosmetic unlocks.
-- Matchmaking via Steam lobbies + manual server browser or direct connect for dedicated.
-- Killcams / replay basics, scoreboard, voice/text chat via Steam.
-- Anti-cheat considerations (start with basic server authority + report tools; evaluate VAC/EAC later).
+- 4 lineages (Human, Elf, Dwarf, Troll) with distinct passives; shared buy-phase pool of Manifestations, Augments, and weapons (see MECHANICS_REFERENCE.md).
+- 2–4 maps (mix of close-quarters and larger objective maps), each polished.
+- Loadout system (see below) + basic cosmetic unlocks.
+- Matchmaking (decided 2026-07-16): Steam lobbies with friends + overlay invites AND an in-game public lobby browser (filterable `requestLobbyList`). Players may join mid-match: they connect, spectate until the current round ends, then buy in. **True host migration** — if the P2P host drops, a surviving peer assumes authority and the match continues. Cap: 16 players (8v8), a MatchConfig tunable.
+- Scoreboard and post-round stats; killcams/replays deferred to Phase 2. Voice/text chat via Steam.
+- Anti-cheat per the layered decision in §7: validation discipline from day one; EAC + Steam ban infrastructure land at EA launch.
+
+### Loadouts (Shopping-List Shortcuts) — decided 2026-07-15
+Loadouts are **ordered shopping lists, not classes or kits**. They are never mutually exclusive and never restrict what a player can buy or use.
+
+- The game ships with **default loadouts**; players can **define and save their own**.
+- Each loadout is a list of items (weapons, Manifestations, Augments) in a **player-configured priority order**.
+- **Purchase semantics:** buying a loadout walks the list in priority order and purchases each item the player does not already own and can still afford. Items already owned are skipped; when funds run out, remaining items are simply not bought.
+- Selecting a loadout when all its items are owned does nothing.
+- Loadouts pair with **loadout-specific binding config sets** (see MECHANICS_REFERENCE.md §11) so a saved loadout can carry its own key/controller mappings.
+- Open tuning question: when an item is unaffordable, whether to stop or skip-and-continue down the list (current design: skip and continue) — validate in playtests.
 
 ---
 
 ## 6. Feature Roadmap (Phased)
 
 **Phase 0 — Foundation (Current)**
-- Godot 4.6+ project + GodotSteam GDExtension integrated.
-- Basic FPS controller (CharacterBody3D + mouse look, sprint, crouch, jump, weapon switching).
+- Godot 4.7.1 project + GodotSteam GDExtension integrated. ✅
+- Basic FPS controller (CharacterBody3D + mouse look, sprint, jump; Repulse + Glide prototype). ✅ (crouch, weapon switching pending)
+- Testing infrastructure: GdUnit4 + SceneRunner suites, live-game agent testing via godot-mcp. ✅
+- **Netcode spike: integrate netfox (or equivalent) and rebuild the FPS controller on predicted movement** — before more gameplay code accrues on the unpredicted controller.
 - Weapon system (hitscan + projectiles, recoil, spread).
-- Simple ability framework (fireball spell, cyber dash, hack pulse, etc.).
-- Git structure, CI basics if useful, docs.
+- Resonance resource system + ability framework (Repulse, Glide Harness first; see MECHANICS_REFERENCE.md §10).
+- Git structure, CI (headless test runs), docs.
 
 **Phase 1 — Multiplayer Core + Steam (MVP for EA)**
-- Steam initialization (with dev fallback).
+- Steam initialization (with dev fallback). ✅ (SteamManager autoload)
 - Steam Lobbies + SteamMultiplayerPeer (P2P).
-- Basic dedicated server path (GodotSteam Server builds).
-- Authoritative or semi-authoritative replication for important state (positions with reconciliation, health, scores).
-- Match flow: lobby → map vote or fixed → round → results.
-- 2 modes fully playable (Arena + CTF).
-- Basic UI: main menu, lobby, HUD, scoreboard.
+- **Client prediction + server reconciliation from day one** (netfox: predicted movement, snapshot interpolation, lag compensation), host-authoritative over Steam P2P.
+- Buy phase + economy + loadout system (shopping-list semantics, §5).
+- Match flow: lobby → map vote or fixed → buy phase → round → results.
+- Anti-cheat Layer 1: authority-side validation rules written with each mechanic (movement caps, Resonance costs, cooldowns); input-trace logging hooks.
+- 2 modes fully playable (Arena + CTF with variable objective item).
+- Basic UI: main menu, lobby, buy menu, HUD (Resonance display), scoreboard.
 - Steam: achievements, stats, rich presence, cloud saves.
 
 **Phase 2 — Early Access Polish & Content**
-- More maps, archetypes, weapons, VFX/SFX.
-- Netcode iteration (prediction, lag compensation, bandwidth optimization).
+- More maps, weapons, VFX/SFX; remaining lineage passives tuned.
+- Dedicated server path (GodotSteam Server builds) + server browser.
+- Netcode iteration (bandwidth optimization, host-migration or server fallback).
+- Killcams/replay basics.
 - Progression, cosmetics, Steam Inventory hooks.
-- Controller + Steam Input support.
+- Steam Input action manifest + per-game Deck configs (native controller support ships in Milestone A — decided 2026-07-16 for early testability).
 - Steam Deck testing + verified.
+- Anti-cheat Layer 2: EAC via EOS (P2P client-protection + Proton flag), Steamworks game bans + player reporting, VAC baseline. EAC runs only in release/public builds — dev builds stay unprotected so tooling (godot-mcp, debuggers) keeps working.
 - Store page, trailers, community management.
 
 **Phase 3 — Expansion**
@@ -153,22 +173,27 @@ This is a **spiritual successor using original IP**.
 ## 7. Technical Architecture & Constraints
 
 ### Engine & Core
-- **Godot 4.6 or newer** (GDExtension support, improved 3D, Multiplayer API).
+- **Godot 4.7.1 (pinned; 4.7 or newer)** (GDExtension support, improved 3D, Multiplayer API).
 - Primary language: GDScript (fast iteration). Evaluate C# for performance-critical netcode later if needed.
 - 3D rendering: Forward+ or Mobile renderer as appropriate. Target 60+ fps on mid-range hardware + Steam Deck.
 - Physics: Godot 3D physics (or Jolt if addon provides better determinism).
 
 ### Multiplayer & Networking (Key Challenge)
-- Godot High-Level Multiplayer API (MultiplayerSynchronizer, Spawner, RPCs).
-- Transport options:
-  - **Primary dev path:** SteamMultiplayerPeer (GodotSteam ecosystem) for seamless P2P via Steam relay + friends.
-  - Dedicated servers using GodotSteam Server variant.
-- **FPS Netcode Realities:** Built-in replication is a good start but competitive FPS usually requires client prediction + server reconciliation + lag compensation. Plan to evaluate or integrate community solutions (e.g. netfox or custom) early.
-- Topology: Start with small player counts (4v4–8v8). Scale later.
-- Anti-cheat: Server authority for damage/score. Consider future Easy Anti-Cheat or custom + player reports. VAC requires additional integration work.
+- **Committed architecture (v0.4): client prediction + reconciliation from day one**, built on netfox (or equivalent if evaluation fails) over Godot's High-Level Multiplayer API. Rationale: movement tech (Repulse launches, glide, blinks) is a core pillar — retrofitting prediction onto unpredicted movement code means rewriting it; building on it from the start does not.
+- Transport & topology (updated 2026-07-16):
+  - **MVP:** GodotSteam 4.20+ built-in MultiplayerPeer (merged upstream; separate extension retired), P2P via Steam relay; the lobby host is the authority. Fallback transport if it misbehaves: expressobits/steam-multiplayer-peer (Steam Sockets). ENet path retained for dev/E2E testing.
+  - **Player cap: 16 (8v8)** as a MatchConfig tunable. Risk: host upload at 60 tps × 15 connections is unproven — measure in playtests; the knobs are tickrate, state-property count, and the cap itself.
+  - **Session resilience (decided):** join-in-progress (spectate → buy in at next round) and **true host migration** on host loss. Migration requires a feasibility spike (netfox authority handoff + peer re-mesh) before its implementation plan is written; graceful match-end is the interim behavior until it lands.
+  - **Phase 2:** Dedicated servers using GodotSteam Server variant.
+- Physics-heavy abilities (Repulse impulses, glide state, persistent objects like Lifebloom/Tangle) must be designed as predicted-or-reconciled from the outset — see MECHANICS_REFERENCE.md §10 Netcode Considerations.
+- **Anti-cheat (decided 2026-07-16)** — layered, matching the P2P → dedicated topology:
+  - **Layer 1 (Phase 0–1, free, built-in):** authority-side validation written alongside each mechanic in the netfox tick simulation — movement caps, Resonance costs, cooldowns, no client-reported hits — plus structured input-trace logging so behavioral (aimbot/impossible-input) detection is possible later without a client footprint.
+  - **Host-gap honesty:** in P2P the authority is a player's machine; host authority protects everyone *except from the host*. MVP mitigations: P2P play is friends/lobbies (chosen hosts); cross-match progression lives in Steam stats/cloud (never host-writable); clients log/flag physically impossible host behavior. Dedicated servers (Phase 2) are the trust escape hatch for players who want a neutral authority.
+  - **Layer 2 (Phase 2 / EA launch):** **Easy Anti-Cheat via Epic Online Services** (free) using the epic-online-services-godot GDExtension — client-protection in **P2P mode** (every peer including the host is validated) and server mode for dedicated; enable the Wine/Proton flag for Steam Deck/Linux. Plus Steamworks `ICheatReportingService` game bans + player reporting; enable VAC's module as a free baseline.
+  - **Rejected:** BattlEye (paid, enterprise-oriented); open-source client-side anti-cheat (structurally ineffective); GD Anti Cheats for multiplayer — its value-obfuscation streams conflict with netfox rollback state properties, don't address FPS cheats (aimbot/wallhack), and duplicate a weaker version of EAC's memory protection. Revisit GD Anti Cheats only if the Phase 3 single-player campaign stores local saves worth protecting (its actual design domain).
 
 ### Steam Infrastructure
-- **GodotSteam GDExtension** (current recommended: 4.19+ or latest compatible with Godot 4.6+).
+- **GodotSteam GDExtension** (current recommended: 4.19+ or latest compatible with Godot 4.7+).
 - Required Steamworks features (roadmap):
   - Steam Overlay
   - Lobbies & Matchmaking (via lobbies + P2P)
@@ -202,7 +227,7 @@ This is a **spiritual successor using original IP**.
 See also `README.md` for step-by-step.
 
 **Minimum for contributors:**
-1. Godot 4.6+ (or exact version pinned in project).
+1. Godot 4.7.1 (the pinned project version — see `docs/SETUP.md`).
 2. Clone repo.
 3. Add GodotSteam GDExtension (AssetLib or manual from godotsteam releases).
 4. Obtain Steamworks SDK redistributables (after partner access) and place per GodotSteam docs.
@@ -221,17 +246,18 @@ Detailed GodotSteam initialization, callbacks, lobbies, and multiplayer peer set
 ## 9. Risks, Assumptions & Dependencies
 
 **High Risks (Address Early)**
-- **Netcode quality for competitive FPS.** This is the hardest part for small teams. Prototype multiplayer feel immediately. Budget time for iteration and possibly custom prediction code.
-- **Content production (art, animation, sound, VFX, maps).** Placeholder art will get you far in prototype, but EA requires significant investment. Plan outsourcing or very strong solo artist.
-- **Scope creep.** PvP + dedicated servers + later PvE + SP is a lot. Ruthlessly cut for first release.
+- **Netcode quality for competitive FPS.** Mitigation committed (v0.4): netfox-based prediction from day one, starting with a Phase 0 spike that rebuilds the FPS controller on predicted movement before more gameplay accrues. Residual risk: netfox fit for physics-impulse abilities (Repulse) — validate in the spike.
+- **Content production (art, animation, sound, VFX, maps).** The single biggest solo-developer risk. Current mitigation: cohesive CC0 placeholder set (Quaternius) for all prototyping; budget for commissioned/outsourced art before any public build. Maps rightsized to 2–4 for EA.
+- **Scope creep.** PvP + dedicated servers + later PvE + SP is a lot for a solo developer even with AI agents. Ruthlessly cut for first release; the Grid pillar is already deferred to Phase 3.
 - **IP / legal missteps.** Stick strictly to original IP. Have a second pair of eyes review names/lore before public builds.
 - **Steam review & discoverability.** EA games need strong vertical slice + marketing.
+- **Bus factor / burnout (solo).** Keep the repo, docs, and tests good enough that the project survives gaps in momentum and can onboard collaborators at any point.
 
 **Assumptions**
-- Small team can deliver tight, fun core loop in 6–12 months of focused work.
+- A solo developer + AI agents (implementation, automated testing against the running game) can deliver a tight, fun, networked core loop; the timeline is quality-gated rather than fixed (see §11).
 - Players will accept "spiritual successor" branding and original setting.
-- GodotSteam remains actively maintained (it is, as of 2026 research).
-- We can reach acceptable netcode with Godot's tools + community help.
+- GodotSteam and netfox remain actively maintained (both are, as of mid-2026).
+- We can reach acceptable netcode with Godot's tools + community solutions.
 
 **Dependencies**
 - GodotSteam + SteamMultiplayerPeer GDExtensions.
@@ -248,17 +274,23 @@ Detailed GodotSteam initialization, callbacks, lobbies, and multiplayer peer set
 - Store page and marketing must clearly position as "inspired by" or "spiritual successor."
 - Follow Steam Direct process: $100 fee per app (recoupable), tax/bank setup, 30-day review period in some cases, content review.
 - Age rating, privacy policy (for any telemetry or Steam data usage), and accessibility statements required for Steam.
+- **Title diligence (2026-07-16):** "CounterSpell" adopted as the working title. Known existing uses: two Steam titles ("Counterspell" app 2211960, an arcade endless-runner; "Counter Spell" app 351230, an older RPG/stealth hybrid), a Hack Club game-jam brand, and a TCG store — the word itself is generic fantasy-gaming vocabulary (WotC owns Counterspell *cards*, not the word as a game title). Before the Steam page: run a formal trademark screen, and plan a **distinguishing subtitle** (e.g. "CounterSpell: [subtitle]") for discoverability and mark distinctiveness.
 
 ---
 
-## 11. High-Level Timeline (Indicative — Adjust in Planning Docs)
+## 11. High-Level Timeline (Quality-Gated — Solo + AI Cadence)
 
-- **Month 0–2:** Repo + GodotSteam setup, basic FPS prototype (single player + local multiplayer), first abilities.
-- **Month 2–5:** Networked PvP foundation (lobbies, sync, one mode playable over internet), Steam features core.
-- **Month 5–9:** Second mode (CTF), more archetypes/maps, polish, internal + closed playtests.
-- **Month 9–12+:** Early Access launch prep, marketing assets, more content, dedicated server support.
-- **Year 1–2 (Post EA):** PvE, campaign foundations, live ops.
-- **Year 2–3:** Full features, expansions.
+Project start: June 2026. Milestones advance when their quality gate is met, not on calendar dates; the durations below are rough planning guides only.
+
+- **Milestone A — Predicted Core (next):** netfox spike passes — FPS controller rebuilt on predicted movement, Repulse + Glide combo feels right over simulated latency. Resonance resource + first weapon.
+  - *Gate:* the signature combo is testable over a network and still feels good.
+- **Milestone B — Networked Loop:** Steam lobbies (friends + invites + public browser) + P2P, Arena mode playable end-to-end with friends over the internet, buy phase + loadouts functional, join-at-next-round spectating. Host-migration spike runs here; migration itself may land in Milestone C.
+  - *Gate:* a full match with remote players completes without manual intervention, including a mid-match joiner entering at a round boundary.
+- **Milestone C — Two Modes + Playtests:** CTF with variable objective item, 2 polished maps, recurring external playtest cohort.
+  - *Gate:* playtesters return voluntarily and movement/combat feel scores well.
+- **Milestone D — EA Launch Prep:** Steam page, marketing assets, achievements/cloud/rich presence complete, EAC/EOS integration + Steam ban wiring, content polish.
+  - *Gate:* vertical slice strong enough to justify the Steam Direct fee and public scrutiny; anti-cheat verified on Windows and Steam Deck/Proton.
+- **Post-EA:** dedicated servers, more content, then PvE / campaign / Grid (Phase 3).
 
 Use shorter milestones in actual project tracking (GitHub issues, project board).
 
@@ -273,17 +305,21 @@ Use shorter milestones in actual project tracking (GitHub issues, project board)
 - Shadowrun lore (for inspiration only): Use wikis and books for tone/feel, never copy protected text or names.
 - Git best practices: Godot official version control docs + github/gitignore Godot template.
 
-**Source Game Research — Shadowrun (2007 FPS) mechanics** (see Appendix 12.A for the full breakdown):
+**Source Game Research — Shadowrun (2007 FPS) mechanics** (see Appendix 12.A for the raw reference):
 - Shadowrun 2007 FPS — Shadowrun Wiki (Fandom): https://shadowrun.fandom.com/wiki/Shadowrun_2007_FPS
 - Shadowrun (2007 video game) — Wikipedia: https://en.wikipedia.org/wiki/Shadowrun_(2007_video_game)
 - Shadowrun (2007) — Hardcore Gaming 101: https://www.hardcoregaming101.net/shadowrun-2007/
 - Shadowrun Q&A: Magical Races, Abilities, and Technology — GameSpot: https://www.gamespot.com/articles/shadowrun-qanda-magical-races-abilities-and-technology/1100-6165066/
 
+See [docs/MECHANICS_REFERENCE.md](MECHANICS_REFERENCE.md) for how we are translating this inspiration into original systems and numbers.
+
 ---
 
-## 12.A Source Game Mechanics Reference — Shadowrun (2007 FPS)
+## 12.A Source Game Mechanics Reference — Shadowrun (2007 FPS) (Raw Reference)
 
-> **Purpose:** A verified reference of the mechanics from the original **Shadowrun (2007)** FASA Studio FPS, captured to inform our own original-IP designs. This is research/inspiration only — names and exact values here are the *source game's*, not ours. Reproduce the *feel and structure*, not protected terminology. Sources are cited at the end of this appendix.
+> **Purpose:** A verified reference of the mechanics from the original **Shadowrun (2007)** FASA Studio FPS.  
+> This is research/inspiration only. See [MECHANICS_REFERENCE.md](MECHANICS_REFERENCE.md) for our actual design decisions, original names, and proposed numbers.  
+> Names and values here are the *source game's*, not ours. We reproduce *feel and structure*, not protected terminology. Sources at end of appendix.
 
 ### Core Resource — Essence (the load-bearing mechanic)
 Essence is the unifying resource that ties races, magic, and tech together:
@@ -336,9 +372,11 @@ Mostly conventional FPS armaments: **pistol** (sidearm), **SMG**, **rifle**, **s
 - Shadowrun (2007) — Hardcore Gaming 101: https://www.hardcoregaming101.net/shadowrun-2007/
 - Shadowrun Q&A: Magical Races, Abilities, and Technology — GameSpot: https://www.gamespot.com/articles/shadowrun-qanda-magical-races-abilities-and-technology/1100-6165066/
 
-**Related Internal Docs (to create)**
+**Related Internal Docs**
+- [Mechanics Reference](MECHANICS_REFERENCE.md) — Detailed translation of source inspiration into our original systems (resource, archetypes, abilities, interactions, numbers)
+- [Ability Tuning Sheet](ABILITY_TUNING_SHEET.md) — Live scratch pad for testing numbers, playtest notes, and investigations. Use to decide when to promote stable values.
 - Technical Design / Architecture doc
-- Game Design Document (GDD) with detailed archetype kits, map specs, economy
+- Game Design Document (GDD) with archetype kits, map specs, economy, and mode rules
 - Art bible / style guide
 - Contribution guide
 - Steam build & deployment runbook
@@ -351,3 +389,8 @@ This document will evolve. Update version history below.
 **Version History**
 - v0.1 — 2026-06-17 — Initial draft after research and requirement clarification. Focused on PvP starting point, Steam + Godot, spiritual successor approach, realistic scope warnings.
 - v0.2 — 2026-06-28 — Added Appendix 12.A: verified Source Game Mechanics Reference for Shadowrun (2007 FPS) — essence resource, races, magic, tech, weapons, modes, and economy — with cited sources, to inform original-IP mechanics design.
+- v0.3 — 2026-06-29 — Linked new [MECHANICS_REFERENCE.md](MECHANICS_REFERENCE.md) and clarified the role of Appendix 12.A as raw source data.
+- v0.4 — 2026-07-15 — Owner clarifications applied: (1) archetypes are lineages + open buy phase, with loadouts specified as non-restrictive priority-ordered shopping lists; (2) Grid pillar explicitly deferred post-EA (Phase 3); (3) netcode committed to client prediction from day one (netfox) over Steam P2P, dedicated servers moved to Phase 2; (4) scope/metrics/timeline rightsized for solo developer + AI agents, timeline converted to quality-gated milestones.
+- v0.5 — 2026-07-16 — Anti-cheat decision recorded (§7): layered approach — authority-side validation + input-trace logging from Phase 1, EAC via EOS (P2P client-protection mode, Proton/Deck flag) + Steamworks game bans at EA launch; host-gap mitigations documented; GD Anti Cheats rejected for multiplayer (revisit only for Phase 3 local saves).
+- v0.6 — 2026-07-16 — Session/matchmaking decisions (§5, §7): public lobby browser + friends/invites; join-in-progress via spectate-then-buy-in at round boundaries; TRUE host migration committed (spike first, graceful-end interim); 16-player (8v8) cap as tunable; transport = GodotSteam 4.20 built-in MultiplayerPeer with expressobits fallback documented.
+- v0.7 — 2026-07-16 — Game named **CounterSpell** (owner decision); all docs and project config renamed from the "Running in Shadows" working title. Title diligence recorded in §10 (existing Steam titles noted; formal trademark screen + distinguishing subtitle required before the Steam page). Also this date: full ability/cybernetics designs (MECHANICS_REFERENCE §4.A), cybernetic slot system, weapon damage types, controller support pulled into Milestone A.

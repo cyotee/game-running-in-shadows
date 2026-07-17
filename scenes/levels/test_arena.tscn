@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://testarenastub"]
+[gd_scene load_steps=8 format=3 uid="uid://testarenastub"]
 
 [ext_resource type="PackedScene" uid="uid://fpscontrollerstub" path="res://scenes/player/fps_controller.tscn" id="1_player"]
 [ext_resource type="Script" path="res://scenes/levels/steam_status.gd" id="2_steamstatus_script"]
@@ -8,6 +8,18 @@ size = Vector3(60, 1, 60)
 
 [sub_resource type="BoxShape3D" id="BoxShape_Floor"]
 size = Vector3(60, 1, 60)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Wall"]
+size = Vector3(4, 6, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape_Wall"]
+size = Vector3(4, 6, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Pillar"]
+size = Vector3(3, 6, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape_Pillar"]
+size = Vector3(3, 6, 3)
 
 [node name="TestArena" type="Node3D"]
 
@@ -23,32 +35,31 @@ shape = SubResource("BoxShape_Floor")
 
 [node name="Walls" type="Node3D" parent="."]
 
-# Simple walls for cover (primitives for now)
 [node name="Wall1" type="StaticBody3D" parent="Walls"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25, 3, 0)
 
-[node name="Mesh" type="MeshInstance3D" parent="Walls/Wall1"]
+[node name="Mesh" type="MeshInstance3D" parent="Wall1"]
 mesh = SubResource("BoxMesh_Wall")
 
-[node name="Collision" type="CollisionShape3D" parent="Walls/Wall1"]
+[node name="Collision" type="CollisionShape3D" parent="Wall1"]
 shape = SubResource("BoxShape_Wall")
 
 [node name="Wall2" type="StaticBody3D" parent="Walls"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 3, 0)
 
-[node name="Mesh" type="MeshInstance3D" parent="Walls/Wall2"]
+[node name="Mesh" type="MeshInstance3D" parent="Wall2"]
 mesh = SubResource("BoxMesh_Wall")
 
-[node name="Collision" type="CollisionShape3D" parent="Walls/Wall2"]
+[node name="Collision" type="CollisionShape3D" parent="Wall2"]
 shape = SubResource("BoxShape_Wall")
 
 [node name="Pillar" type="StaticBody3D" parent="Walls"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -15)
 
-[node name="Mesh" type="MeshInstance3D" parent="Walls/Pillar"]
+[node name="Mesh" type="MeshInstance3D" parent="Pillar"]
 mesh = SubResource("BoxMesh_Pillar")
 
-[node name="Collision" type="CollisionShape3D" parent="Walls/Pillar"]
+[node name="Collision" type="CollisionShape3D" parent="Pillar"]
 shape = SubResource("BoxShape_Pillar")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
@@ -64,9 +75,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 [node name="DebugLabel" type="Label3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, -20)
 text = "WASD to move | Space jump | Shift sprint | Mouse look
-Left click to fire (coming soon)
-ESC to toggle mouse
-Basic test arena for Running in Shadows"
+Left click: fire (stub) | Right click: Repulse | G: Glide
+Look DOWN + Repulse then G = big upward launch combo!
+ESC to toggle mouse | Basic test arena for CounterSpell"
 horizontal_alignment = 1
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
@@ -80,15 +91,3 @@ theme_override_font_sizes/font_size = 16
 text = "Steam: Checking..."
 vertical_alignment = 1
 script = ExtResource("2_steamstatus_script")
-
-[sub_resource type="BoxMesh" id="BoxMesh_Wall"]
-size = Vector3(4, 6, 1)
-
-[sub_resource type="BoxShape3D" id="BoxShape_Wall"]
-size = Vector3(4, 6, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_Pillar"]
-size = Vector3(3, 6, 3)
-
-[sub_resource type="BoxShape3D" id="BoxShape_Pillar"]
-size = Vector3(3, 6, 3)

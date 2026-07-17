@@ -52,7 +52,7 @@ func _initialize_steam() -> void:
 	# steamInitEx() returns a Dictionary with "status" and "verbal"
 	# Status 0 = success in most versions.
 	# Newer GodotSteam also respects Project Settings → Steam → Initialization
-	init_response = Steam.steamInitEx()
+	init_response = Steam.steamInitEx(480)
 	print("GodotSteam initialization response: ", init_response)
 
 	var status: int = init_response.get("status", -1)

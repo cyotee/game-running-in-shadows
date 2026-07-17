@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Report a bug in Running in Shadows
+about: Report a bug in CounterSpell
 title: ''
 labels: bug
 assignees: ''

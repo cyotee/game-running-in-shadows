@@ -1,0 +1,58 @@
+[
+  {
+    "race_path": "orc/male",
+    "title": "Orc",
+    "file": "orc/male/Orc.glb",
+    "public_id": "5vO2YJsPEf",
+    "license": "CC0 1.0"
+  },
+  {
+    "race_path": "orc/male",
+    "title": "Orc Enemy",
+    "file": "orc/male/Orc_Enemy.glb",
+    "public_id": "Q3z8ZX4kUy",
+    "license": "CC0 1.0"
+  },
+  {
+    "race_path": "troll/male",
+    "title": "Giant",
+    "file": "troll/male/Giant.glb",
+    "public_id": "BldaiPtyJa",
+    "license": "CC0 1.0"
+  },
+  {
+    "race_path": "troll/male",
+    "title": "Yeti",
+    "file": "troll/male/Yeti.glb",
+    "public_id": "S1E7idPFhe",
+    "license": "CC0 1.0"
+  },
+  {
+    "race_path": "troll/male",
+    "title": "Yeti",
+    "file": "troll/male/Yeti_B.glb",
+    "public_id": "ceRHrn8HHE",
+    "license": "CC0 1.0"
+  },
+  {
+    "race_path": "troll/male",
+    "title": "Demon",
+    "file": "troll/male/Demon.glb",
+    "public_id": "Mo2ky6vkf8",
+    "license": "CC0 1.0"
+  },
+  {
+    "race_path": "troll/male",
+    "title": "Demon",
+    "file": "troll/male/Demon_B.glb",
+    "public_id": "LnfIziKv4o",
+    "license": "CC0 1.0"
+  },
+  {
+    "race_path": "troll/male",
+    "title": "Blue Demon",
+    "file": "troll/male/Blue_Demon.glb",
+    "public_id": "S7jYW6Amye",
+    "license": "CC0 1.0"
+  }
+]
