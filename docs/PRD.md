@@ -128,7 +128,7 @@ Loadouts are **ordered shopping lists, not classes or kits**. They are never mut
 - Godot 4.7.1 project + GodotSteam GDExtension integrated. ✅
 - Basic FPS controller (CharacterBody3D + mouse look, sprint, jump; Repulse + Glide prototype). ✅ (crouch, weapon switching pending)
 - Testing infrastructure: GdUnit4 + SceneRunner suites, live-game agent testing via godot-mcp. ✅
-- **Netcode spike: integrate netfox (or equivalent) and rebuild the FPS controller on predicted movement** — before more gameplay code accrues on the unpredicted controller.
+- **Netcode spike: integrate netfox (or equivalent) and rebuild the FPS controller on predicted movement** — before more gameplay code accrues on the unpredicted controller. ✅ (see docs/superpowers/plans/2026-07-15-netfox-integration.md)
 - Weapon system (hitscan + projectiles, recoil, spread).
 - Resonance resource system + ability framework (Repulse, Glide Harness first; see MECHANICS_REFERENCE.md §10).
 - Git structure, CI (headless test runs), docs.
