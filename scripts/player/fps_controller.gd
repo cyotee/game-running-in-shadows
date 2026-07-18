@@ -38,6 +38,9 @@ var health: float = 100.0
 
 func _ready() -> void:
 	add_to_group("players")
+	for zone_area: Area3D in $HitZones.get_children():
+		zone_area.set_meta("zone", zone_area.name.to_lower())
+		zone_area.set_meta("player", self)
 	_apply_archetype_config()
 	# Input authority may have been reassigned by a spawner before _ready.
 	rollback_synchronizer.process_settings()
@@ -183,6 +186,19 @@ func _process_archetype_passives(delta: float, tick: int, is_fresh: bool) -> voi
 				continue
 			if other.global_position.distance_to(global_position) <= radius:
 				other.resonance.drain(rate * delta)
+
+
+func take_zone_damage(base_damage: float, weapon_key: String, zone: String,
+		attacker: FPSController, tick: int) -> void:
+	var mult := 1.0
+	match zone:
+		"head":
+			# Dwarf headshot immunity: resolves as body damage.
+			mult = 1.0 if archetype == &"dwarf" \
+				else MatchConfig.get_value("weapon.%s.head_mult" % weapon_key)
+		"limbs":
+			mult = MatchConfig.get_value("zones.limb_mult")
+	take_damage(base_damage * mult, attacker, tick)
 
 
 func take_damage(amount: float, attacker: FPSController, tick: int) -> void:

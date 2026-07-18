@@ -199,6 +199,36 @@ func test_elf_archetype_reservation_scaled() -> void:
 	assert_float(controller.health).is_equal(78.0)
 
 
+func test_zone_damage_multipliers() -> void:
+	var runner := _spawn_controller()
+	var victim: FPSController = runner.scene()
+
+	victim.take_zone_damage(10.0, "pistol", "head", null, NetworkTime.tick)
+	assert_float(victim.health).is_equal(80.0)   # 10 x 2.0
+	victim.take_zone_damage(10.0, "pistol", "limbs", null, NetworkTime.tick)
+	assert_float(victim.health).is_equal(72.5)   # 10 x 0.75
+
+
+func test_dwarf_headshot_immunity() -> void:
+	var runner := _spawn_controller()
+	var victim: FPSController = runner.scene()
+	victim.archetype = &"dwarf"
+	victim._apply_archetype_config()
+
+	victim.take_zone_damage(10.0, "pistol", "head", null, NetworkTime.tick)
+	assert_float(victim.health).is_equal(85.0)   # 95 - 10, no multiplier
+
+
+func test_hit_zone_areas_exist_with_meta() -> void:
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+	for zone in ["Head", "Body", "Limbs"]:
+		var area: Area3D = controller.get_node("HitZones/%s" % zone)
+		assert_object(area).is_not_null()
+		assert_str(str(area.get_meta("zone"))).is_equal(zone.to_lower())
+		assert_int(area.collision_layer).is_equal(2)
+
+
 func test_take_damage_marks_both_combatants_and_gates_regen() -> void:
 	var runner := _spawn_controller()
 	var victim: FPSController = runner.scene()
