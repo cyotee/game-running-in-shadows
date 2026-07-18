@@ -145,6 +145,16 @@ func test_level_repulse_does_not_arm_combo() -> void:
 	assert_float(controller.velocity.y).is_less(controller.combo_launch_velocity * 0.5)
 
 
+func test_airborne_jump_deploys_glide() -> void:
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+	# Spawned in empty space, the controller is airborne (falling) from tick 1.
+	runner.simulate_action_press("jump")
+	await runner.simulate_frames(5)
+
+	assert_bool(controller.is_gliding).is_true()
+
+
 func test_combo_expires_after_window() -> void:
 	var runner := _spawn_controller()
 	var controller: FPSController = runner.scene()

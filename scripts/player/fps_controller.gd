@@ -53,9 +53,14 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 	transform.basis = Basis(Vector3.UP, input.aim_yaw)
 	_force_update_is_on_floor()
 
+	# Capture boost intent before contextual deploy can consume the press.
+	var jump_for_boost := input.jump and is_gliding
+
 	if input.repulse:
 		_cast_repulse(tick, is_fresh)
-	if input.glide and not is_gliding:
+	# Contextual jump (controller A): airborne and not gliding -> deploy glide.
+	var wants_glide := input.glide or (input.jump and not is_on_floor() and not is_gliding)
+	if wants_glide and not is_gliding:
 		_try_deploy_glide(tick)
 
 	var speed := sprint_speed if input.sprint else walk_speed
@@ -72,7 +77,7 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 				velocity.x = move_toward(velocity.x, direction.x * glide_speed, glide_air_control * delta)
 				velocity.z = move_toward(velocity.z, direction.z * glide_speed, glide_air_control * delta)
 			velocity.y = maxf(velocity.y, -6.0)
-			if input.jump:
+			if jump_for_boost:
 				velocity.y = maxf(velocity.y + 9.0, 9.0)
 	else:
 		if not is_on_floor():
