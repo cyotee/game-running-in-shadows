@@ -17,10 +17,14 @@ var sprint: bool = false
 var repulse: bool = false
 var glide: bool = false
 var fire: bool = false
+var swap_weapon: bool = false
 
 # --- Local-only view state (never rolled back) ---
 var local_yaw: float = 0.0
 var local_pitch: float = 0.0
+
+# --- Controller look (local shaping; feeds the same local_yaw/local_pitch) ---
+var look_rate_scale: float = 1.0
 
 var _pending_jump: bool = false
 var _pending_repulse: bool = false
@@ -35,6 +39,8 @@ var _held_jump: bool = false
 var _held_repulse: bool = false
 var _held_glide: bool = false
 var _held_fire: bool = false
+var _pending_swap: bool = false
+var _held_swap: bool = false
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -50,21 +56,43 @@ func _unhandled_input(event: InputEvent) -> void:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if not is_multiplayer_authority():
 		return
 	var jump_now := Input.is_action_pressed("jump")
 	var repulse_now := Input.is_action_pressed("repulse")
 	var glide_now := Input.is_action_pressed("glide")
 	var fire_now := Input.is_action_pressed("fire_primary")
+	var swap_now := Input.is_action_pressed("weapon_swap")
 	_pending_jump = _pending_jump or (jump_now and not _held_jump)
 	_pending_repulse = _pending_repulse or (repulse_now and not _held_repulse)
 	_pending_glide = _pending_glide or (glide_now and not _held_glide)
 	_pending_fire = _pending_fire or (fire_now and not _held_fire)
+	_pending_swap = _pending_swap or (swap_now and not _held_swap)
 	_held_jump = jump_now
 	_held_repulse = repulse_now
 	_held_glide = glide_now
 	_held_fire = fire_now
+	_held_swap = swap_now
+
+	var stick_x := _remap_stick(Input.get_joy_axis(0, JOY_AXIS_RIGHT_X))
+	var stick_y := _remap_stick(Input.get_joy_axis(0, JOY_AXIS_RIGHT_Y))
+	if stick_x != 0.0 or stick_y != 0.0:
+		var yaw_rate := deg_to_rad(MatchConfig.get_value("input.look_max_yaw_deg_s"))
+		var pitch_rate := deg_to_rad(MatchConfig.get_value("input.look_max_pitch_deg_s"))
+		local_yaw = wrapf(local_yaw - stick_x * yaw_rate * look_rate_scale * delta, -PI, PI)
+		local_pitch = clampf(local_pitch - stick_y * pitch_rate * look_rate_scale * delta,
+			-PI / 2.0, PI / 2.0)
+
+
+func _remap_stick(value: float) -> float:
+	var inner := MatchConfig.get_value("input.stick_deadzone_inner")
+	var outer := MatchConfig.get_value("input.stick_deadzone_outer")
+	var mag := absf(value)
+	if mag < inner:
+		return 0.0
+	var normalized := clampf((mag - inner) / (outer - inner), 0.0, 1.0)
+	return signf(value) * pow(normalized, MatchConfig.get_value("input.look_curve_exponent"))
 
 
 func _gather() -> void:
@@ -76,7 +104,9 @@ func _gather() -> void:
 	repulse = _pending_repulse
 	glide = _pending_glide
 	fire = _pending_fire
+	swap_weapon = _pending_swap
 	_pending_jump = false
 	_pending_repulse = false
 	_pending_glide = false
 	_pending_fire = false
+	_pending_swap = false

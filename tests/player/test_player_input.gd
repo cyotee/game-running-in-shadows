@@ -49,3 +49,37 @@ func test_gather_snapshots_local_aim() -> void:
 
 	assert_float(_input.aim_yaw).is_equal_approx(1.5, 0.001)
 	assert_float(_input.aim_pitch).is_equal_approx(-0.8, 0.001)
+
+
+func test_stick_look_turns_view() -> void:
+	var motion := InputEventJoypadMotion.new()
+	motion.axis = JOY_AXIS_RIGHT_X
+	motion.axis_value = 1.0
+	Input.parse_input_event(motion)
+	var start_yaw := _input.local_yaw
+	await await_millis(200)
+
+	assert_float(_input.local_yaw).is_not_equal(start_yaw)
+
+	motion = InputEventJoypadMotion.new()
+	motion.axis = JOY_AXIS_RIGHT_X
+	motion.axis_value = 0.0
+	Input.parse_input_event(motion)
+
+
+func test_stick_deadzone_ignores_drift() -> void:
+	var motion := InputEventJoypadMotion.new()
+	motion.axis = JOY_AXIS_RIGHT_X
+	motion.axis_value = 0.1  # below 0.15 inner deadzone
+	Input.parse_input_event(motion)
+	var start_yaw := _input.local_yaw
+	await await_millis(200)
+
+	assert_float(_input.local_yaw).is_equal(start_yaw)
+
+
+func test_swap_weapon_is_edge_latched() -> void:
+	Input.action_press("weapon_swap")
+	Input.action_release("weapon_swap")
+	await await_millis(100)
+	assert_bool(_input._pending_swap).is_false()
