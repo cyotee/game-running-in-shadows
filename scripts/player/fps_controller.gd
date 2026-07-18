@@ -21,6 +21,8 @@ extends CharacterBody3D
 @export var combo_launch_velocity: float = 28.0
 @export var combo_window: float = 0.7
 @export var archetype: StringName = &"human"
+@export var default_slot1: String = "rifle"
+@export var default_slot2: String = "pistol"
 
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 
@@ -34,6 +36,7 @@ var health: float = 100.0
 @onready var camera: Camera3D = $Camera3D
 @onready var rollback_synchronizer: RollbackSynchronizer = $RollbackSynchronizer
 @onready var resonance: ResonancePool = $Resonance
+@onready var weapon_rig: WeaponRig = $Camera3D/WeaponSocket/WeaponRig
 
 
 func _ready() -> void:
@@ -42,6 +45,10 @@ func _ready() -> void:
 		zone_area.set_meta("zone", zone_area.name.to_lower())
 		zone_area.set_meta("player", self)
 	_apply_archetype_config()
+	weapon_rig.setup(self)
+	weapon_rig.grant(default_slot2, 2)
+	if default_slot1 != "":
+		weapon_rig.grant(default_slot1, 1)
 	# Input authority may have been reassigned by a spawner before _ready.
 	rollback_synchronizer.process_settings()
 	var is_local := input.is_multiplayer_authority()
@@ -103,6 +110,7 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 
 	resonance.process_tick(delta, tick)
 	_process_archetype_passives(delta, tick, is_fresh)
+	weapon_rig.process_tick(delta, tick, is_fresh)
 
 	# Press-tick inputs match exactly one simulated tick (see PlayerInput).
 	var jump_pressed := input.jump_press_tick == tick
@@ -122,7 +130,7 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 	if wants_glide and not is_gliding:
 		_try_deploy_glide(tick)
 
-	var speed := sprint_speed if input.sprint else walk_speed
+	var speed := (sprint_speed if input.sprint else walk_speed) * weapon_rig.carry_weight_mult()
 	var direction := (transform.basis * Vector3(input.movement.x, 0, input.movement.y)).normalized()
 
 	if is_gliding:
