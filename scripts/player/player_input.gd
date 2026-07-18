@@ -1,8 +1,16 @@
 # Per-tick input gathering for the FPS controller (netfox BaseNetInput).
 # Networked properties below are registered as RollbackSynchronizer
 # input_properties ("Input:<name>") in fps_controller.tscn.
-# Edge-triggered actions are latched in _process so presses between network
-# ticks are never lost, and consumed on exactly one tick by _gather().
+#
+# Edge-triggered actions are transmitted as PRESS TICKS, not bools: netfox
+# reuses the last gathered input for every tick in a catch-up batch (and
+# extrapolates it while waiting for remote input), so a latched bool press
+# is seen by many consecutive ticks and multi-fires. A press-tick only
+# matches the single simulated tick it was stamped with — exactly-once under
+# batching, extrapolation, and resimulation.
+#
+# Presses are latched in _process from polled state transitions
+# (is_action_just_pressed is frame-exact and races node process order).
 class_name PlayerInput
 extends BaseNetInput
 
@@ -12,12 +20,12 @@ extends BaseNetInput
 var movement: Vector2 = Vector2.ZERO
 var aim_yaw: float = 0.0
 var aim_pitch: float = 0.0
-var jump: bool = false
 var sprint: bool = false
-var repulse: bool = false
-var glide: bool = false
-var fire: bool = false
-var swap_weapon: bool = false
+var jump_press_tick: int = -1
+var repulse_press_tick: int = -1
+var glide_press_tick: int = -1
+var fire_press_tick: int = -1
+var swap_press_tick: int = -1
 
 # --- Local-only view state (never rolled back) ---
 var local_yaw: float = 0.0
@@ -30,16 +38,12 @@ var _pending_jump: bool = false
 var _pending_repulse: bool = false
 var _pending_glide: bool = false
 var _pending_fire: bool = false
+var _pending_swap: bool = false
 
-# Previous polled state for manual edge detection: is_action_just_pressed is
-# only true within the exact engine frame of the press, which races against
-# node process order (and simulated input in tests). Polling pressed-state
-# transitions is order-independent.
 var _held_jump: bool = false
 var _held_repulse: bool = false
 var _held_glide: bool = false
 var _held_fire: bool = false
-var _pending_swap: bool = false
 var _held_swap: bool = false
 
 
@@ -100,11 +104,16 @@ func _gather() -> void:
 	sprint = Input.is_action_pressed("sprint")
 	aim_yaw = local_yaw
 	aim_pitch = local_pitch
-	jump = _pending_jump
-	repulse = _pending_repulse
-	glide = _pending_glide
-	fire = _pending_fire
-	swap_weapon = _pending_swap
+	if _pending_jump:
+		jump_press_tick = NetworkTime.tick
+	if _pending_repulse:
+		repulse_press_tick = NetworkTime.tick
+	if _pending_glide:
+		glide_press_tick = NetworkTime.tick
+	if _pending_fire:
+		fire_press_tick = NetworkTime.tick
+	if _pending_swap:
+		swap_press_tick = NetworkTime.tick
 	_pending_jump = false
 	_pending_repulse = false
 	_pending_glide = false

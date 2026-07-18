@@ -28,18 +28,21 @@ func test_gathers_movement_and_sprint() -> void:
 	Input.action_release("sprint")
 
 
-func test_latches_edge_actions_until_next_tick() -> void:
-	Input.action_press("glide")
-	Input.action_release("glide")
-	await await_millis(100)
-	# The press happened between ticks; the latch must have delivered it
-	# on exactly one subsequent tick, then cleared.
-	assert_bool(_input.glide).is_false()
+func test_press_stamps_a_single_tick_and_clears_latch() -> void:
+	assert_int(_input.glide_press_tick).is_equal(-1)
 
-	Input.action_press("repulse")
+	Input.action_press("glide")
 	await await_millis(100)
-	Input.action_release("repulse")
-	assert_bool(_input._pending_repulse).is_false()
+	Input.action_release("glide")
+
+	# The press was stamped with one tick and the pending latch cleared;
+	# the stamp stays put (it only matches its own tick in simulation).
+	var stamped := _input.glide_press_tick
+	assert_int(stamped).is_greater(-1)
+	assert_bool(_input._pending_glide).is_false()
+
+	await await_millis(100)
+	assert_int(_input.glide_press_tick).is_equal(stamped)
 
 
 func test_gather_snapshots_local_aim() -> void:
