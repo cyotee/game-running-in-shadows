@@ -150,7 +150,7 @@ Loadouts are **ordered shopping lists, not classes or kits**. They are never mut
 - Netcode iteration (bandwidth optimization, host-migration or server fallback).
 - Killcams/replay basics.
 - Progression, cosmetics, Steam Inventory hooks.
-- Steam Input action manifest + per-game Deck configs (native controller support ships in Milestone A — decided 2026-07-16 for early testability).
+- Steam Input action manifest + per-game Deck configs (native controller support shipped in Milestone A ✅ — decided 2026-07-16 for early testability).
 - Steam Deck testing + verified.
 - Anti-cheat Layer 2: EAC via EOS (P2P client-protection + Proton flag), Steamworks game bans + player reporting, VAC baseline. EAC runs only in release/public builds — dev builds stay unprotected so tooling (godot-mcp, debuggers) keeps working.
 - Store page, trailers, community management.
