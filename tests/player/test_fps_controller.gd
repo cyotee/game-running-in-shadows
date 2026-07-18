@@ -198,6 +198,34 @@ func test_elf_archetype_reservation_scaled() -> void:
 	assert_float(controller.health).is_equal(78.0)
 
 
+func test_take_damage_marks_both_combatants_and_gates_regen() -> void:
+	var runner := _spawn_controller()
+	var victim: FPSController = runner.scene()
+	var attacker_runner := _spawn_controller()
+	var attacker: FPSController = attacker_runner.scene()
+
+	victim.resonance.drain(4.0)
+	attacker.resonance.drain(4.0)
+	var tick := NetworkTime.tick
+	victim.take_damage(10.0, attacker, tick)
+
+	assert_float(victim.health).is_equal(90.0)
+	assert_bool(victim.resonance.is_in_combat(tick + 60)).is_true()
+	assert_bool(attacker.resonance.is_in_combat(tick + 60)).is_true()
+	# Both regen pools frozen while in combat.
+	var v := victim.resonance.current
+	victim.resonance.process_tick(1.0, tick + 60)
+	assert_float(victim.resonance.current).is_equal(v)
+
+
+func test_health_floors_at_zero() -> void:
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+
+	controller.take_damage(9999.0, controller, NetworkTime.tick)
+	assert_float(controller.health).is_equal(0.0)
+
+
 func test_slowdown_scale_set_when_enemy_under_reticle() -> void:
 	var runner := _spawn_controller()
 	var controller: FPSController = runner.scene()

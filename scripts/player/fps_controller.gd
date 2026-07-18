@@ -144,7 +144,7 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 		velocity.z = move_toward(velocity.z, target.z, acceleration * delta)
 
 	if input.fire_press_tick == tick and is_fresh:
-		_try_shoot()
+		_try_shoot(tick)
 
 	# netfox CharacterBody3D pattern: move_and_slide assumes engine delta.
 	velocity *= NetworkTime.physics_factor
@@ -161,7 +161,17 @@ func _force_update_is_on_floor() -> void:
 	velocity = old_velocity
 
 
-func _try_shoot() -> void:
+func take_damage(amount: float, attacker: FPSController, tick: int) -> void:
+	health = maxf(health - amount, 0.0)
+	resonance.mark_combat(tick)
+	if attacker != null and attacker != self:
+		attacker.resonance.mark_combat(tick)
+	if health <= 0.0:
+		# Death/respawn arrives with the round-flow plan; clamp for now.
+		print("%s down (no death handling yet)" % name)
+
+
+func _try_shoot(tick: int) -> void:
 	var space_state := get_world_3d().direct_space_state
 	var from := camera.global_position
 	var aim := Basis(Vector3.UP, input.aim_yaw) * Basis(Vector3.RIGHT, input.aim_pitch)
@@ -172,8 +182,10 @@ func _try_shoot() -> void:
 	query.exclude = [get_rid()]
 	var result := space_state.intersect_ray(query)
 
-	if result:
-		print("Hit: ", result.collider.name if result.collider else "something", " at ", result.position)
+	if result and result.collider is FPSController:
+		result.collider.take_damage(MatchConfig.get_value("weapon.hitscan_damage"), self, tick)
+	elif result:
+		print("Hit: ", result.collider.name, " at ", result.position)
 	else:
 		print("Shot fired (miss)")
 
