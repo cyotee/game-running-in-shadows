@@ -86,3 +86,29 @@ func test_swap_weapon_is_edge_latched() -> void:
 	Input.action_release("weapon_swap")
 	await await_millis(100)
 	assert_bool(_input._pending_swap).is_false()
+
+
+func test_gathers_weapon_inputs() -> void:
+	Input.action_press("fire_primary")
+	Input.action_press("ads")
+	Input.action_press("weapon_slot_2")
+	await await_millis(100)
+
+	assert_bool(_input.fire_held).is_true()
+	assert_bool(_input.ads).is_true()
+
+	Input.action_release("fire_primary")
+	Input.action_release("ads")
+	Input.action_release("weapon_slot_2")
+	await await_millis(100)
+	assert_bool(_input.fire_held).is_false()
+	assert_int(_input.slot_select).is_equal(0)
+
+
+func test_reload_is_edge_latched() -> void:
+	Input.action_press("reload")
+	await await_millis(100)
+	Input.action_release("reload")
+	await await_millis(50)
+	assert_bool(_input._pending_reload).is_false()
+	assert_int(_input.reload_press_tick).is_greater(-1)

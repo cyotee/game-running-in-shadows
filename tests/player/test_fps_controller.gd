@@ -339,7 +339,8 @@ func test_airborne_jump_deploys_glide() -> void:
 	var controller: FPSController = runner.scene()
 	# Spawned in empty space, the controller is airborne (falling) from tick 1.
 	runner.simulate_action_press("jump")
-	await runner.simulate_frames(5)
+	# Latch -> gather -> tick takes up to 3 frames; leave slack for batching.
+	await runner.simulate_frames(10)
 
 	assert_bool(controller.is_gliding).is_true()
 
