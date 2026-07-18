@@ -17,6 +17,7 @@ func before_test() -> void:
 
 func after_test() -> void:
 	NetworkTime.stop()
+	MatchConfig.reset_to_defaults()
 
 
 func _spawn_controller() -> GdUnitSceneRunner:
@@ -224,6 +225,93 @@ func test_health_floors_at_zero() -> void:
 
 	controller.take_damage(9999.0, controller, NetworkTime.tick)
 	assert_float(controller.health).is_equal(0.0)
+
+
+func test_elf_converts_resonance_to_health_out_of_combat() -> void:
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+	controller.archetype = &"elf"
+	controller._apply_archetype_config()
+	controller.health = 50.0
+
+	await runner.simulate_frames(60)  # ~1s out of combat at 60 tps
+
+	assert_float(controller.health).is_greater(50.0)
+	assert_float(controller.resonance.current).is_less(controller.resonance.cap())
+
+
+func test_elf_heal_respects_resonance_floor() -> void:
+	# Zero out regen so the pool cannot climb back above the floor mid-test
+	# (out of combat, regen + conversion legitimately cooperate otherwise).
+	MatchConfig.set_value("archetype.elf.regen_per_s", 0.0)
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+	controller.archetype = &"elf"
+	controller._apply_archetype_config()
+	controller.health = 1.0
+	controller.resonance.current = 2.0  # exactly at the floor
+
+	await runner.simulate_frames(30)
+
+	assert_float(controller.resonance.current).is_equal(2.0)
+	assert_float(controller.health).is_equal(1.0)
+
+
+func test_elf_does_not_heal_in_combat() -> void:
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+	controller.archetype = &"elf"
+	controller._apply_archetype_config()
+	controller.health = 50.0
+	controller.resonance.mark_combat(NetworkTime.tick)
+
+	await runner.simulate_frames(30)
+
+	assert_float(controller.health).is_equal(50.0)
+
+
+func test_human_does_not_convert() -> void:
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+	controller.health = 50.0
+
+	await runner.simulate_frames(30)
+
+	assert_float(controller.health).is_equal(50.0)
+
+
+func test_dwarf_aura_drains_nearby_enemy() -> void:
+	var runner := _spawn_controller()
+	var dwarf: FPSController = runner.scene()
+	dwarf.archetype = &"dwarf"
+	dwarf._apply_archetype_config()
+
+	var victim_runner := _spawn_controller()
+	var victim: FPSController = victim_runner.scene()
+	victim.global_position = dwarf.global_position + Vector3(2, 0, 0)
+	var start := victim.resonance.current
+
+	await runner.simulate_frames(60)  # ~1s in aura
+
+	assert_float(victim.resonance.current).is_less(start)
+	# Destroy-only: the dwarf gains nothing beyond its own (slow) regen cap.
+	assert_float(dwarf.resonance.current).is_less_equal(dwarf.resonance.cap())
+
+
+func test_dwarf_aura_ignores_distant_players() -> void:
+	var runner := _spawn_controller()
+	var dwarf: FPSController = runner.scene()
+	dwarf.archetype = &"dwarf"
+	dwarf._apply_archetype_config()
+
+	var victim_runner := _spawn_controller()
+	var victim: FPSController = victim_runner.scene()
+	victim.global_position = dwarf.global_position + Vector3(50, 0, 0)
+	var start := victim.resonance.current
+
+	await runner.simulate_frames(30)
+
+	assert_float(victim.resonance.current).is_equal(start)
 
 
 func test_slowdown_scale_set_when_enemy_under_reticle() -> void:

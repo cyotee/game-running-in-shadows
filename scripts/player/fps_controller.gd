@@ -99,6 +99,7 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 	_force_update_is_on_floor()
 
 	resonance.process_tick(delta, tick)
+	_process_archetype_passives(delta, tick, is_fresh)
 
 	# Press-tick inputs match exactly one simulated tick (see PlayerInput).
 	var jump_pressed := input.jump_press_tick == tick
@@ -159,6 +160,29 @@ func _force_update_is_on_floor() -> void:
 	velocity = Vector3.ZERO
 	move_and_slide()
 	velocity = old_velocity
+
+
+func _process_archetype_passives(delta: float, tick: int, is_fresh: bool) -> void:
+	if archetype == &"elf":
+		var max_health := _config("max_health")
+		if health < max_health and not resonance.is_in_combat(tick):
+			var floor_value := _config("heal_resonance_floor")
+			if resonance.current > floor_value:
+				var convert := minf(_config("heal_convert_per_s") * delta,
+					resonance.current - floor_value)
+				resonance.drain(convert)
+				health = minf(health + convert * _config("heal_hp_per_resonance"), max_health)
+	if archetype == &"dwarf" and is_fresh:
+		# Cross-player state writes run on fresh ticks only, like Repulse
+		# pushes. Drained Resonance is destroyed, never siphoned.
+		var radius := _config("drain_radius_m")
+		var rate := _config("drain_per_enemy_per_s")
+		for node in get_tree().get_nodes_in_group("players"):
+			var other := node as FPSController
+			if other == null or other == self:
+				continue
+			if other.global_position.distance_to(global_position) <= radius:
+				other.resonance.drain(rate * delta)
 
 
 func take_damage(amount: float, attacker: FPSController, tick: int) -> void:
