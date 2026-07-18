@@ -1,9 +1,10 @@
-[gd_scene load_steps=6 format=3 uid="uid://fpscontrollerstub"]
+[gd_scene load_steps=7 format=3 uid="uid://fpscontrollerstub"]
 
 [ext_resource type="Script" path="res://scripts/player/fps_controller.gd" id="1_stub"]
 [ext_resource type="Script" path="res://scripts/player/player_input.gd" id="2_input"]
 [ext_resource type="Script" path="res://addons/netfox/rollback/rollback-synchronizer.gd" id="3_rbs"]
 [ext_resource type="Script" path="res://addons/netfox/tick-interpolator.gd" id="4_ti"]
+[ext_resource type="Script" path="res://scripts/player/resonance_pool.gd" id="5_resonance"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
 height = 1.8
@@ -25,11 +26,14 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, -0.3, -0.8)
 [node name="Input" type="Node" parent="."]
 script = ExtResource("2_input")
 
+[node name="Resonance" type="Node" parent="."]
+script = ExtResource("5_resonance")
+
 [node name="RollbackSynchronizer" type="Node" parent="." node_paths=PackedStringArray("root")]
 script = ExtResource("3_rbs")
 root = NodePath("..")
-state_properties = Array[String]([":transform", ":velocity", ":is_gliding", ":glide_ticks_remaining", ":last_down_repulse_tick"])
-input_properties = Array[String](["Input:movement", "Input:aim_yaw", "Input:aim_pitch", "Input:jump", "Input:sprint", "Input:repulse", "Input:glide", "Input:fire", "Input:swap_weapon"])
+state_properties = Array[String]([":transform", ":velocity", ":is_gliding", ":glide_ticks_remaining", ":last_down_repulse_tick", ":health", "Resonance:current", "Resonance:reserved", "Resonance:last_combat_tick"])
+input_properties = Array[String](["Input:movement", "Input:aim_yaw", "Input:aim_pitch", "Input:sprint", "Input:jump_press_tick", "Input:repulse_press_tick", "Input:glide_press_tick", "Input:fire_press_tick", "Input:swap_press_tick"])
 
 [node name="TickInterpolator" type="Node" parent="." node_paths=PackedStringArray("root")]
 script = ExtResource("4_ti")

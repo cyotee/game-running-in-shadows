@@ -20,6 +20,7 @@ extends CharacterBody3D
 @export var glide_air_control: float = 30.0
 @export var combo_launch_velocity: float = 28.0
 @export var combo_window: float = 0.7
+@export var archetype: StringName = &"human"
 
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 
@@ -27,13 +28,17 @@ var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var is_gliding: bool = false
 var glide_ticks_remaining: int = 0
 var last_down_repulse_tick: int = -(1 << 30)
+var health: float = 100.0
 
 @onready var input: PlayerInput = $Input
 @onready var camera: Camera3D = $Camera3D
 @onready var rollback_synchronizer: RollbackSynchronizer = $RollbackSynchronizer
+@onready var resonance: ResonancePool = $Resonance
 
 
 func _ready() -> void:
+	add_to_group("players")
+	_apply_archetype_config()
 	# Input authority may have been reassigned by a spawner before _ready.
 	rollback_synchronizer.process_settings()
 	var is_local := input.is_multiplayer_authority()
@@ -71,17 +76,46 @@ func enemy_under_reticle(max_range: float) -> bool:
 	return not result.is_empty() and result.collider is FPSController
 
 
+func _config(key_suffix: String) -> float:
+	return MatchConfig.get_value("archetype.%s.%s" % [archetype, key_suffix])
+
+
+func _apply_archetype_config() -> void:
+	resonance.max_resonance = _config("max_resonance")
+	resonance.regen_per_s = _config("regen_per_s")
+	resonance.combat_timeout_ticks = int(roundf(
+		MatchConfig.get_value("resonance.combat_timeout_s") * NetworkTime.tickrate))
+	resonance.reserved = 0.0
+	# Glide Harness is always equipped in the prototype; reservation scales
+	# with the archetype tech multiplier (decided 2026-07-16).
+	resonance.reserve(
+		MatchConfig.get_value("resonance.glide_harness_reservation") * _config("tech_mult"))
+	resonance.fill_to_cap()
+	health = _config("max_health")
+
+
 func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 	transform.basis = Basis(Vector3.UP, input.aim_yaw)
 	_force_update_is_on_floor()
 
-	# Capture boost intent before contextual deploy can consume the press.
-	var jump_for_boost := input.jump and is_gliding
+	resonance.process_tick(delta, tick)
+	_process_archetype_passives(delta, tick, is_fresh)
 
-	if input.repulse:
+	# Press-tick inputs match exactly one simulated tick (see PlayerInput).
+	var jump_pressed := input.jump_press_tick == tick
+	# Capture boost intent before contextual deploy can consume the press.
+	var jump_for_boost := jump_pressed and is_gliding
+
+	if (
+		input.repulse_press_tick == tick
+		and resonance.try_spend(MatchConfig.get_value("resonance.repulse_cost"))
+	):
 		_cast_repulse(tick, is_fresh)
 	# Contextual jump (controller A): airborne and not gliding -> deploy glide.
-	var wants_glide := input.glide or (input.jump and not is_on_floor() and not is_gliding)
+	var wants_glide := (
+		input.glide_press_tick == tick
+		or (jump_pressed and not is_on_floor() and not is_gliding)
+	)
 	if wants_glide and not is_gliding:
 		_try_deploy_glide(tick)
 
@@ -104,14 +138,14 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 	else:
 		if not is_on_floor():
 			velocity.y -= gravity * delta
-		if input.jump and is_on_floor():
+		if jump_pressed and is_on_floor():
 			velocity.y = jump_velocity
 		var target := direction * speed
 		velocity.x = move_toward(velocity.x, target.x, acceleration * delta)
 		velocity.z = move_toward(velocity.z, target.z, acceleration * delta)
 
-	if input.fire and is_fresh:
-		_try_shoot()
+	if input.fire_press_tick == tick and is_fresh:
+		_try_shoot(tick)
 
 	# netfox CharacterBody3D pattern: move_and_slide assumes engine delta.
 	velocity *= NetworkTime.physics_factor
@@ -128,7 +162,40 @@ func _force_update_is_on_floor() -> void:
 	velocity = old_velocity
 
 
-func _try_shoot() -> void:
+func _process_archetype_passives(delta: float, tick: int, is_fresh: bool) -> void:
+	if archetype == &"elf":
+		var max_health := _config("max_health")
+		if health < max_health and not resonance.is_in_combat(tick):
+			var floor_value := _config("heal_resonance_floor")
+			if resonance.current > floor_value:
+				var convert := minf(_config("heal_convert_per_s") * delta,
+					resonance.current - floor_value)
+				resonance.drain(convert)
+				health = minf(health + convert * _config("heal_hp_per_resonance"), max_health)
+	if archetype == &"dwarf" and is_fresh:
+		# Cross-player state writes run on fresh ticks only, like Repulse
+		# pushes. Drained Resonance is destroyed, never siphoned.
+		var radius := _config("drain_radius_m")
+		var rate := _config("drain_per_enemy_per_s")
+		for node in get_tree().get_nodes_in_group("players"):
+			var other := node as FPSController
+			if other == null or other == self:
+				continue
+			if other.global_position.distance_to(global_position) <= radius:
+				other.resonance.drain(rate * delta)
+
+
+func take_damage(amount: float, attacker: FPSController, tick: int) -> void:
+	health = maxf(health - amount, 0.0)
+	resonance.mark_combat(tick)
+	if attacker != null and attacker != self:
+		attacker.resonance.mark_combat(tick)
+	if health <= 0.0:
+		# Death/respawn arrives with the round-flow plan; clamp for now.
+		print("%s down (no death handling yet)" % name)
+
+
+func _try_shoot(tick: int) -> void:
 	var space_state := get_world_3d().direct_space_state
 	var from := camera.global_position
 	var aim := Basis(Vector3.UP, input.aim_yaw) * Basis(Vector3.RIGHT, input.aim_pitch)
@@ -139,8 +206,10 @@ func _try_shoot() -> void:
 	query.exclude = [get_rid()]
 	var result := space_state.intersect_ray(query)
 
-	if result:
-		print("Hit: ", result.collider.name if result.collider else "something", " at ", result.position)
+	if result and result.collider is FPSController:
+		result.collider.take_damage(MatchConfig.get_value("weapon.hitscan_damage"), self, tick)
+	elif result:
+		print("Hit: ", result.collider.name, " at ", result.position)
 	else:
 		print("Shot fired (miss)")
 

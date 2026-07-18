@@ -55,6 +55,7 @@ Hummingbot
 Hyperliquid
 hyperoptimization
 incentivizes
+ints
 joypad
 Kalshi
 Katana

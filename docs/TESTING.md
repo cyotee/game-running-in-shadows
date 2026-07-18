@@ -116,6 +116,16 @@ written:
 - **Rollback state resists external mutation:** `transform`/`velocity` etc.
   are restored from recorded state each tick, so `game_eval` teleports are
   overwritten. Drive the game through inputs instead (jump, then glide).
+  Exception: mutations made synchronously right after spawning a scene (before
+  its first tick) stick — the first recorded state captures them. Tests rely
+  on this for archetype/health setup.
+- **Config-driven mechanics:** override tunables with
+  `MatchConfig.set_value(...)` inside the test and call
+  `MatchConfig.reset_to_defaults()` in `after_test`.
+- **Edge inputs are press-tick ints** (`<action>_press_tick`), not bools —
+  see CLAUDE.md. In tests, hold `Input.action_press(...)` across a few
+  simulated frames before releasing so `PlayerInput._process` observes the
+  transition.
 - **MCP input:** prefer the action form of `key_press`
   (`{"action": "glide", "pressed": true/false}`) — raw key events are
   auto-released after one frame and can collapse into a single buffered
