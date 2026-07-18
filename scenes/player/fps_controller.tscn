@@ -28,7 +28,7 @@ script = ExtResource("2_input")
 script = ExtResource("3_rbs")
 root = NodePath("..")
 state_properties = Array[String]([":transform", ":velocity", ":is_gliding", ":glide_ticks_remaining", ":last_down_repulse_tick"])
-input_properties = Array[String](["Input:movement", "Input:aim_yaw", "Input:aim_pitch", "Input:jump", "Input:sprint", "Input:repulse", "Input:glide", "Input:fire"])
+input_properties = Array[String](["Input:movement", "Input:aim_yaw", "Input:aim_pitch", "Input:jump", "Input:sprint", "Input:repulse", "Input:glide", "Input:fire", "Input:swap_weapon"])
 
 [node name="TickInterpolator" type="Node" parent="." node_paths=PackedStringArray("root")]
 script = ExtResource("4_ti")
