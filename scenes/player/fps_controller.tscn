@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://fpscontrollerstub"]
+[gd_scene load_steps=14 format=3 uid="uid://fpscontrollerstub"]
 
 [ext_resource type="Script" path="res://scripts/player/fps_controller.gd" id="1_stub"]
 [ext_resource type="Script" path="res://scripts/player/player_input.gd" id="2_input"]
@@ -7,6 +7,8 @@
 [ext_resource type="Script" path="res://scripts/player/resonance_pool.gd" id="5_resonance"]
 [ext_resource type="Script" path="res://scripts/weapons/weapon_rig.gd" id="6_rig"]
 [ext_resource type="Script" path="res://scripts/weapons/weapon_base.gd" id="7_weapon"]
+[ext_resource type="Script" path="res://scripts/weapons/pistol.gd" id="8_pistol"]
+[ext_resource type="Script" path="res://addons/netfox/rewindable-action.gd" id="9_action"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
 height = 1.8
@@ -39,29 +41,44 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, -0.3, -0.8)
 script = ExtResource("6_rig")
 
 [node name="Pistol" type="Node3D" parent="Camera3D/WeaponSocket/WeaponRig"]
-script = ExtResource("7_weapon")
+script = ExtResource("8_pistol")
 weapon_key = "pistol"
 weight_class = 0
+
+[node name="FireAction" type="Node" parent="Camera3D/WeaponSocket/WeaponRig/Pistol"]
+script = ExtResource("9_action")
 
 [node name="Smg" type="Node3D" parent="Camera3D/WeaponSocket/WeaponRig"]
 script = ExtResource("7_weapon")
 weapon_key = "smg"
 weight_class = 0
 
+[node name="FireAction" type="Node" parent="Camera3D/WeaponSocket/WeaponRig/Smg"]
+script = ExtResource("9_action")
+
 [node name="Shotgun" type="Node3D" parent="Camera3D/WeaponSocket/WeaponRig"]
 script = ExtResource("7_weapon")
 weapon_key = "shotgun"
 weight_class = 1
+
+[node name="FireAction" type="Node" parent="Camera3D/WeaponSocket/WeaponRig/Shotgun"]
+script = ExtResource("9_action")
 
 [node name="Rifle" type="Node3D" parent="Camera3D/WeaponSocket/WeaponRig"]
 script = ExtResource("7_weapon")
 weapon_key = "rifle"
 weight_class = 1
 
+[node name="FireAction" type="Node" parent="Camera3D/WeaponSocket/WeaponRig/Rifle"]
+script = ExtResource("9_action")
+
 [node name="Sniper" type="Node3D" parent="Camera3D/WeaponSocket/WeaponRig"]
 script = ExtResource("7_weapon")
 weapon_key = "sniper"
 weight_class = 2
+
+[node name="FireAction" type="Node" parent="Camera3D/WeaponSocket/WeaponRig/Sniper"]
+script = ExtResource("9_action")
 
 [node name="HitZones" type="Node3D" parent="."]
 

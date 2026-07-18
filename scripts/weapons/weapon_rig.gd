@@ -14,6 +14,11 @@ var _controller: FPSController
 
 func setup(controller: FPSController) -> void:
 	_controller = controller
+	# Weapons register the controller for action mutation here — the
+	# controller does not exist yet when their own _ready runs.
+	for child in get_children():
+		if child is WeaponBase:
+			child.fire_action.mutate(controller)
 
 
 func grant(key: String, slot: int) -> void:
