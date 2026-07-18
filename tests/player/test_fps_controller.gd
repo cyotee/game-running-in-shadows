@@ -145,6 +145,26 @@ func test_level_repulse_does_not_arm_combo() -> void:
 	assert_float(controller.velocity.y).is_less(controller.combo_launch_velocity * 0.5)
 
 
+func test_slowdown_scale_set_when_enemy_under_reticle() -> void:
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+	var victim: FPSController = auto_free((load(CONTROLLER_SCENE) as PackedScene).instantiate())
+	controller.get_parent().add_child(victim)
+	victim.position = controller.position + Vector3(0, 0, -5)
+	# Aim straight at the victim (spawned facing -Z).
+	controller.input.local_pitch = 0.0
+	await runner.simulate_frames(5)
+
+	assert_bool(controller.enemy_under_reticle(40.0)).is_true()
+	assert_float(controller.input.look_rate_scale).is_equal(0.6)
+
+	# Turn the view away (rollback owns the victim's transform, so move the
+	# reticle rather than the victim).
+	controller.input.local_yaw = 1.2
+	await runner.simulate_frames(10)
+	assert_float(controller.input.look_rate_scale).is_equal(1.0)
+
+
 func test_airborne_jump_deploys_glide() -> void:
 	var runner := _spawn_controller()
 	var controller: FPSController = runner.scene()

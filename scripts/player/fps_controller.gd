@@ -47,6 +47,28 @@ func _process(_delta: float) -> void:
 	# body in _rollback_tick from recorded input.
 	if input.is_multiplayer_authority():
 		camera.rotation.x = input.local_pitch
+		# Controller-only aim assist: reticle friction while an enemy is in
+		# view. Mouse look never reads look_rate_scale (decided design).
+		input.look_rate_scale = (
+			MatchConfig.get_value("input.slowdown_mult")
+			if enemy_under_reticle(MatchConfig.get_value("input.slowdown_range_m"))
+			else 1.0
+		)
+
+
+# TODO(weapons): use the hit-zone layer once the weapons plan adds hit zones;
+# for now any FPSController body counts.
+func enemy_under_reticle(max_range: float) -> bool:
+	var space_state := get_world_3d().direct_space_state
+	var from := camera.global_position
+	var to := from + (-camera.global_transform.basis.z) * max_range
+
+	var query := PhysicsRayQueryParameters3D.create(from, to)
+	query.collide_with_bodies = true
+	query.exclude = [get_rid()]
+	var result := space_state.intersect_ray(query)
+
+	return not result.is_empty() and result.collider is FPSController
 
 
 func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
