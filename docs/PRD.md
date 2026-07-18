@@ -130,7 +130,7 @@ Loadouts are **ordered shopping lists, not classes or kits**. They are never mut
 - Testing infrastructure: GdUnit4 + SceneRunner suites, live-game agent testing via godot-mcp. ✅
 - **Netcode spike: integrate netfox (or equivalent) and rebuild the FPS controller on predicted movement** — before more gameplay code accrues on the unpredicted controller. ✅ (see docs/superpowers/plans/2026-07-15-netfox-integration.md)
 - Weapon system (hitscan + projectiles, recoil, spread).
-- Resonance resource system + ability framework (Repulse, Glide Harness first; see MECHANICS_REFERENCE.md §10).
+- Resonance resource system + ability framework (Repulse, Glide Harness first; see MECHANICS_REFERENCE.md §10). ✅ (Resonance + costs + archetype stats; framework grows with each Manifestation)
 - Git structure, CI (headless test runs), docs.
 
 **Phase 1 — Multiplayer Core + Steam (MVP for EA)**
