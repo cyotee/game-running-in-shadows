@@ -1,8 +1,9 @@
-[gd_scene load_steps=9 format=3 uid="uid://testarenastub"]
+[gd_scene load_steps=10 format=3 uid="uid://testarenastub"]
 
 [ext_resource type="PackedScene" uid="uid://fpscontrollerstub" path="res://scenes/player/fps_controller.tscn" id="1_player"]
 [ext_resource type="Script" path="res://scenes/levels/steam_status.gd" id="2_steamstatus_script"]
 [ext_resource type="Script" path="res://scripts/levels/test_arena.gd" id="3_arena_script"]
+[ext_resource type="Script" path="res://scripts/ui/resonance_hud.gd" id="4_resonance_hud"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_Floor"]
 size = Vector3(60, 1, 60)
@@ -83,6 +84,15 @@ ESC to toggle mouse | Basic test arena for CounterSpell"
 horizontal_alignment = 1
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="ResonanceHud" type="Label" parent="CanvasLayer"]
+offset_left = 20.0
+offset_top = 60.0
+offset_right = 500.0
+offset_bottom = 120.0
+theme_override_font_sizes/font_size = 18
+text = "Resonance: ..."
+script = ExtResource("4_resonance_hud")
 
 [node name="SteamStatus" type="Label" parent="CanvasLayer"]
 offset_left = 20.0
