@@ -39,6 +39,8 @@ var bleed_hp_per_s: float = 0.0
 @onready var rollback_synchronizer: RollbackSynchronizer = $RollbackSynchronizer
 @onready var resonance: ResonancePool = $Resonance
 @onready var weapon_rig: WeaponRig = $Camera3D/WeaponSocket/WeaponRig
+@onready var third_person_rig: Node3D = $ThirdPersonRig
+@onready var third_person_camera: Camera3D = $ThirdPersonRig/SpringArm3D/ThirdPersonCamera
 
 
 func _ready() -> void:
@@ -70,6 +72,13 @@ func _process(_delta: float) -> void:
 		if active != null and input.ads and active.supports_ads():
 			target_fov = 75.0 / active.ads_zoom()
 		camera.fov = lerpf(camera.fov, target_fov, minf(10.0 * _delta, 1.0))
+		# Blade wields in third person (view-only camera swap).
+		var blade_out := active != null and active.weapon_key == "blade"
+		if blade_out != third_person_camera.current:
+			third_person_camera.current = blade_out
+			camera.current = not blade_out
+		if blade_out:
+			third_person_rig.rotation = Vector3(input.local_pitch * 0.5, 0, 0)
 		# Controller-only aim assist: reticle friction while an enemy is in
 		# view. Mouse look never reads look_rate_scale (decided design).
 		input.look_rate_scale = (
