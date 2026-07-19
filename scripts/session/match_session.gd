@@ -15,6 +15,7 @@ var _match_started := false
 @onready var spawn_points: Node3D = $SpawnPoints
 @onready var spectator_camera: Camera3D = $SpectatorCamera
 @onready var match_state: MatchState = $MatchState
+@onready var economy: Economy = $Economy
 
 var _spawn_index := 0
 
@@ -22,6 +23,8 @@ var _spawn_index := 0
 func _ready() -> void:
 	spawner.spawn_function = _spawn_player
 	match_state.setup(self)
+	economy.setup(self, match_state)
+	match_state.round_ended.connect(economy.award_round_wages)
 	NetworkTime.on_tick.connect(func(_delta: float, tick: int) -> void:
 		match_state.process_tick(tick))
 	var peer := multiplayer.multiplayer_peer
@@ -88,11 +91,16 @@ func _despawn(peer_id: int) -> void:
 func _spawn_player(peer_id: int) -> Node:
 	var player: FPSController = (load(PLAYER_SCENE) as PackedScene).instantiate()
 	player.name = str(peer_id)
+	# Economy mode: pistol only at spawn; everything else is bought.
+	player.default_slot1 = ""
 	var point_count := spawn_points.get_child_count()
 	var point: Marker3D = spawn_points.get_child(_spawn_index % point_count)
 	player.position = point.position
 	player.get_node("Input").set_multiplayer_authority(peer_id)
 	player.died.connect(match_state.record_kill)
+	player.died.connect(func(_victim: int, attacker: int) -> void:
+		economy.note_kill(attacker))
+	economy.register_player(peer_id)
 	return player
 
 

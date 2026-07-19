@@ -10,6 +10,7 @@ extends Node
 
 signal phase_changed(phase: int)
 signal scores_changed(team_scores: Array, round_wins: Array)
+signal round_ended(round_winner: int)
 signal match_ended(winning_team: int)
 
 enum { BUY_PHASE, ROUND_LIVE, ROUND_END, MATCH_END }
@@ -137,6 +138,7 @@ func _check_elimination() -> void:
 
 
 func _end_round(round_winner: int) -> void:
+	round_ended.emit(round_winner)
 	if round_winner >= 0:
 		round_wins[round_winner] += 1
 		scores_changed.emit(team_kills, round_wins)

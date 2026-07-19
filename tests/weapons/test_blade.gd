@@ -1,5 +1,5 @@
 class_name TestBlade
-extends GdUnitTestSuite
+extends NetSuite
 
 const CONTROLLER_SCENE := "res://scenes/player/fps_controller.tscn"
 
@@ -27,7 +27,7 @@ func _blade_duel() -> Array:
 
 func _swing(runner: GdUnitSceneRunner) -> void:
 	runner.simulate_action_press("fire_primary")
-	await runner.simulate_frames(10)
+	await await_ticks(10)
 	runner.simulate_action_release("fire_primary")
 
 
@@ -36,13 +36,13 @@ func test_blade_switches_to_third_person_camera() -> void:
 	var controller: FPSController = runner.scene()
 	controller.weapon_rig.grant("blade", 1)
 	controller.weapon_rig.active_slot = 1
-	await runner.simulate_frames(5)
+	await await_ticks(5)
 
 	assert_bool(controller.third_person_camera.current).is_true()
 	assert_bool(controller.camera.current).is_false()
 
 	runner.simulate_action_press("weapon_slot_2")
-	await runner.simulate_frames(10)
+	await await_ticks(10)
 	assert_bool(controller.camera.current).is_true()
 	assert_bool(controller.third_person_camera.current).is_false()
 
@@ -97,7 +97,7 @@ func test_frontal_block_reduces_blade_damage() -> void:
 	# Block via the real input path: both players gather the global ads
 	# action; only the victim's matters here.
 	Input.action_press("ads")
-	await runner.simulate_frames(5)
+	await await_ticks(5)
 	await _swing(runner)
 	Input.action_release("ads")
 
