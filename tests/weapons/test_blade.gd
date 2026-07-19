@@ -68,8 +68,9 @@ func test_backstab_multiplies_and_bleeds() -> void:
 	# Victim faces AWAY from the attacker: backstab (default yaw 0).
 	await _swing(runner)
 
-	# Bleed starts ticking immediately after the strike; allow a few ticks.
-	assert_float(victim._config("max_health") - victim.health).is_equal_approx(40.0, 1.5)
+	# Bleed starts ticking immediately after the strike (4 HP/s); the awaited
+	# frame count varies with load, so allow up to ~1s of bleed on top.
+	assert_float(victim._config("max_health") - victim.health).is_between(39.9, 44.5)
 	assert_int(victim.bleed_ticks_remaining).is_greater(0)
 
 
