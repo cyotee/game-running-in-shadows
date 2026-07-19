@@ -297,6 +297,11 @@ Current prototype has basic raycast hitscan. Need real damage, spread, recoil, e
 
 ## 9. Investigations & Playtest Tracker
 
+**Milestone A exit check (2026-07-18 — automated half)**
+- Two-instance NetworkSimulator E2E (`tests/e2e/net_smoke.py`) PASSES at 50 ms, 100 ms, and 150 ms injected latency: client movement, jump/glide (press-tick inputs), and state replication all verified host-side. Full GdUnit suite: 63 tests green.
+- All five Milestone A plans executed (netfox core, controller support, Resonance, weapons, blade).
+- **PENDING (owner):** the subjective PRD §11 gate — play the client instance at ≥100 ms (`NET_TEST_LATENCY_MS=100`, two windowed instances of `scenes/dev/net_test.tscn`) and judge whether Repulse+Glide, weapon fire, and blade duels *feel* responsive. Record the verdict here.
+
 **Weapon implementation notes (2026-07-18)**
 - SMG bloom now decays only after sustained fire stops: at the recorded baselines (0.15°/shot at 12.5 shots/s vs 3°/s decay) continuous-decay bloom could never accumulate. Behavior: grows while firing, decays at 3°/s once fire stops.
 - Player bodies moved to collision layer 4 (world 1, hit zones 2) so weapon rays resolve zones instead of the body shell; capsule offset so feet sit at node origin (camera 1.6 is inside the 1.8 m body).
