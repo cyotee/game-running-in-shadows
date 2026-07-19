@@ -60,7 +60,7 @@ GODOT_BIN=/Applications/Godot.app/Contents/MacOS/Godot \
 
 | # | Plan file | Delivers | Status |
 |---|-----------|----------|--------|
-| 6 | `2026-07-16-steam-lobbies-sessions.md` | GodotSteam 4.20; `SessionManager`; lobby create/invite/browse/join; SteamMultiplayerPeer under netfox; 16-player spawning; join-in-progress spectate; host-migration spike scoped as its final task | ☐ |
+| 6 | `2026-07-16-steam-lobbies-sessions.md` | GodotSteam 4.20; `SessionManager`; lobby create/invite/browse/join; SteamMultiplayerPeer under netfox; 16-player spawning; join-in-progress spectate; host-migration spike scoped as its final task | ✅ code-complete (2026-07-19; live two-machine Steam verification pending owner — see tuning sheet §9) |
 | 7 | *(to write — Gap G2)* Match flow & Arena mode | Round state machine, respawn/death, win conditions, results | ☐ |
 | 8 | *(to write — Gap G3)* Buy phase, economy & loadouts | Wages, buy menu, shopping-list loadouts, cybernetic slots | ☐ |
 | 9 | *(to write — Gap G4)* Core HUD | Resonance pips, health, ammo, scoreboard, kill feed | ☐ |

@@ -297,6 +297,10 @@ Current prototype has basic raycast hitscan. Need real damage, spread, recoil, e
 
 ## 9. Investigations & Playtest Tracker
 
+**Steam sessions — pending owner verification (2026-07-19)**
+- Plan 6 is code-complete: GodotSteam 4.20.1 boots, `SteamMultiplayerPeer` class present, session state machine + lobby browser tested with fakes, three-peer ENet E2E green.
+- **PENDING (owner, needs Steam client + second machine/account):** Host (Public) → lobby appears in browser with correct n/16 → Join → both load match_session over Steam relay → movement + Repulse/Glide replicate; third account joins mid-session → spectator camera → host presses F9 → body spawns. Record latency feel + drops here.
+
 **Milestone A exit check (2026-07-18 — automated half)**
 - Two-instance NetworkSimulator E2E (`tests/e2e/net_smoke.py`) PASSES at 50 ms, 100 ms, and 150 ms injected latency: client movement, jump/glide (press-tick inputs), and state replication all verified host-side. Full GdUnit suite: 63 tests green.
 - All five Milestone A plans executed (netfox core, controller support, Resonance, weapons, blade).

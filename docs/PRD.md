@@ -135,7 +135,7 @@ Loadouts are **ordered shopping lists, not classes or kits**. They are never mut
 
 **Phase 1 — Multiplayer Core + Steam (MVP for EA)**
 - Steam initialization (with dev fallback). ✅ (SteamManager autoload)
-- Steam Lobbies + SteamMultiplayerPeer (P2P).
+- Steam Lobbies + SteamMultiplayerPeer (P2P). ✅ code-complete 2026-07-19 (GodotSteam 4.20.1; SessionManager + lobby browser + 16-player match session + join-in-progress spectators; live two-machine Steam verification pending)
 - **Client prediction + server reconciliation from day one** (netfox: predicted movement, snapshot interpolation, lag compensation), host-authoritative over Steam P2P.
 - Buy phase + economy + loadout system (shopping-list semantics, §5).
 - Match flow: lobby → map vote or fixed → buy phase → round → results.

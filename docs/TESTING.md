@@ -98,6 +98,19 @@ errors, and inspect state while the game runs.
 Fallback without MCP: run the game from a shell, capture stdout (scripts
 `print` hits, Repulse casts, combo launches), kill after a timeout.
 
+## Steam-Dependent Testing Policy
+
+- **Logic level (CI-safe):** session/lobby logic is tested with injected fakes
+  — `SessionManager.lobby_service` accepts any `SteamLobbyService` subclass
+  (see `tests/session/test_session_manager.gd`). CI stays green with no Steam
+  client: the real service reports `is_available() == false` and
+  `SessionManager` surfaces "Steam unavailable".
+- **Live flows (manual, Steam running):** host/browse/invite/join and
+  SteamMultiplayerPeer behavior need the Steam client plus a second
+  machine/account; record results in `docs/ABILITY_TUNING_SHEET.md`.
+- **Automated transport guard:** the ENet E2E (`tests/e2e/net_smoke.py`, now
+  three peers) proves the netfox stack independent of Steam.
+
 ## Netcode Testing (netfox)
 
 Gameplay simulation runs on netfox's tick loop, which changes how tests are
