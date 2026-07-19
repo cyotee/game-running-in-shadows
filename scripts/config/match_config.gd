@@ -88,6 +88,14 @@ const DEFAULTS: Dictionary = {
 	"weight.heavy.dwarf": 0.85, "weight.heavy.troll": 0.93,
 	# --- Session ---
 	"session.max_players": 16.0,
+	# --- Movement ---
+	"movement.crouch_speed_mult": 0.55,
+	# --- Match flow ---
+	"match.buy_phase_s": 15.0,
+	"match.round_time_s": 180.0,
+	"match.round_end_s": 5.0,
+	"match.rounds_to_win": 6.0,
+	"match.team_count": 2.0,
 	# --- Controller input ---
 	"input.stick_deadzone_inner": 0.15,
 	"input.stick_deadzone_outer": 0.98,

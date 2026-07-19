@@ -33,9 +33,19 @@ var last_down_repulse_tick: int = -(1 << 30)
 var health: float = 100.0
 var bleed_ticks_remaining: int = 0
 var bleed_hp_per_s: float = 0.0
+var is_dead: bool = false
+var last_attacker_peer: int = 0
+
+# Respawn request (plain vars, consumed inside the tick simulation).
+var _pending_respawn: Vector3 = Vector3.ZERO
+var _has_pending_respawn: bool = false
+
+signal died(victim_peer: int, attacker_peer: int)
 
 @onready var input: PlayerInput = $Input
 @onready var camera: Camera3D = $Camera3D
+@onready var standing_shape: CollisionShape3D = $CollisionShape3D
+@onready var crouch_shape: CollisionShape3D = $CrouchShape
 @onready var rollback_synchronizer: RollbackSynchronizer = $RollbackSynchronizer
 @onready var resonance: ResonancePool = $Resonance
 @onready var weapon_rig: WeaponRig = $Camera3D/WeaponSocket/WeaponRig
@@ -130,8 +140,25 @@ func _apply_archetype_config() -> void:
 
 
 func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
+	if _has_pending_respawn and is_fresh:
+		_apply_pending_respawn()
+
+	# Death is simulation state: a dead body freezes where it fell (full
+	# body persistence is a pillar; the corpse system extends this later).
+	if is_dead:
+		return
+	if health <= 0.0:
+		is_dead = true
+		if is_fresh:
+			died.emit(input.get_multiplayer_authority(), last_attacker_peer)
+		return
+
 	transform.basis = Basis(Vector3.UP, input.aim_yaw)
 	_force_update_is_on_floor()
+
+	# Crouch: deterministic collider swap + speed multiplier from input.
+	standing_shape.disabled = input.crouch
+	crouch_shape.disabled = not input.crouch
 
 	resonance.process_tick(delta, tick)
 	_process_archetype_passives(delta, tick, is_fresh)
@@ -164,6 +191,8 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 		_try_deploy_glide(tick)
 
 	var speed := (sprint_speed if input.sprint else walk_speed) * weapon_rig.carry_weight_mult()
+	if input.crouch:
+		speed *= MatchConfig.get_value("movement.crouch_speed_mult")
 	var direction := (transform.basis * Vector3(input.movement.x, 0, input.movement.y)).normalized()
 
 	if is_gliding:
@@ -255,9 +284,33 @@ func take_damage(amount: float, attacker: FPSController, tick: int) -> void:
 	resonance.mark_combat(tick)
 	if attacker != null and attacker != self:
 		attacker.resonance.mark_combat(tick)
-	if health <= 0.0:
-		# Death/respawn arrives with the round-flow plan; clamp for now.
-		print("%s down (no death handling yet)" % name)
+		last_attacker_peer = attacker.input.get_multiplayer_authority()
+	# External mutation of rollback state must be registered or the next
+	# restore discards it (netfox upstream pattern).
+	NetworkRollback.mutate(self)
+
+
+func reset_for_round(spawn_position: Vector3) -> void:
+	# Queues a host-side round reset; the revive itself runs INSIDE the next
+	# simulated tick (external writes to rollback state are discarded by the
+	# restore, so out-of-band mutation cannot revive a player).
+	_pending_respawn = spawn_position
+	_has_pending_respawn = true
+
+
+func _apply_pending_respawn() -> void:
+	_has_pending_respawn = false
+	is_dead = false
+	last_attacker_peer = 0
+	bleed_ticks_remaining = 0
+	bleed_hp_per_s = 0.0
+	is_gliding = false
+	velocity = Vector3.ZERO
+	global_position = _pending_respawn
+	_apply_archetype_config()
+	for key in [weapon_rig.slot1, weapon_rig.slot2]:
+		if key != "":
+			weapon_rig.weapon_by_key(key).initialize_ammo()
 
 
 func _cast_repulse(tick: int, is_fresh: bool) -> void:
