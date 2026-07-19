@@ -21,6 +21,8 @@ extends CharacterBody3D
 @export var combo_launch_velocity: float = 28.0
 @export var combo_window: float = 0.7
 @export var archetype: StringName = &"human"
+@export var default_slot1: String = "rifle"
+@export var default_slot2: String = "pistol"
 
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 
@@ -34,11 +36,19 @@ var health: float = 100.0
 @onready var camera: Camera3D = $Camera3D
 @onready var rollback_synchronizer: RollbackSynchronizer = $RollbackSynchronizer
 @onready var resonance: ResonancePool = $Resonance
+@onready var weapon_rig: WeaponRig = $Camera3D/WeaponSocket/WeaponRig
 
 
 func _ready() -> void:
 	add_to_group("players")
+	for zone_area: Area3D in $HitZones.get_children():
+		zone_area.set_meta("zone", zone_area.name.to_lower())
+		zone_area.set_meta("player", self)
 	_apply_archetype_config()
+	weapon_rig.setup(self)
+	weapon_rig.grant(default_slot2, 2)
+	if default_slot1 != "":
+		weapon_rig.grant(default_slot1, 1)
 	# Input authority may have been reassigned by a spawner before _ready.
 	rollback_synchronizer.process_settings()
 	var is_local := input.is_multiplayer_authority()
@@ -52,6 +62,12 @@ func _process(_delta: float) -> void:
 	# body in _rollback_tick from recorded input.
 	if input.is_multiplayer_authority():
 		camera.rotation.x = input.local_pitch
+		# ADS zoom is view-only feedback.
+		var active := weapon_rig.active_weapon() if weapon_rig != null else null
+		var target_fov := 75.0
+		if active != null and input.ads and active.supports_ads():
+			target_fov = 75.0 / active.ads_zoom()
+		camera.fov = lerpf(camera.fov, target_fov, minf(10.0 * _delta, 1.0))
 		# Controller-only aim assist: reticle friction while an enemy is in
 		# view. Mouse look never reads look_rate_scale (decided design).
 		input.look_rate_scale = (
@@ -61,19 +77,27 @@ func _process(_delta: float) -> void:
 		)
 
 
-# TODO(weapons): use the hit-zone layer once the weapons plan adds hit zones;
-# for now any FPSController body counts.
 func enemy_under_reticle(max_range: float) -> bool:
 	var space_state := get_world_3d().direct_space_state
 	var from := camera.global_position
 	var to := from + (-camera.global_transform.basis.z) * max_range
 
 	var query := PhysicsRayQueryParameters3D.create(from, to)
+	query.collide_with_areas = true
 	query.collide_with_bodies = true
-	query.exclude = [get_rid()]
+	query.collision_mask = 0b11  # world (1) + hit zones (2)
+	var excludes: Array[RID] = [get_rid()]
+	for zone_area: Area3D in $HitZones.get_children():
+		excludes.append(zone_area.get_rid())
+	query.exclude = excludes
 	var result := space_state.intersect_ray(query)
 
-	return not result.is_empty() and result.collider is FPSController
+	return (
+		not result.is_empty()
+		and result.collider is Area3D
+		and result.collider.has_meta("player")
+		and result.collider.get_meta("player") != self
+	)
 
 
 func _config(key_suffix: String) -> float:
@@ -100,6 +124,7 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 
 	resonance.process_tick(delta, tick)
 	_process_archetype_passives(delta, tick, is_fresh)
+	weapon_rig.process_tick(delta, tick, is_fresh)
 
 	# Press-tick inputs match exactly one simulated tick (see PlayerInput).
 	var jump_pressed := input.jump_press_tick == tick
@@ -119,7 +144,7 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 	if wants_glide and not is_gliding:
 		_try_deploy_glide(tick)
 
-	var speed := sprint_speed if input.sprint else walk_speed
+	var speed := (sprint_speed if input.sprint else walk_speed) * weapon_rig.carry_weight_mult()
 	var direction := (transform.basis * Vector3(input.movement.x, 0, input.movement.y)).normalized()
 
 	if is_gliding:
@@ -143,9 +168,6 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 		var target := direction * speed
 		velocity.x = move_toward(velocity.x, target.x, acceleration * delta)
 		velocity.z = move_toward(velocity.z, target.z, acceleration * delta)
-
-	if input.fire_press_tick == tick and is_fresh:
-		_try_shoot(tick)
 
 	# netfox CharacterBody3D pattern: move_and_slide assumes engine delta.
 	velocity *= NetworkTime.physics_factor
@@ -185,6 +207,19 @@ func _process_archetype_passives(delta: float, tick: int, is_fresh: bool) -> voi
 				other.resonance.drain(rate * delta)
 
 
+func take_zone_damage(base_damage: float, weapon_key: String, zone: String,
+		attacker: FPSController, tick: int) -> void:
+	var mult := 1.0
+	match zone:
+		"head":
+			# Dwarf headshot immunity: resolves as body damage.
+			mult = 1.0 if archetype == &"dwarf" \
+				else MatchConfig.get_value("weapon.%s.head_mult" % weapon_key)
+		"limbs":
+			mult = MatchConfig.get_value("zones.limb_mult")
+	take_damage(base_damage * mult, attacker, tick)
+
+
 func take_damage(amount: float, attacker: FPSController, tick: int) -> void:
 	health = maxf(health - amount, 0.0)
 	resonance.mark_combat(tick)
@@ -193,25 +228,6 @@ func take_damage(amount: float, attacker: FPSController, tick: int) -> void:
 	if health <= 0.0:
 		# Death/respawn arrives with the round-flow plan; clamp for now.
 		print("%s down (no death handling yet)" % name)
-
-
-func _try_shoot(tick: int) -> void:
-	var space_state := get_world_3d().direct_space_state
-	var from := camera.global_position
-	var aim := Basis(Vector3.UP, input.aim_yaw) * Basis(Vector3.RIGHT, input.aim_pitch)
-	var to := from + (aim * Vector3.FORWARD) * 100.0
-
-	var query := PhysicsRayQueryParameters3D.create(from, to)
-	query.collide_with_bodies = true
-	query.exclude = [get_rid()]
-	var result := space_state.intersect_ray(query)
-
-	if result and result.collider is FPSController:
-		result.collider.take_damage(MatchConfig.get_value("weapon.hitscan_damage"), self, tick)
-	elif result:
-		print("Hit: ", result.collider.name, " at ", result.position)
-	else:
-		print("Shot fired (miss)")
 
 
 func _cast_repulse(tick: int, is_fresh: bool) -> void:

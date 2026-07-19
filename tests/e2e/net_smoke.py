@@ -63,6 +63,13 @@ class Instance:
                 self.sock.close()
         finally:
             self.proc.send_signal(signal.SIGTERM)
+            try:
+                # Wait for the UDP ports to actually free up so back-to-back
+                # runs don't join a dying host.
+                self.proc.wait(timeout=8)
+            except subprocess.TimeoutExpired:
+                self.proc.kill()
+                self.proc.wait(timeout=5)
 
 
 def wait_for(fn, timeout=15.0, interval=0.5, desc="condition"):
@@ -99,15 +106,25 @@ def main() -> int:
         client.action("move_forward", False)
         print("movement replicated to host")
 
-        # Glide from the client (needs to be airborne: jump first).
-        client.action("jump", True)
-        time.sleep(0.3)
-        client.action("jump", False)
-        client.action("glide", True)
-        time.sleep(0.3)
-        client.action("glide", False)
-        wait_for(lambda: host.cmd("get_property", {"node_path": path, "property": "is_gliding"})
-                 .get("value", False), timeout=5, desc="glide state on host")
+        # Glide from the client (needs to be airborne: jump first). The
+        # jump/glide timing can race the landing, so retry the whole cycle.
+        def try_glide() -> bool:
+            client.action("jump", True)
+            time.sleep(0.2)
+            client.action("jump", False)
+            time.sleep(0.35)  # mid-air
+            client.action("glide", True)
+            time.sleep(0.3)
+            client.action("glide", False)
+            deadline = time.time() + 2.0
+            while time.time() < deadline:
+                if host.cmd("get_property", {"node_path": path, "property": "is_gliding"}) \
+                        .get("value", False):
+                    return True
+                time.sleep(0.25)
+            return False
+
+        wait_for(try_glide, timeout=20, interval=0.5, desc="glide state on host")
         print("glide replicated to host")
 
         print("E2E NET SMOKE: PASS")
