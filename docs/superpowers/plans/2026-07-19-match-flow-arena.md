@@ -30,7 +30,14 @@ collider swap (two CollisionShape3D nodes toggled by `disabled`).
 
 ## Tasks
 
-- [ ] **Task 1 — Crouch (G1):** `crouch` InputMap action (keyboard Ctrl;
+> **Status: EXECUTED 2026-07-19.** All tasks complete; 77 GdUnit tests green,
+> three-peer E2E green, live offline round-cycling verified via MCP with a
+> `--match-config` fast-timer file. Learned: revives/damage must be applied
+> inside the tick simulation (external writes are discarded by state restore
+> even with `NetworkRollback.mutate`) — `reset_for_round` queues and the tick
+> applies.
+
+- [x] **Task 1 — Crouch (G1):** `crouch` InputMap action (keyboard Ctrl;
   controller slot reserved for a later layout pass); `PlayerInput.crouch`
   level input (+ registration); `_rollback_tick` speed multiplier; standing/
   crouched collision shapes toggled deterministically from input; camera

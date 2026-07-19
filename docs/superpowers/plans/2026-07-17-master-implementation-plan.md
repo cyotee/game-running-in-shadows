@@ -61,7 +61,7 @@ GODOT_BIN=/Applications/Godot.app/Contents/MacOS/Godot \
 | # | Plan file | Delivers | Status |
 |---|-----------|----------|--------|
 | 6 | `2026-07-16-steam-lobbies-sessions.md` | GodotSteam 4.20; `SessionManager`; lobby create/invite/browse/join; SteamMultiplayerPeer under netfox; 16-player spawning; join-in-progress spectate; host-migration spike scoped as its final task | ✅ code-complete (2026-07-19; live two-machine Steam verification pending owner — see tuning sheet §9) |
-| 7 | *(to write — Gap G2)* Match flow & Arena mode | Round state machine, respawn/death, win conditions, results | ☐ |
+| 7 | `2026-07-19-match-flow-arena.md` (G2 + G1 crouch) | Round state machine, respawn/death, win conditions, results | ✅ DONE (2026-07-19) |
 | 8 | *(to write — Gap G3)* Buy phase, economy & loadouts | Wages, buy menu, shopping-list loadouts, cybernetic slots | ☐ |
 | 9 | *(to write — Gap G4)* Core HUD | Resonance pips, health, ammo, scoreboard, kill feed | ☐ |
 
@@ -88,9 +88,7 @@ Each entry is the scope brief for a future `writing-plans` session. Decided desi
 
 - Plan: `2026-07-19-ci-headless-tests.md`. Workflow at `.github/workflows/tests.yml` (pinned Linux Godot 4.7.1, import warm-up, GdUnit run, report artifacts). GodotSteam 4.20.1 ships linux64 binaries, so the flagged risk is moot. No git remote was configured at execution time — verify the first Actions run on initial push.
 
-### G1 — Crouch *(small; after plan 2)*
-
-- **Scope:** PRD §6 Phase 0 lists crouch as pending and no plan covers it. Add a `crouch` InputMap action (keyboard + the controller layout's reserved slot), a rollback-tick movement rule (reduced speed + collider height change, prediction-safe), and a MatchConfig-tuned speed multiplier. Small enough to fold into the start of the G2 plan if preferred — record the choice here when made.
+### G1 — Crouch ✅ DONE (2026-07-19, folded into the G2 plan as its Task 1)
 
 ### G2 — Match flow & Arena/TDM mode *(after plan 6)*
 

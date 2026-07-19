@@ -14,26 +14,34 @@ var _match_started := false
 @onready var spawner: MultiplayerSpawner = $Players/MultiplayerSpawner
 @onready var spawn_points: Node3D = $SpawnPoints
 @onready var spectator_camera: Camera3D = $SpectatorCamera
+@onready var match_state: MatchState = $MatchState
 
 var _spawn_index := 0
 
 
 func _ready() -> void:
 	spawner.spawn_function = _spawn_player
+	match_state.setup(self)
+	NetworkTime.on_tick.connect(func(_delta: float, tick: int) -> void:
+		match_state.process_tick(tick))
 	var peer := multiplayer.multiplayer_peer
 	if peer == null or peer is OfflineMultiplayerPeer:
 		# Offline dev path: run the tick loop locally, spawn player 1.
 		NetworkTime.start()
 		_match_started = true
+		match_state.assign_team(1)
 		_do_spawn(1)
+		match_state.start_match()
 		return
 	if multiplayer.is_server():
 		_match_started = true
+		match_state.assign_team(multiplayer.get_unique_id())
 		_do_spawn(multiplayer.get_unique_id())
 		for peer_id in multiplayer.get_peers():
 			_admit_peer(peer_id)
 		multiplayer.peer_connected.connect(_admit_peer)
 		multiplayer.peer_disconnected.connect(_despawn)
+		match_state.start_match()
 
 
 func _admit_peer(peer_id: int) -> void:
@@ -42,6 +50,7 @@ func _admit_peer(peer_id: int) -> void:
 		push_warning("MatchSession: rejecting peer %d (session full)" % peer_id)
 		multiplayer.multiplayer_peer.disconnect_peer(peer_id)
 		return
+	match_state.assign_team(peer_id)
 	if _match_started and _spawn_index > 0:
 		_register_late_joiner(peer_id)
 	else:
@@ -83,7 +92,22 @@ func _spawn_player(peer_id: int) -> Node:
 	var point: Marker3D = spawn_points.get_child(_spawn_index % point_count)
 	player.position = point.position
 	player.get_node("Input").set_multiplayer_authority(peer_id)
+	player.died.connect(match_state.record_kill)
 	return player
+
+
+func promote_all_spectators() -> void:
+	for peer_id in _spectators.keys():
+		promote_spectator(peer_id)
+
+
+func reset_players_for_round() -> void:
+	var index := 0
+	var point_count := spawn_points.get_child_count()
+	for player in get_tree().get_nodes_in_group("players"):
+		var point: Marker3D = spawn_points.get_child(index % point_count)
+		player.reset_for_round(point.global_position)
+		index += 1
 
 
 func _unhandled_input(event: InputEvent) -> void:
