@@ -45,6 +45,7 @@ var _has_pending_respawn: bool = false
 var _pending_grants: Array[Array] = []
 
 signal died(victim_peer: int, attacker_peer: int)
+signal cast_denied()
 
 @onready var input: PlayerInput = $Input
 @onready var camera: Camera3D = $Camera3D
@@ -185,11 +186,12 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 	# Capture boost intent before contextual deploy can consume the press.
 	var jump_for_boost := jump_pressed and is_gliding
 
-	if (
-		input.repulse_press_tick == tick
-		and resonance.try_spend(MatchConfig.get_value("resonance.repulse_cost"))
-	):
-		_cast_repulse(tick, is_fresh)
+	if input.repulse_press_tick == tick:
+		if resonance.try_spend(MatchConfig.get_value("resonance.repulse_cost")):
+			_cast_repulse(tick, is_fresh)
+		elif is_fresh:
+			# Hard block (decided): clear denial feedback, no overdraft.
+			cast_denied.emit()
 	# Contextual jump (controller A): airborne and not gliding -> deploy glide.
 	var wants_glide := (
 		input.glide_press_tick == tick

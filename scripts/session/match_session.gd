@@ -24,6 +24,7 @@ func _ready() -> void:
 	spawner.spawn_function = _spawn_player
 	match_state.setup(self)
 	economy.setup(self, match_state)
+	$PlayerHud.bind_match_state(match_state)
 	match_state.round_ended.connect(economy.award_round_wages)
 	NetworkTime.on_tick.connect(func(_delta: float, tick: int) -> void:
 		match_state.process_tick(tick))
@@ -100,6 +101,7 @@ func _spawn_player(peer_id: int) -> Node:
 	player.died.connect(match_state.record_kill)
 	player.died.connect(func(_victim: int, attacker: int) -> void:
 		economy.note_kill(attacker))
+	player.died.connect($PlayerHud.note_kill)
 	economy.register_player(peer_id)
 	return player
 

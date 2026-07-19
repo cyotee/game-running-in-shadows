@@ -1,10 +1,11 @@
-[gd_scene load_steps=8 format=3 uid="uid://matchsession1"]
+[gd_scene load_steps=9 format=3 uid="uid://matchsession1"]
 
 [ext_resource type="Script" path="res://scripts/session/match_session.gd" id="1_session"]
 [ext_resource type="Script" path="res://scripts/match/match_state.gd" id="2_matchstate"]
 [ext_resource type="Script" path="res://scripts/ui/match_hud.gd" id="3_matchhud"]
 [ext_resource type="Script" path="res://scripts/match/economy.gd" id="4_economy"]
 [ext_resource type="Script" path="res://scripts/ui/buy_menu.gd" id="5_buymenu"]
+[ext_resource type="PackedScene" uid="uid://playerhud1" path="res://scenes/ui/player_hud.tscn" id="6_playerhud"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_Floor"]
 size = Vector3(80, 1, 80)
@@ -82,6 +83,8 @@ text = "Buy"
 [node name="LoadoutButton" type="Button" parent="CanvasLayer/BuyMenu/VBox"]
 unique_name_in_owner = true
 text = "Buy Default Loadout"
+
+[node name="PlayerHud" parent="." instance=ExtResource("6_playerhud")]
 
 [node name="SpawnPoints" type="Node3D" parent="."]
 
