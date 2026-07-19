@@ -51,7 +51,7 @@ GODOT_BIN=/Applications/Godot.app/Contents/MacOS/Godot \
 | 1 | `2026-07-15-netfox-integration.md` | netfox v1.35.3 vendored; FPS controller rebuilt on `_rollback_tick` + `PlayerInput` (BaseNetInput); tick-based combo; NetworkSimulator dev scene; two-instance simulated-latency E2E | ✅ DONE (2026-07-17) |
 | 2 | `2026-07-16-controller-support.md` | Joypad bindings for all actions (+ new `weapon_swap`/`menu`/`scoreboard` actions), stick look, contextual A (jump→glide), slowdown-on-target | ✅ DONE (2026-07-17; MatchConfig pulled forward from plan 3) |
 | 3 | `2026-07-16-resonance-system.md` | `MatchConfig` autoload (all tunables); `ResonancePool` as rollback state; costs on Repulse/Glide; health + damage attribution; archetype stats; Dwarf drain; Elf auto-heal | ✅ DONE (2026-07-18; edge inputs redesigned as press-tick ints) |
-| 4 | `2026-07-16-weapon-system.md` | `WeaponBase`/`WeaponRig`, 2 slots, mags+reserve, hit zones, hybrid recoil, lag-compensated hitscan; Pistol, SMG, Shotgun, Rifle, Sniper | ☐ |
+| 4 | `2026-07-16-weapon-system.md` | `WeaponBase`/`WeaponRig`, 2 slots, mags+reserve, hit zones, hybrid recoil, lag-compensated hitscan; Pistol, SMG, Shotgun, Rifle, Sniper | ✅ DONE (2026-07-18; player bodies moved to layer 4, view-kick recoil deferred per plan scope note) |
 | 5 | `2026-07-16-melee-third-person.md` | Combat Blade: third-person camera, swing/backstab, non-stacking bleed (emergent Elf equilibrium), blade-vs-blade block | ☐ |
 
 **Milestone A exit check (manual, after plan 5):** run the NetworkSimulator dev scene at ≥100 ms injected latency; Repulse+Glide launch, weapon fire, and blade duels must feel responsive on the "client" instance. Record verdict + numbers in `docs/ABILITY_TUNING_SHEET.md` §9 (Investigations & Playtest Tracker).
