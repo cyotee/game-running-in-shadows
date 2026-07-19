@@ -84,11 +84,9 @@ Not planned in detail yet — write plans when Milestone C's gate is met: Steam 
 
 Each entry is the scope brief for a future `writing-plans` session. Decided design is cited so the plan author does not re-litigate it.
 
-### G0 — CI: headless test runs on GitHub Actions *(no prerequisites — can be done immediately, in parallel with plan 1)*
+### G0 — CI: headless test runs on GitHub Actions ✅ DONE (2026-07-19)
 
-- **Scope:** one workflow (`.github/workflows/tests.yml`) that on push/PR: installs a pinned Linux headless Godot 4.7.1, runs the `--import --quit` warm-up, then the GdUnit4 command-line run above, failing the job on non-zero exit; uploads `reports/` as an artifact.
-- **Known risks to verify in that plan:** GodotSteam GDExtension must load (or degrade gracefully) on Linux CI with no Steam client — `SteamManager` already tolerates failed init (TESTING.md), but the extension binary for Linux must be present in `addons/godotsteam/`; if it is macOS-only today, the import step will error and the plan must vendor the Linux binaries.
-- **References:** `docs/TESTING.md` "Running Tests" + its two CI links.
+- Plan: `2026-07-19-ci-headless-tests.md`. Workflow at `.github/workflows/tests.yml` (pinned Linux Godot 4.7.1, import warm-up, GdUnit run, report artifacts). GodotSteam 4.20.1 ships linux64 binaries, so the flagged risk is moot. No git remote was configured at execution time — verify the first Actions run on initial push.
 
 ### G1 — Crouch *(small; after plan 2)*
 
