@@ -119,8 +119,12 @@ written:
 - **Start/stop the loop per test:** `NetworkTime.start()` in `before_test`,
   `NetworkTime.stop()` in `after_test` (see `tests/player/`). The "offline
   peer" warning is expected in tests.
-- **Effects land on network ticks, not frames.** After injecting input,
-  `await runner.simulate_frames(N)` (or `await_millis`) before asserting.
+- **Effects land on network ticks, not frames.** Simulation-driven suites
+  extend `NetSuite` (`tests/helpers/net_suite.gd`) and use
+  `await await_ticks(N)`: under machine load, frames stretch while tick
+  batches catch up in bursts, so frame-count awaits stop mapping to
+  simulation time. Assertions on frame-driven view code (camera swaps, FOV
+  lerps) remain load-sensitive — run the suite on a reasonably idle machine.
 - **Edge-triggered input in tests:** use `Input.action_press("x")`, hold it
   across a few simulated frames, then `Input.action_release("x")`. A press
   released after a single frame can slip between the scene's `_process`
