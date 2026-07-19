@@ -30,3 +30,8 @@ func _process(_delta: float) -> void:
 			pips += "○"
 	text = "Resonance %s  %.1f/%.0f (cap %.0f)\nHealth %.0f" % [
 		pips, pool.current, pool.max_resonance, pool.cap(), _player.health]
+	var weapon := _player.weapon_rig.active_weapon()
+	if weapon != null:
+		text += "\n%s  %d / %d%s" % [weapon.weapon_key, int(weapon.mag),
+			int(weapon.reserve),
+			" (reloading)" if weapon.is_reloading(NetworkTime.tick) else ""]
