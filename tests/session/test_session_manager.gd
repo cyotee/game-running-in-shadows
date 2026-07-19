@@ -60,6 +60,20 @@ func test_join_failure_returns_to_idle_with_error() -> void:
 	assert_array(errors).has_size(1)
 
 
+func test_lobby_browser_model_formats_and_skips_malformed() -> void:
+	var browser_script := load("res://scripts/ui/lobby_browser.gd")
+	var model = browser_script.LobbyBrowserModel
+	var rows: Array[Dictionary] = model.to_rows([
+		{"id": 1, "name": "Rooftop Run", "mode": "arena", "count": 3, "max": 16},
+		{"id": 2, "name": "NoMode"},  # malformed: skipped
+		"garbage",  # malformed: skipped
+	])
+
+	assert_int(rows.size()).is_equal(1)
+	assert_str(rows[0].label).is_equal("Rooftop Run — arena — 3/16")
+	assert_int(rows[0].id).is_equal(1)
+
+
 func test_headless_without_steam_surfaces_error() -> void:
 	SessionManager.lobby_service = SteamLobbyService.new()
 	SessionManager._reset_for_tests()

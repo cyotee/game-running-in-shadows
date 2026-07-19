@@ -18,7 +18,7 @@ config/name="CounterSpell"
 config/description="A spiritual successor FPS inspired by the Shadowrun universe. Cyberpunk meets urban fantasy in fast-paced first-person combat."
 config/version="0.1.0-dev"
 config/tags=PackedStringArray("fps", "multiplayer", "steam", "cyberpunk", "fantasy")
-run/main_scene="res://scenes/levels/test_arena.tscn"
+run/main_scene="res://scenes/ui/main_menu.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
 
