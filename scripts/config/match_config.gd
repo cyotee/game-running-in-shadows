@@ -86,6 +86,8 @@ const DEFAULTS: Dictionary = {
 	"weight.medium.dwarf": 0.95, "weight.medium.troll": 1.0,
 	"weight.heavy.human": 0.85, "weight.heavy.elf": 0.65,
 	"weight.heavy.dwarf": 0.85, "weight.heavy.troll": 0.93,
+	# --- Session ---
+	"session.max_players": 16.0,
 	# --- Controller input ---
 	"input.stick_deadzone_inner": 0.15,
 	"input.stick_deadzone_outer": 0.98,

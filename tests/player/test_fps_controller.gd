@@ -165,8 +165,9 @@ func test_repulse_spends_resonance() -> void:
 	runner.simulate_action_press("repulse")
 	await runner.simulate_frames(5)
 
-	# One cast (cost 2) plus a few ticks of out-of-combat regen drift.
-	assert_float(controller.resonance.current).is_equal_approx(6.0, 0.1)
+	# One cast (cost 2) plus out-of-combat regen drift (0.35/s, variable wall
+	# time). Two casts would land near 4, zero casts near 8.
+	assert_float(controller.resonance.current).is_between(5.9, 6.6)
 
 
 func test_repulse_hard_blocked_when_insufficient() -> void:
@@ -178,8 +179,9 @@ func test_repulse_hard_blocked_when_insufficient() -> void:
 	runner.simulate_action_press("repulse")
 	await runner.simulate_frames(5)
 
-	# No spend (hard block); small out-of-combat regen drift allowed.
-	assert_float(controller.resonance.current).is_equal_approx(1.0, 0.1)
+	# No spend (hard block); out-of-combat regen drift allowed (0.35/s, and
+	# the awaited wall time varies with load). A spend would subtract 2.0.
+	assert_float(controller.resonance.current).is_between(0.99, 1.5)
 	# No self-push happened (horizontal only: gravity owns the y axis while
 	# the controller free-falls in the scene-runner void).
 	var delta_v := controller.velocity - vel_before

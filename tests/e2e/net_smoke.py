@@ -18,7 +18,7 @@ import time
 GODOT = "/Applications/Godot.app/Contents/MacOS/Godot"
 SCENE = "res://scenes/dev/net_test.tscn"
 LATENCY_MS = os.environ.get("NET_TEST_LATENCY_MS", "50")
-HOST_MCP, CLIENT_MCP = 9191, 9192
+HOST_MCP, CLIENT_MCP, CLIENT2_MCP = 9191, 9192, 9193
 
 
 class Instance:
@@ -126,6 +126,17 @@ def main() -> int:
 
         wait_for(try_glide, timeout=20, interval=0.5, desc="glide state on host")
         print("glide replicated to host")
+
+        # Third peer joins: host must end up with three player bodies
+        # (multi-peer spawn smoke for the sessions milestone).
+        client2 = Instance(CLIENT2_MCP)
+        try:
+            wait_for(lambda: host.cmd(
+                "eval", {"code": "return get_tree().get_nodes_in_group('players').size()"})
+                .get("result", 0) >= 3, desc="three player bodies on host")
+            print("three peers spawned on host")
+        finally:
+            client2.stop()
 
         print("E2E NET SMOKE: PASS")
         return 0
