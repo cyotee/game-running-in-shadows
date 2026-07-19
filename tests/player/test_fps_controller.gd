@@ -344,6 +344,49 @@ func test_dwarf_aura_ignores_distant_players() -> void:
 	assert_float(victim.resonance.current).is_equal(start)
 
 
+func test_bleed_damages_without_marking_combat() -> void:
+	var runner := _spawn_controller()
+	var victim: FPSController = runner.scene()
+	var start_health := victim.health
+
+	victim.apply_bleed(4.0, 8.0)
+	await runner.simulate_frames(60)  # ~1s
+
+	assert_float(victim.health).is_less(start_health)
+	assert_float(victim.health).is_greater(start_health - 8.0)  # ~4 HP lost
+	assert_bool(victim.resonance.is_in_combat(NetworkTime.tick)).is_false()
+
+
+func test_bleed_refreshes_does_not_stack() -> void:
+	var runner := _spawn_controller()
+	var victim: FPSController = runner.scene()
+
+	victim.apply_bleed(4.0, 8.0)
+	var first := victim.bleed_ticks_remaining
+	await runner.simulate_frames(30)
+	victim.apply_bleed(4.0, 8.0)
+
+	assert_int(victim.bleed_ticks_remaining).is_between(first - 5, first + 5)
+	assert_float(victim.bleed_hp_per_s).is_equal(4.0)
+
+
+func test_bleeding_elf_holds_health_while_resonance_drains() -> void:
+	# THE decided equilibrium: bleed 4 HP/s vs Elf heal 4 HP/s must cancel
+	# emergently. Elf must be out of combat for the heal to run.
+	var runner := _spawn_controller()
+	var elf: FPSController = runner.scene()
+	elf.archetype = &"elf"
+	elf._apply_archetype_config()
+	elf.health = 60.0
+	var start_res := elf.resonance.current
+
+	elf.apply_bleed(4.0, 8.0)
+	await runner.simulate_frames(120)  # ~2s
+
+	assert_float(elf.health).is_equal_approx(60.0, 1.5)
+	assert_float(elf.resonance.current).is_less(start_res)
+
+
 func test_slowdown_scale_set_when_enemy_under_reticle() -> void:
 	var runner := _spawn_controller()
 	var controller: FPSController = runner.scene()

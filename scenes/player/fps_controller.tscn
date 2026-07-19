@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://fpscontrollerstub"]
+[gd_scene load_steps=19 format=3 uid="uid://fpscontrollerstub"]
 
 [ext_resource type="Script" path="res://scripts/player/fps_controller.gd" id="1_stub"]
 [ext_resource type="Script" path="res://scripts/player/player_input.gd" id="2_input"]
@@ -13,6 +13,7 @@
 [ext_resource type="Script" path="res://scripts/weapons/shotgun.gd" id="11_shotgun"]
 [ext_resource type="Script" path="res://scripts/weapons/rifle.gd" id="12_rifle"]
 [ext_resource type="Script" path="res://scripts/weapons/sniper.gd" id="13_sniper"]
+[ext_resource type="Script" path="res://scripts/weapons/blade.gd" id="14_blade"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
 height = 1.8
@@ -86,6 +87,14 @@ weight_class = 2
 [node name="FireAction" type="Node" parent="Camera3D/WeaponSocket/WeaponRig/Sniper"]
 script = ExtResource("9_action")
 
+[node name="Blade" type="Node3D" parent="Camera3D/WeaponSocket/WeaponRig"]
+script = ExtResource("14_blade")
+weapon_key = "blade"
+weight_class = 0
+
+[node name="FireAction" type="Node" parent="Camera3D/WeaponSocket/WeaponRig/Blade"]
+script = ExtResource("9_action")
+
 [node name="HitZones" type="Node3D" parent="."]
 
 [node name="Head" type="Area3D" parent="HitZones"]
@@ -115,6 +124,15 @@ monitoring = false
 [node name="LimbsShape" type="CollisionShape3D" parent="HitZones/Limbs"]
 shape = SubResource("BoxShape3D_Limbs")
 
+[node name="ThirdPersonRig" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+
+[node name="SpringArm3D" type="SpringArm3D" parent="ThirdPersonRig"]
+spring_length = 3.5
+
+[node name="ThirdPersonCamera" type="Camera3D" parent="ThirdPersonRig/SpringArm3D"]
+current = false
+
 [node name="Input" type="Node" parent="."]
 script = ExtResource("2_input")
 
@@ -124,7 +142,7 @@ script = ExtResource("5_resonance")
 [node name="RollbackSynchronizer" type="Node" parent="." node_paths=PackedStringArray("root")]
 script = ExtResource("3_rbs")
 root = NodePath("..")
-state_properties = Array[String]([":transform", ":velocity", ":is_gliding", ":glide_ticks_remaining", ":last_down_repulse_tick", ":health", "Resonance:current", "Resonance:reserved", "Resonance:last_combat_tick", "Camera3D/WeaponSocket/WeaponRig:slot1", "Camera3D/WeaponSocket/WeaponRig:slot2", "Camera3D/WeaponSocket/WeaponRig:active_slot", "Camera3D/WeaponSocket/WeaponRig/Pistol:mag", "Camera3D/WeaponSocket/WeaponRig/Pistol:reserve", "Camera3D/WeaponSocket/WeaponRig/Pistol:last_fire_tick", "Camera3D/WeaponSocket/WeaponRig/Pistol:reload_until_tick", "Camera3D/WeaponSocket/WeaponRig/Smg:mag", "Camera3D/WeaponSocket/WeaponRig/Smg:reserve", "Camera3D/WeaponSocket/WeaponRig/Smg:last_fire_tick", "Camera3D/WeaponSocket/WeaponRig/Smg:reload_until_tick", "Camera3D/WeaponSocket/WeaponRig/Shotgun:mag", "Camera3D/WeaponSocket/WeaponRig/Shotgun:reserve", "Camera3D/WeaponSocket/WeaponRig/Shotgun:last_fire_tick", "Camera3D/WeaponSocket/WeaponRig/Shotgun:reload_until_tick", "Camera3D/WeaponSocket/WeaponRig/Rifle:mag", "Camera3D/WeaponSocket/WeaponRig/Rifle:reserve", "Camera3D/WeaponSocket/WeaponRig/Rifle:last_fire_tick", "Camera3D/WeaponSocket/WeaponRig/Rifle:reload_until_tick", "Camera3D/WeaponSocket/WeaponRig/Sniper:mag", "Camera3D/WeaponSocket/WeaponRig/Sniper:reserve", "Camera3D/WeaponSocket/WeaponRig/Sniper:last_fire_tick", "Camera3D/WeaponSocket/WeaponRig/Sniper:reload_until_tick", "Camera3D/WeaponSocket/WeaponRig/Smg:bloom_deg", "Camera3D/WeaponSocket/WeaponRig/Rifle:burst_remaining", "Camera3D/WeaponSocket/WeaponRig/Rifle:next_burst_tick"])
+state_properties = Array[String]([":transform", ":velocity", ":is_gliding", ":glide_ticks_remaining", ":last_down_repulse_tick", ":health", ":bleed_ticks_remaining", ":bleed_hp_per_s", "Resonance:current", "Resonance:reserved", "Resonance:last_combat_tick", "Camera3D/WeaponSocket/WeaponRig:slot1", "Camera3D/WeaponSocket/WeaponRig:slot2", "Camera3D/WeaponSocket/WeaponRig:active_slot", "Camera3D/WeaponSocket/WeaponRig/Pistol:mag", "Camera3D/WeaponSocket/WeaponRig/Pistol:reserve", "Camera3D/WeaponSocket/WeaponRig/Pistol:last_fire_tick", "Camera3D/WeaponSocket/WeaponRig/Pistol:reload_until_tick", "Camera3D/WeaponSocket/WeaponRig/Smg:mag", "Camera3D/WeaponSocket/WeaponRig/Smg:reserve", "Camera3D/WeaponSocket/WeaponRig/Smg:last_fire_tick", "Camera3D/WeaponSocket/WeaponRig/Smg:reload_until_tick", "Camera3D/WeaponSocket/WeaponRig/Shotgun:mag", "Camera3D/WeaponSocket/WeaponRig/Shotgun:reserve", "Camera3D/WeaponSocket/WeaponRig/Shotgun:last_fire_tick", "Camera3D/WeaponSocket/WeaponRig/Shotgun:reload_until_tick", "Camera3D/WeaponSocket/WeaponRig/Rifle:mag", "Camera3D/WeaponSocket/WeaponRig/Rifle:reserve", "Camera3D/WeaponSocket/WeaponRig/Rifle:last_fire_tick", "Camera3D/WeaponSocket/WeaponRig/Rifle:reload_until_tick", "Camera3D/WeaponSocket/WeaponRig/Sniper:mag", "Camera3D/WeaponSocket/WeaponRig/Sniper:reserve", "Camera3D/WeaponSocket/WeaponRig/Sniper:last_fire_tick", "Camera3D/WeaponSocket/WeaponRig/Sniper:reload_until_tick", "Camera3D/WeaponSocket/WeaponRig/Smg:bloom_deg", "Camera3D/WeaponSocket/WeaponRig/Rifle:burst_remaining", "Camera3D/WeaponSocket/WeaponRig/Rifle:next_burst_tick", "Camera3D/WeaponSocket/WeaponRig/Blade:last_fire_tick"])
 input_properties = Array[String](["Input:movement", "Input:aim_yaw", "Input:aim_pitch", "Input:sprint", "Input:fire_held", "Input:ads", "Input:jump_press_tick", "Input:repulse_press_tick", "Input:glide_press_tick", "Input:fire_press_tick", "Input:swap_press_tick", "Input:reload_press_tick", "Input:slot_select"])
 
 [node name="TickInterpolator" type="Node" parent="." node_paths=PackedStringArray("root")]

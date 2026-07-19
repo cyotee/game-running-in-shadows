@@ -66,6 +66,21 @@ const DEFAULTS: Dictionary = {
 	"weapon.sniper.falloff_min_mult": 1.0, "weapon.sniper.weight": 2.0,
 	"weapon.sniper.ads_zoom": 4.0,
 	"weapon.recoil_scale": 1.0,
+	"weapon.blade.damage": 25.0, "weapon.blade.backstab_mult": 1.6,
+	"weapon.blade.swing_interval_s": 0.6, "weapon.blade.range_m": 2.2,
+	"weapon.blade.arc_deg": 70.0, "weapon.blade.weight": 0.0,
+	# Base-pipeline keys the shared WeaponBase code reads before BladeWeapon
+	# overrides them away (prevents unknown-key push_errors): sentinel values.
+	"weapon.blade.mag": 1.0, "weapon.blade.reserve": 0.0,
+	"weapon.blade.reload_s": 0.1, "weapon.blade.fire_interval_s": 0.6,
+	"weapon.blade.head_mult": 1.0, "weapon.blade.falloff_start_m": 999.0,
+	"weapon.blade.falloff_end_m": 999.0, "weapon.blade.falloff_min_mult": 1.0,
+	"weapon.blade.bleed_hp_s": 4.0, "weapon.blade.bleed_duration_s": 8.0,
+	"weapon.blade.block_mult": 0.3, "weapon.blade.backstab_cone_deg": 100.0,
+	"archetype.human.melee_mult": 1.0,
+	"archetype.elf.melee_mult": 0.8,
+	"archetype.dwarf.melee_mult": 1.0,
+	"archetype.troll.melee_mult": 1.4,
 	# Movement weight speed multipliers: weight class 0=light 1=medium 2=heavy
 	"weight.medium.human": 0.95, "weight.medium.elf": 0.85,
 	"weight.medium.dwarf": 0.95, "weight.medium.troll": 1.0,

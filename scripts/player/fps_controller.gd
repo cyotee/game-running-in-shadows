@@ -31,12 +31,16 @@ var is_gliding: bool = false
 var glide_ticks_remaining: int = 0
 var last_down_repulse_tick: int = -(1 << 30)
 var health: float = 100.0
+var bleed_ticks_remaining: int = 0
+var bleed_hp_per_s: float = 0.0
 
 @onready var input: PlayerInput = $Input
 @onready var camera: Camera3D = $Camera3D
 @onready var rollback_synchronizer: RollbackSynchronizer = $RollbackSynchronizer
 @onready var resonance: ResonancePool = $Resonance
 @onready var weapon_rig: WeaponRig = $Camera3D/WeaponSocket/WeaponRig
+@onready var third_person_rig: Node3D = $ThirdPersonRig
+@onready var third_person_camera: Camera3D = $ThirdPersonRig/SpringArm3D/ThirdPersonCamera
 
 
 func _ready() -> void:
@@ -68,6 +72,13 @@ func _process(_delta: float) -> void:
 		if active != null and input.ads and active.supports_ads():
 			target_fov = 75.0 / active.ads_zoom()
 		camera.fov = lerpf(camera.fov, target_fov, minf(10.0 * _delta, 1.0))
+		# Blade wields in third person (view-only camera swap).
+		var blade_out := active != null and active.weapon_key == "blade"
+		if blade_out != third_person_camera.current:
+			third_person_camera.current = blade_out
+			camera.current = not blade_out
+		if blade_out:
+			third_person_rig.rotation = Vector3(input.local_pitch * 0.5, 0, 0)
 		# Controller-only aim assist: reticle friction while an enemy is in
 		# view. Mouse look never reads look_rate_scale (decided design).
 		input.look_rate_scale = (
@@ -125,6 +136,14 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 	resonance.process_tick(delta, tick)
 	_process_archetype_passives(delta, tick, is_fresh)
 	weapon_rig.process_tick(delta, tick, is_fresh)
+
+	if bleed_ticks_remaining > 0:
+		bleed_ticks_remaining -= 1
+		# Direct health reduction: bleed must NOT mark combat (decided) —
+		# the Elf equilibrium depends on the heal running concurrently.
+		health = maxf(health - bleed_hp_per_s * delta, 0.0)
+		if bleed_ticks_remaining == 0:
+			bleed_hp_per_s = 0.0
 
 	# Press-tick inputs match exactly one simulated tick (see PlayerInput).
 	var jump_pressed := input.jump_press_tick == tick
@@ -205,6 +224,17 @@ func _process_archetype_passives(delta: float, tick: int, is_fresh: bool) -> voi
 				continue
 			if other.global_position.distance_to(global_position) <= radius:
 				other.resonance.drain(rate * delta)
+
+
+func apply_bleed(hp_per_s: float, duration_s: float) -> void:
+	# No stacking (decided 2026-07-16): refresh duration, keep higher rate.
+	bleed_ticks_remaining = int(roundf(duration_s * NetworkTime.tickrate))
+	bleed_hp_per_s = maxf(bleed_hp_per_s, hp_per_s)
+
+
+func is_blocking() -> bool:
+	var active := weapon_rig.active_weapon()
+	return active != null and active.weapon_key == "blade" and input.ads
 
 
 func take_zone_damage(base_damage: float, weapon_key: String, zone: String,

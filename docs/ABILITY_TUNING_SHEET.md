@@ -297,6 +297,11 @@ Current prototype has basic raycast hitscan. Need real damage, spread, recoil, e
 
 ## 9. Investigations & Playtest Tracker
 
+**Weapon implementation notes (2026-07-18)**
+- SMG bloom now decays only after sustained fire stops: at the recorded baselines (0.15°/shot at 12.5 shots/s vs 3°/s decay) continuous-decay bloom could never accumulate. Behavior: grows while firing, decays at 3°/s once fire stops.
+- Player bodies moved to collision layer 4 (world 1, hit zones 2) so weapon rays resolve zones instead of the body shell; capsule offset so feet sit at node origin (camera 1.6 is inside the 1.8 m body).
+- View-kick recoil patterns deferred per the weapon plan's scope note (dispersion half shipped).
+
 **Netfox rebuild behavior note (2026-07-17)**
 - Glide now cancels on floor contact **only while descending** (`velocity.y <= 0.01`), so a ground-level Repulse + Glide combo keeps glide active through the upward launch. This is a deliberate change from the pre-netfox prototype, where a grounded launch silently dropped glide. Validate feel in playtests.
 
