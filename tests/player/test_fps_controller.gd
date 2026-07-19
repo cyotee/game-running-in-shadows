@@ -346,6 +346,59 @@ func test_dwarf_aura_ignores_distant_players() -> void:
 	assert_float(victim.resonance.current).is_equal(start)
 
 
+func test_crouch_slows_movement() -> void:
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+
+	runner.simulate_action_press("move_forward")
+	await runner.simulate_frames(30)
+	var walk_dz := absf(controller.global_position.z)
+
+	# Measure the crouched window as a delta (rollback owns the transform,
+	# so mid-test position resets cannot be relied on).
+	var crouch_start_z := controller.global_position.z
+	runner.simulate_action_press("crouch")
+	await runner.simulate_frames(30)
+	# Collider swap follows the input while crouched.
+	assert_bool(controller.crouch_shape.disabled).is_false()
+	assert_bool(controller.standing_shape.disabled).is_true()
+	var crouch_dz := absf(controller.global_position.z - crouch_start_z)
+	runner.simulate_action_release("crouch")
+	runner.simulate_action_release("move_forward")
+
+	assert_float(crouch_dz).is_less(walk_dz)
+
+
+func test_lethal_damage_freezes_and_signals_once() -> void:
+	var runner := _spawn_controller()
+	var victim: FPSController = runner.scene()
+	var deaths: Array = []
+	victim.died.connect(func(v: int, a: int) -> void: deaths.append([v, a]))
+
+	victim.take_damage(9999.0, null, NetworkTime.tick)
+	await runner.simulate_frames(10)
+
+	assert_bool(victim.is_dead).is_true()
+	assert_array(deaths).has_size(1)
+	var frozen_at := victim.global_position
+	await runner.simulate_frames(10)
+	assert_float((victim.global_position - frozen_at).length()).is_less(0.01)
+
+
+func test_reset_for_round_revives() -> void:
+	var runner := _spawn_controller()
+	var victim: FPSController = runner.scene()
+	victim.take_damage(9999.0, null, NetworkTime.tick)
+	await runner.simulate_frames(5)
+	assert_bool(victim.is_dead).is_true()
+
+	victim.reset_for_round(Vector3(3, 1, 3))
+	await runner.simulate_frames(5)
+
+	assert_bool(victim.is_dead).is_false()
+	assert_float(victim.health).is_equal(victim._config("max_health"))
+
+
 func test_bleed_damages_without_marking_combat() -> void:
 	var runner := _spawn_controller()
 	var victim: FPSController = runner.scene()

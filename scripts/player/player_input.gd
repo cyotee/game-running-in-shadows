@@ -23,6 +23,7 @@ var aim_pitch: float = 0.0
 var sprint: bool = false
 var fire_held: bool = false
 var ads: bool = false
+var crouch: bool = false
 var jump_press_tick: int = -1
 var repulse_press_tick: int = -1
 var glide_press_tick: int = -1
@@ -124,6 +125,7 @@ func _gather() -> void:
 	sprint = Input.is_action_pressed("sprint")
 	fire_held = Input.is_action_pressed("fire_primary")
 	ads = Input.is_action_pressed("ads")
+	crouch = Input.is_action_pressed("crouch")
 	aim_yaw = local_yaw
 	aim_pitch = local_pitch
 	if _pending_jump:
