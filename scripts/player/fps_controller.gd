@@ -62,6 +62,12 @@ func _process(_delta: float) -> void:
 	# body in _rollback_tick from recorded input.
 	if input.is_multiplayer_authority():
 		camera.rotation.x = input.local_pitch
+		# ADS zoom is view-only feedback.
+		var active := weapon_rig.active_weapon() if weapon_rig != null else null
+		var target_fov := 75.0
+		if active != null and input.ads and active.supports_ads():
+			target_fov = 75.0 / active.ads_zoom()
+		camera.fov = lerpf(camera.fov, target_fov, minf(10.0 * _delta, 1.0))
 		# Controller-only aim assist: reticle friction while an enemy is in
 		# view. Mouse look never reads look_rate_scale (decided design).
 		input.look_rate_scale = (
@@ -71,19 +77,27 @@ func _process(_delta: float) -> void:
 		)
 
 
-# TODO(weapons): use the hit-zone layer once the weapons plan adds hit zones;
-# for now any FPSController body counts.
 func enemy_under_reticle(max_range: float) -> bool:
 	var space_state := get_world_3d().direct_space_state
 	var from := camera.global_position
 	var to := from + (-camera.global_transform.basis.z) * max_range
 
 	var query := PhysicsRayQueryParameters3D.create(from, to)
+	query.collide_with_areas = true
 	query.collide_with_bodies = true
-	query.exclude = [get_rid()]
+	query.collision_mask = 0b11  # world (1) + hit zones (2)
+	var excludes: Array[RID] = [get_rid()]
+	for zone_area: Area3D in $HitZones.get_children():
+		excludes.append(zone_area.get_rid())
+	query.exclude = excludes
 	var result := space_state.intersect_ray(query)
 
-	return not result.is_empty() and result.collider is FPSController
+	return (
+		not result.is_empty()
+		and result.collider is Area3D
+		and result.collider.has_meta("player")
+		and result.collider.get_meta("player") != self
+	)
 
 
 func _config(key_suffix: String) -> float:
@@ -155,9 +169,6 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 		velocity.x = move_toward(velocity.x, target.x, acceleration * delta)
 		velocity.z = move_toward(velocity.z, target.z, acceleration * delta)
 
-	if input.fire_press_tick == tick and is_fresh:
-		_try_shoot(tick)
-
 	# netfox CharacterBody3D pattern: move_and_slide assumes engine delta.
 	velocity *= NetworkTime.physics_factor
 	move_and_slide()
@@ -217,25 +228,6 @@ func take_damage(amount: float, attacker: FPSController, tick: int) -> void:
 	if health <= 0.0:
 		# Death/respawn arrives with the round-flow plan; clamp for now.
 		print("%s down (no death handling yet)" % name)
-
-
-func _try_shoot(tick: int) -> void:
-	var space_state := get_world_3d().direct_space_state
-	var from := camera.global_position
-	var aim := Basis(Vector3.UP, input.aim_yaw) * Basis(Vector3.RIGHT, input.aim_pitch)
-	var to := from + (aim * Vector3.FORWARD) * 100.0
-
-	var query := PhysicsRayQueryParameters3D.create(from, to)
-	query.collide_with_bodies = true
-	query.exclude = [get_rid()]
-	var result := space_state.intersect_ray(query)
-
-	if result and result.collider is FPSController:
-		result.collider.take_damage(MatchConfig.get_value("weapon.hitscan_damage"), self, tick)
-	elif result:
-		print("Hit: ", result.collider.name, " at ", result.position)
-	else:
-		print("Shot fired (miss)")
 
 
 func _cast_repulse(tick: int, is_fresh: bool) -> void:
