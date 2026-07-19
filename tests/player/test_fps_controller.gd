@@ -165,8 +165,9 @@ func test_repulse_spends_resonance() -> void:
 	runner.simulate_action_press("repulse")
 	await runner.simulate_frames(5)
 
-	# One cast (cost 2) plus a few ticks of out-of-combat regen drift.
-	assert_float(controller.resonance.current).is_equal_approx(6.0, 0.1)
+	# One cast (cost 2) plus out-of-combat regen drift (0.35/s, variable wall
+	# time). Two casts would land near 4, zero casts near 8.
+	assert_float(controller.resonance.current).is_between(5.9, 6.6)
 
 
 func test_repulse_hard_blocked_when_insufficient() -> void:
