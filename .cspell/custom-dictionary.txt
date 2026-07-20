@@ -68,6 +68,7 @@ Krypto
 lerps
 Lifebloom
 loadouts
+lootable
 megacorp
 megacorporations
 metahumans
