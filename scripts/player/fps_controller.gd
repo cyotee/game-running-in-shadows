@@ -37,6 +37,10 @@ var is_dead: bool = false
 var is_wraithed: bool = false
 var grenade_stock: int = 2
 var grenade_cook_ticks: int = 0
+var lifebloom_reserved: bool = false
+var tangle_reserved: bool = false
+var lifebloom_cast_tick: int = -(1 << 30)
+var tangle_cast_tick: int = -(1 << 30)
 var last_attacker_peer: int = 0
 
 # Respawn request (plain vars, consumed inside the tick simulation).
@@ -214,6 +218,10 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 		grenade_cook_ticks = mini(grenade_cook_ticks + 1, cook_max)
 	if not is_wraithed and input.grenade_press_tick == tick and grenade_stock > 0:
 		_throw_grenade(is_fresh, cook_max)
+	# Placed fields (instant placement at an aimed point; held reservations).
+	if not is_wraithed and input.lifebloom_press_tick == tick:
+		_cast_lifebloom(tick, is_fresh)
+	_reconcile_field_reservations(tick)
 	# Contextual jump (controller A): airborne and not gliding -> deploy glide.
 	var wants_glide := not is_wraithed and (
 		input.glide_press_tick == tick
@@ -299,6 +307,14 @@ func is_blocking() -> bool:
 	return active != null and active.weapon_key == "blade" and input.ads
 
 
+func heal(amount: float, _tick: int) -> void:
+	# Lifebloom heals friend or foe regardless of combat state (decided).
+	if is_dead:
+		return
+	health = minf(health + amount, _config("max_health"))
+	NetworkRollback.mutate(self)
+
+
 func take_zone_damage(base_damage: float, weapon_key: String, zone: String,
 		attacker: FPSController, tick: int) -> void:
 	var mult := 1.0
@@ -352,6 +368,71 @@ func _apply_pending_respawn() -> void:
 	for key in [weapon_rig.slot1, weapon_rig.slot2]:
 		if key != "":
 			weapon_rig.weapon_by_key(key).initialize_ammo()
+
+
+func _cast_lifebloom(tick: int, is_fresh: bool) -> void:
+	var cost := MatchConfig.get_value("resonance.lifebloom_cost")
+	if lifebloom_reserved or _in_null_field() or resonance.current < cost:
+		if is_fresh:
+			cast_denied.emit()
+		return
+	resonance.reserve(cost)  # held while the field lives; releases empty on death
+	lifebloom_reserved = true
+	lifebloom_cast_tick = tick
+	if is_fresh:
+		_place_field("lifebloom")
+
+
+func _reconcile_field_reservations(tick: int) -> void:
+	# Release a held reservation (EMPTY) once the field is gone. A grace
+	# window past the cast tick avoids the spawn/replication race where the
+	# just-placed field is not yet in its group.
+	if lifebloom_reserved and tick > lifebloom_cast_tick + 30 \
+			and not _has_owned_field("lifebloom_fields"):
+		resonance.release(MatchConfig.get_value("resonance.lifebloom_cost"))
+		lifebloom_reserved = false
+	if tangle_reserved and tick > tangle_cast_tick + 30 \
+			and not _has_owned_field("tangle_fields"):
+		resonance.release(MatchConfig.get_value("resonance.tangle_cost"))
+		tangle_reserved = false
+
+
+func _place_field(kind: String) -> void:
+	var spawner := get_tree().get_first_node_in_group("projectile_spawner")
+	if spawner == null:
+		return
+	spawner.place_field(kind, _aim_placement_point(), input.get_multiplayer_authority())
+
+
+func _aim_placement_point() -> Vector3:
+	var aim := Basis(Vector3.UP, input.aim_yaw) * Basis(Vector3.RIGHT, input.aim_pitch)
+	var dir := aim * Vector3.FORWARD
+	var from := camera.global_position
+	var max_range := MatchConfig.get_value("ability.field_cast_range_m")
+	var query := PhysicsRayQueryParameters3D.create(from, from + dir * max_range)
+	query.collision_mask = 0b1
+	query.exclude = [get_rid()]
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	return hit.position if hit else from + dir * max_range
+
+
+func _has_owned_field(group: String) -> bool:
+	var my_peer := input.get_multiplayer_authority()
+	for node in get_tree().get_nodes_in_group(group):
+		var field := node as PlacedField
+		if field != null and field.caster_peer == my_peer and not field._is_dead():
+			return true
+	return false
+
+
+func _in_null_field() -> bool:
+	var radius := MatchConfig.get_value("ability.null_radius_m")
+	for node in get_tree().get_nodes_in_group("null_fields"):
+		var field := node as PlacedField
+		if field != null and not field._is_dead() \
+				and global_position.distance_to(field.global_position) <= radius:
+			return true
+	return false
 
 
 func _throw_grenade(is_fresh: bool, cook_max: int) -> void:
