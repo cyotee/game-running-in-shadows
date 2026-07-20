@@ -52,5 +52,17 @@ field destruction) integrate into controller/weapon as noted per task.
 
 **Deferred (documented):** Dwarf-proximity destroys fields (Dwarf aura already
 drains Resonance; field destruction folds in with the ability-ownership pass);
-"two Lifebloom nodes weaken each other"; exact ally-impede slow. Buy/ownership
-gating stays deferred with the rest of the abilities (Wave 1 precedent).
+"two Lifebloom nodes weaken each other"; exact ally-impede slow (Tangle exempts
+only the caster until team data is wired into the field). Buy/ownership gating
+stays deferred with the rest of the abilities (Wave 1 precedent).
+
+---
+
+> **Status: EXECUTED 2026-07-20.** 110 GdUnit tests green; live MCP arena
+> verification: Lifebloom placed (reservation 2 → 5), Tangle placed, Null Charge
+> placed (stock 4 → 3). Learned: (1) held reservations reconcile from world
+> state with a post-cast grace window to survive the spawn/replication race;
+> (2) Tangle pull must enforce a minimum inward speed (conveyor) or the movement
+> decay swamps an accel-based pull; (3) a raycast whose origin is inside a
+> convex shape reports no hit — the gunfire-block test must place the vortex
+> beyond the shooter's camera.
