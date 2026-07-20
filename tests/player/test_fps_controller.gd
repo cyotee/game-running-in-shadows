@@ -81,9 +81,8 @@ func test_glide_without_combo_gives_no_launch() -> void:
 	var controller: FPSController = runner.scene()
 	controller.input.local_pitch = PITCH_DOWN
 
-	Input.action_press("glide")
+	press(controller.input, &"glide")
 	await await_ticks(3)
-	Input.action_release("glide")
 	await await_ticks(5)
 
 	assert_bool(controller.is_gliding).is_true()
@@ -95,13 +94,11 @@ func test_down_repulse_then_glide_triggers_combo_launch() -> void:
 	var controller: FPSController = runner.scene()
 	controller.input.local_pitch = PITCH_DOWN
 
-	Input.action_press("repulse")
+	press(controller.input, &"repulse")
 	await await_ticks(3)
-	Input.action_release("repulse")
 	await await_ticks(3)
-	Input.action_press("glide")
+	press(controller.input, &"glide")
 	await await_ticks(3)
-	Input.action_release("glide")
 	await await_ticks(2)
 
 	assert_bool(controller.is_gliding).is_true()
@@ -114,13 +111,9 @@ func test_combo_launch_keeps_glide_active_while_rising() -> void:
 	var controller: FPSController = runner.scene()
 	controller.input.local_pitch = PITCH_DOWN
 
-	Input.action_press("repulse")
+	press(controller.input, &"repulse")
 	await await_ticks(3)
-	Input.action_release("repulse")
-	await await_ticks(3)
-	Input.action_press("glide")
-	await await_ticks(1)
-	Input.action_release("glide")
+	press(controller.input, &"glide")
 	await await_ticks(20)
 
 	# Still rising or floating mid-launch: glide must not self-cancel.
@@ -132,14 +125,12 @@ func test_level_repulse_does_not_arm_combo() -> void:
 	var controller: FPSController = runner.scene()
 	controller.input.local_pitch = PITCH_LEVEL
 
-	Input.action_press("repulse")
+	press(controller.input, &"repulse")
 	await await_ticks(3)
-	Input.action_release("repulse")
 	await await_ticks(3)
 	controller.input.local_pitch = PITCH_DOWN
-	Input.action_press("glide")
+	press(controller.input, &"glide")
 	await await_ticks(3)
-	Input.action_release("glide")
 	await await_ticks(2)
 
 	assert_bool(controller.is_gliding).is_true()
@@ -162,7 +153,7 @@ func test_repulse_spends_resonance() -> void:
 	var controller: FPSController = runner.scene()
 	controller.input.local_pitch = PITCH_LEVEL
 
-	runner.simulate_action_press("repulse")
+	press(controller.input, &"repulse")
 	await await_ticks(5)
 
 	# One cast (cost 2) plus out-of-combat regen drift (0.35/s, variable wall
@@ -176,7 +167,7 @@ func test_repulse_hard_blocked_when_insufficient() -> void:
 	controller.resonance.current = 1.0
 	var vel_before := controller.velocity
 
-	runner.simulate_action_press("repulse")
+	press(controller.input, &"repulse")
 	await await_ticks(5)
 
 	# No spend (hard block); out-of-combat regen drift allowed (0.35/s, and
@@ -450,7 +441,8 @@ func test_slowdown_scale_set_when_enemy_under_reticle() -> void:
 	victim.position = controller.position + Vector3(0, 0, -5)
 	# Aim straight at the victim (spawned facing -Z).
 	controller.input.local_pitch = 0.0
-	await await_ticks(5)
+	# Aim assist is frame-driven view logic (_process), so await frames here.
+	await runner.simulate_frames(10)
 
 	assert_bool(controller.enemy_under_reticle(40.0)).is_true()
 	assert_float(controller.input.look_rate_scale).is_equal(0.6)
@@ -458,7 +450,7 @@ func test_slowdown_scale_set_when_enemy_under_reticle() -> void:
 	# Turn the view away (rollback owns the victim's transform, so move the
 	# reticle rather than the victim).
 	controller.input.local_yaw = 1.2
-	await await_ticks(10)
+	await runner.simulate_frames(15)
 	assert_float(controller.input.look_rate_scale).is_equal(1.0)
 
 
@@ -466,8 +458,7 @@ func test_airborne_jump_deploys_glide() -> void:
 	var runner := _spawn_controller()
 	var controller: FPSController = runner.scene()
 	# Spawned in empty space, the controller is airborne (falling) from tick 1.
-	runner.simulate_action_press("jump")
-	# Latch -> gather -> tick takes up to 3 frames; leave slack for batching.
+	press(controller.input, &"jump")
 	await await_ticks(10)
 
 	assert_bool(controller.is_gliding).is_true()
@@ -478,14 +469,12 @@ func test_combo_expires_after_window() -> void:
 	var controller: FPSController = runner.scene()
 	controller.input.local_pitch = PITCH_DOWN
 
-	Input.action_press("repulse")
+	press(controller.input, &"repulse")
 	await await_ticks(3)
-	Input.action_release("repulse")
 	await await_ticks(3)
 	await await_millis(int(controller.combo_window * 1000) + 300)
-	Input.action_press("glide")
+	press(controller.input, &"glide")
 	await await_ticks(3)
-	Input.action_release("glide")
 	await await_ticks(2)
 
 	assert_bool(controller.is_gliding).is_true()

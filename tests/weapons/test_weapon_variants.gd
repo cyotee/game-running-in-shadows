@@ -47,9 +47,8 @@ func test_shotgun_multi_pellet_damage() -> void:
 	controller.get_parent().add_child(victim)
 	victim.global_position = controller.global_position + Vector3(0, 0, -3)
 
-	runner.simulate_action_press("fire_primary")
+	press(controller.input, &"fire")
 	await await_ticks(10)
-	runner.simulate_action_release("fire_primary")
 
 	var lost: float = victim._config("max_health") - victim.health
 	assert_float(lost).is_greater(6.0)
@@ -62,10 +61,8 @@ func test_rifle_fires_three_round_burst_per_trigger() -> void:
 	var controller: FPSController = pair[1]
 	var rifle := controller.weapon_rig.weapon_by_key("rifle")
 
-	runner.simulate_action_press("fire_primary")
-	await await_ticks(3)
-	runner.simulate_action_release("fire_primary")
-	await await_ticks(60)  # let the burst play out (tick/frame jitter)
+	press(controller.input, &"fire")
+	await await_ticks(60)  # let the burst play out
 
 	assert_float(rifle.mag).is_equal(21.0)  # exactly 3 rounds
 
@@ -93,12 +90,10 @@ func test_sniper_single_shot_and_bolt_cooldown() -> void:
 	# shot lands on the body zone.
 	controller.input.local_pitch = -0.1
 
-	runner.simulate_action_press("fire_primary")
+	press(controller.input, &"fire")
 	await await_ticks(3)
-	runner.simulate_action_release("fire_primary")
-	runner.simulate_action_press("fire_primary")
-	await await_ticks(10)   # within bolt time
-	runner.simulate_action_release("fire_primary")
+	press(controller.input, &"fire")
+	await await_ticks(10)   # second trigger within bolt time
 
 	assert_float(victim._config("max_health") - victim.health).is_equal(55.0)
 	assert_float(controller.weapon_rig.weapon_by_key("sniper").mag).is_equal(4.0)

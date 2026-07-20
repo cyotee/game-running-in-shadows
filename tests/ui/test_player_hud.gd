@@ -1,5 +1,6 @@
 class_name TestPlayerHud
 extends NetSuite
+# (cast_denied test drives the controller through the pending-latch inject.)
 
 
 func test_pip_formatting_semantics() -> void:
@@ -33,9 +34,8 @@ func test_cast_denied_fires_on_insufficient_resonance() -> void:
 	var denials: Array = []
 	controller.cast_denied.connect(func() -> void: denials.append(true))
 
-	runner.simulate_action_press("repulse")
+	press(controller.input, &"repulse")
 	await await_ticks(6)
-	runner.simulate_action_release("repulse")
 
 	assert_array(denials).has_size(1)
 	NetworkTime.stop()
