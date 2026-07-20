@@ -306,6 +306,11 @@ Current prototype has basic raycast hitscan. Need real damage, spread, recoil, e
 - All five Milestone A plans executed (netfox core, controller support, Resonance, weapons, blade).
 - **PENDING (owner):** the subjective PRD §11 gate — play the client instance at ≥100 ms (`NET_TEST_LATENCY_MS=100`, two windowed instances of `scenes/dev/net_test.tscn`) and judge whether Repulse+Glide, weapon fire, and blade duels *feel* responsive. Record the verdict here.
 
+**Abilities Wave 2 shipped (2026-07-20)**
+- Lifebloom: 3 held Resonance, 6 HP/s heal, 7 m radius, 100 HP, 3 min wither; heals friend or foe regardless of combat; reservation releases empty on death. Placed at aimed point (max range 30 m).
+- Tangle: 2 held, 4 m radius, 4 m/s inward conveyor pull (min-inward-speed, not accel — decay swamps accel), 120 HP, 75 s; caster exempt (team-ally exemption deferred); blocks direct fire (layer-5 block body); grenades/Null pass through.
+- Null Charge: stock 4/round, 5 m radius, 10 s, 1 Resonance/s drain on enemies, destroys Manifestation fields inside, suppresses Manifestation casting within (Repulse/Slip/Wraith/Lifebloom/Tangle); 60 HP. Watch: null stock vs caster economy; suppression radius feel.
+
 **Abilities Wave 1 shipped (2026-07-20)**
 - Slip: 3 Resonance, 8 m blink (velocity dir when moving, aim dir when stationary); destination-clear check (world layer 1 sphere) refunds+fizzles on block. Passes through walls if landing is clear.
 - Wraith: toggle 1 Resonance + 1.5/s drain; forced out on empty. Walk-speed only, glide/cast/weapon locked, bullet+fall immune (`take_damage` early-returns while phased). Net drain ~1.15/s vs out-of-combat regen. Watch: drain rate vs escape value; the Repulse resonance-burn counter is not yet implemented.

@@ -37,6 +37,11 @@ var is_dead: bool = false
 var is_wraithed: bool = false
 var grenade_stock: int = 2
 var grenade_cook_ticks: int = 0
+var null_stock: int = 4
+var lifebloom_reserved: bool = false
+var tangle_reserved: bool = false
+var lifebloom_cast_tick: int = -(1 << 30)
+var tangle_cast_tick: int = -(1 << 30)
 var last_attacker_peer: int = 0
 
 # Respawn request (plain vars, consumed inside the tick simulation).
@@ -147,6 +152,7 @@ func _apply_archetype_config() -> void:
 	health = _config("max_health")
 	grenade_stock = int(MatchConfig.get_value("ability.grenade_stock"))
 	grenade_cook_ticks = 0
+	null_stock = int(MatchConfig.get_value("ability.null_stock"))
 
 
 func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
@@ -201,10 +207,10 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 			is_wraithed = false  # forced out on empty pool
 
 	if not is_wraithed and input.repulse_press_tick == tick:
-		if resonance.try_spend(MatchConfig.get_value("resonance.repulse_cost")):
+		if not _in_null_field() and resonance.try_spend(MatchConfig.get_value("resonance.repulse_cost")):
 			_cast_repulse(tick, is_fresh)
 		elif is_fresh:
-			# Hard block (decided): clear denial feedback, no overdraft.
+			# Hard block (decided): no overdraft; Null suppresses casting.
 			cast_denied.emit()
 	if not is_wraithed and input.slip_press_tick == tick:
 		_try_slip(is_fresh)
@@ -214,6 +220,16 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 		grenade_cook_ticks = mini(grenade_cook_ticks + 1, cook_max)
 	if not is_wraithed and input.grenade_press_tick == tick and grenade_stock > 0:
 		_throw_grenade(is_fresh, cook_max)
+	# Placed fields (instant placement at an aimed point; held reservations).
+	if not is_wraithed and input.lifebloom_press_tick == tick:
+		_cast_lifebloom(tick, is_fresh)
+	if not is_wraithed and input.tangle_press_tick == tick:
+		_cast_tangle(tick, is_fresh)
+	if not is_wraithed and input.null_press_tick == tick and null_stock > 0:
+		null_stock -= 1
+		if is_fresh:
+			_place_field("null_charge")
+	_reconcile_field_reservations(tick)
 	# Contextual jump (controller A): airborne and not gliding -> deploy glide.
 	var wants_glide := not is_wraithed and (
 		input.glide_press_tick == tick
@@ -249,6 +265,8 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 		var target := direction * speed
 		velocity.x = move_toward(velocity.x, target.x, acceleration * delta)
 		velocity.z = move_toward(velocity.z, target.z, acceleration * delta)
+
+	_apply_tangle_pull(delta)
 
 	# netfox CharacterBody3D pattern: move_and_slide assumes engine delta.
 	velocity *= NetworkTime.physics_factor
@@ -297,6 +315,14 @@ func apply_bleed(hp_per_s: float, duration_s: float) -> void:
 func is_blocking() -> bool:
 	var active := weapon_rig.active_weapon()
 	return active != null and active.weapon_key == "blade" and input.ads
+
+
+func heal(amount: float, _tick: int) -> void:
+	# Lifebloom heals friend or foe regardless of combat state (decided).
+	if is_dead:
+		return
+	health = minf(health + amount, _config("max_health"))
+	NetworkRollback.mutate(self)
 
 
 func take_zone_damage(base_damage: float, weapon_key: String, zone: String,
@@ -354,6 +380,111 @@ func _apply_pending_respawn() -> void:
 			weapon_rig.weapon_by_key(key).initialize_ammo()
 
 
+func _cast_lifebloom(tick: int, is_fresh: bool) -> void:
+	var cost := MatchConfig.get_value("resonance.lifebloom_cost")
+	if lifebloom_reserved or _in_null_field() or resonance.current < cost:
+		if is_fresh:
+			cast_denied.emit()
+		return
+	resonance.reserve(cost)  # held while the field lives; releases empty on death
+	lifebloom_reserved = true
+	lifebloom_cast_tick = tick
+	if is_fresh:
+		_place_field("lifebloom")
+
+
+func _cast_tangle(tick: int, is_fresh: bool) -> void:
+	var cost := MatchConfig.get_value("resonance.tangle_cost")
+	if tangle_reserved or _in_null_field() or resonance.current < cost:
+		if is_fresh:
+			cast_denied.emit()
+		return
+	resonance.reserve(cost)
+	tangle_reserved = true
+	tangle_cast_tick = tick
+	if is_fresh:
+		_place_field("tangle")
+
+
+func _apply_tangle_pull(delta: float) -> void:
+	# Deterministic: the victim reads each Tangle's world position and drags
+	# itself toward the center. A caster's own Tangle does not pull them.
+	# (Team-based ally exemption folds in with team data — for now the caster
+	# is the only exemption.)
+	if is_wraithed:
+		return
+	var radius := MatchConfig.get_value("ability.tangle_radius_m")
+	var pull_speed := MatchConfig.get_value("ability.tangle_pull_speed")
+	var my_peer := input.get_multiplayer_authority()
+	for node in get_tree().get_nodes_in_group("tangle_fields"):
+		var field := node as PlacedField
+		if field == null or field._is_dead() or field.caster_peer == my_peer:
+			continue
+		var offset := field.global_position - global_position
+		offset.y = 0.0
+		var dist := offset.length()
+		if dist > 0.3 and dist <= radius:
+			# Conveyor-style drag: enforce a minimum inward speed so the pull
+			# is not swamped by the movement decay (this is the final velocity
+			# for move_and_slide this tick).
+			var inward := offset.normalized()
+			var inward_speed := velocity.dot(inward)
+			if inward_speed < pull_speed:
+				velocity += inward * (pull_speed - inward_speed)
+
+
+func _reconcile_field_reservations(tick: int) -> void:
+	# Release a held reservation (EMPTY) once the field is gone. A grace
+	# window past the cast tick avoids the spawn/replication race where the
+	# just-placed field is not yet in its group.
+	if lifebloom_reserved and tick > lifebloom_cast_tick + 30 \
+			and not _has_owned_field("lifebloom_fields"):
+		resonance.release(MatchConfig.get_value("resonance.lifebloom_cost"))
+		lifebloom_reserved = false
+	if tangle_reserved and tick > tangle_cast_tick + 30 \
+			and not _has_owned_field("tangle_fields"):
+		resonance.release(MatchConfig.get_value("resonance.tangle_cost"))
+		tangle_reserved = false
+
+
+func _place_field(kind: String) -> void:
+	var spawner := get_tree().get_first_node_in_group("projectile_spawner")
+	if spawner == null:
+		return
+	spawner.place_field(kind, _aim_placement_point(), input.get_multiplayer_authority())
+
+
+func _aim_placement_point() -> Vector3:
+	var aim := Basis(Vector3.UP, input.aim_yaw) * Basis(Vector3.RIGHT, input.aim_pitch)
+	var dir := aim * Vector3.FORWARD
+	var from := camera.global_position
+	var max_range := MatchConfig.get_value("ability.field_cast_range_m")
+	var query := PhysicsRayQueryParameters3D.create(from, from + dir * max_range)
+	query.collision_mask = 0b1
+	query.exclude = [get_rid()]
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	return hit.position if hit else from + dir * max_range
+
+
+func _has_owned_field(group: String) -> bool:
+	var my_peer := input.get_multiplayer_authority()
+	for node in get_tree().get_nodes_in_group(group):
+		var field := node as PlacedField
+		if field != null and field.caster_peer == my_peer and not field._is_dead():
+			return true
+	return false
+
+
+func _in_null_field() -> bool:
+	var radius := MatchConfig.get_value("ability.null_radius_m")
+	for node in get_tree().get_nodes_in_group("null_fields"):
+		var field := node as PlacedField
+		if field != null and not field._is_dead() \
+				and global_position.distance_to(field.global_position) <= radius:
+			return true
+	return false
+
+
 func _throw_grenade(is_fresh: bool, cook_max: int) -> void:
 	# Stock decrement + fuse computation are deterministic (state); the
 	# actual spawn is a world side-effect, fresh-tick only.
@@ -380,6 +511,10 @@ func _toggle_wraith(is_fresh: bool) -> void:
 	if is_wraithed:
 		is_wraithed = false  # instant rematerialize, no cost (decided)
 		return
+	if _in_null_field():
+		if is_fresh:
+			cast_denied.emit()
+		return
 	if resonance.try_spend(MatchConfig.get_value("resonance.wraith_cost")):
 		is_wraithed = true
 		is_gliding = false  # glide is locked while phased
@@ -392,7 +527,7 @@ func _try_slip(is_fresh: bool) -> void:
 	# through solids as long as the DESTINATION is clear; a blocked
 	# destination refunds (never spends) and fizzles. Decided 2026-07-16.
 	var cost := MatchConfig.get_value("resonance.slip_cost")
-	if not resonance.can_afford(cost):
+	if _in_null_field() or not resonance.can_afford(cost):
 		if is_fresh:
 			cast_denied.emit()
 		return

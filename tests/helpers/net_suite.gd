@@ -38,6 +38,12 @@ func press(input: PlayerInput, action: StringName) -> void:
 			input._pending_wraith = true
 		&"grenade":
 			input._pending_grenade = true
+		&"lifebloom":
+			input._pending_lifebloom = true
+		&"tangle":
+			input._pending_tangle = true
+		&"null_charge":
+			input._pending_null = true
 		_:
 			assert(false, "unknown edge action %s" % action)
 

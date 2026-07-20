@@ -136,7 +136,7 @@ func _hitscan(direction: Vector3, tick: int) -> void:
 	var query := PhysicsRayQueryParameters3D.create(from, from + direction * 200.0)
 	query.collide_with_areas = true
 	query.collide_with_bodies = true
-	query.collision_mask = 0b11  # world (1) + hit zones (2)
+	query.collision_mask = 0b10011  # world (1) + hit zones (2) + Tangle block (5)
 	var excludes: Array[RID] = [me.get_rid()]
 	for zone_area: Area3D in me.get_node("HitZones").get_children():
 		excludes.append(zone_area.get_rid())
@@ -145,6 +145,9 @@ func _hitscan(direction: Vector3, tick: int) -> void:
 	if result.is_empty():
 		return
 	var collider: Object = result.collider
+	# Tangle blocks direct fire: the ray stops at the vortex, no damage past.
+	if collider is StaticBody3D and collider.is_in_group("tangle_block"):
+		return
 	if collider is Area3D and collider.has_meta("player"):
 		var victim: FPSController = collider.get_meta("player")
 		if victim == me:
