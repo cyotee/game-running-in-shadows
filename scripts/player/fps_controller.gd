@@ -35,6 +35,8 @@ var bleed_ticks_remaining: int = 0
 var bleed_hp_per_s: float = 0.0
 var is_dead: bool = false
 var is_wraithed: bool = false
+var grenade_stock: int = 2
+var grenade_cook_ticks: int = 0
 var last_attacker_peer: int = 0
 
 # Respawn request (plain vars, consumed inside the tick simulation).
@@ -143,6 +145,8 @@ func _apply_archetype_config() -> void:
 		MatchConfig.get_value("resonance.glide_harness_reservation") * _config("tech_mult"))
 	resonance.fill_to_cap()
 	health = _config("max_health")
+	grenade_stock = int(MatchConfig.get_value("ability.grenade_stock"))
+	grenade_cook_ticks = 0
 
 
 func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
@@ -204,6 +208,12 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 			cast_denied.emit()
 	if not is_wraithed and input.slip_press_tick == tick:
 		_try_slip(is_fresh)
+	# Grenade cook (while held) + throw (on release).
+	var cook_max := int(roundf(MatchConfig.get_value("ability.grenade_cook_max_s") * NetworkTime.tickrate))
+	if not is_wraithed and input.grenade_held and grenade_stock > 0:
+		grenade_cook_ticks = mini(grenade_cook_ticks + 1, cook_max)
+	if not is_wraithed and input.grenade_press_tick == tick and grenade_stock > 0:
+		_throw_grenade(is_fresh, cook_max)
 	# Contextual jump (controller A): airborne and not gliding -> deploy glide.
 	var wants_glide := not is_wraithed and (
 		input.glide_press_tick == tick
@@ -344,6 +354,28 @@ func _apply_pending_respawn() -> void:
 			weapon_rig.weapon_by_key(key).initialize_ammo()
 
 
+func _throw_grenade(is_fresh: bool, cook_max: int) -> void:
+	# Stock decrement + fuse computation are deterministic (state); the
+	# actual spawn is a world side-effect, fresh-tick only.
+	grenade_stock -= 1
+	var fuse_total := int(roundf(MatchConfig.get_value("ability.grenade_fuse_s") * NetworkTime.tickrate))
+	var fuse_ticks := maxi(fuse_total - grenade_cook_ticks, fuse_total - cook_max)
+	grenade_cook_ticks = 0
+	if is_fresh:
+		_spawn_grenade(fuse_ticks)
+
+
+func _spawn_grenade(fuse_ticks: int) -> void:
+	var spawner := get_tree().get_first_node_in_group("projectile_spawner")
+	if spawner == null:
+		return
+	var aim := Basis(Vector3.UP, input.aim_yaw) * Basis(Vector3.RIGHT, input.aim_pitch)
+	var dir := aim * Vector3.FORWARD
+	var spawn_pos := camera.global_position + dir * 0.6
+	var launch_vel := velocity + dir * MatchConfig.get_value("ability.grenade_throw_speed")
+	spawner.throw_grenade(spawn_pos, launch_vel, fuse_ticks, input.get_multiplayer_authority())
+
+
 func _toggle_wraith(is_fresh: bool) -> void:
 	if is_wraithed:
 		is_wraithed = false  # instant rematerialize, no cost (decided)
@@ -430,6 +462,15 @@ func _push_nearby_bodies(cast_dir: Vector3) -> void:
 				body.velocity += push_dir * repulse_strength + Vector3(0, 4, 0)
 			elif body is RigidBody3D:
 				body.apply_central_impulse(push_dir * repulse_strength * 3.0)
+
+	# Grenades are Node3D (not physics bodies) — nudge them by group.
+	for node in get_tree().get_nodes_in_group("grenades"):
+		var grenade := node as Grenade
+		if grenade == null:
+			continue
+		var offset := grenade.global_position - global_position
+		if offset.length() <= repulse_range:
+			grenade.velocity += offset.normalized() * repulse_strength + Vector3(0, 4, 0)
 
 
 func _try_deploy_glide(tick: int) -> void:

@@ -441,23 +441,22 @@ func test_crouch_slows_movement() -> void:
 	var runner := _spawn_controller()
 	var controller: FPSController = runner.scene()
 
+	# Compare steady-state speeds (robust to the acceleration ramp):
+	# walk up to full speed, then crouch and let it settle.
 	runner.simulate_action_press("move_forward")
-	await await_ticks(30)
-	var walk_dz := absf(controller.global_position.z)
+	await await_ticks(40)
+	var walk_speed := Vector2(controller.velocity.x, controller.velocity.z).length()
 
-	# Measure the crouched window as a delta (rollback owns the transform,
-	# so mid-test position resets cannot be relied on).
-	var crouch_start_z := controller.global_position.z
 	runner.simulate_action_press("crouch")
-	await await_ticks(30)
+	await await_ticks(40)
 	# Collider swap follows the input while crouched.
 	assert_bool(controller.crouch_shape.disabled).is_false()
 	assert_bool(controller.standing_shape.disabled).is_true()
-	var crouch_dz := absf(controller.global_position.z - crouch_start_z)
+	var crouch_speed := Vector2(controller.velocity.x, controller.velocity.z).length()
 	runner.simulate_action_release("crouch")
 	runner.simulate_action_release("move_forward")
 
-	assert_float(crouch_dz).is_less(walk_dz)
+	assert_float(crouch_speed).is_less(walk_speed)
 
 
 func test_lethal_damage_freezes_and_signals_once() -> void:
