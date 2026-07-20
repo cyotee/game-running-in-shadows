@@ -89,11 +89,22 @@ level input for release-to-throw). Register as input properties.
   moves the player; wraith toggles + drains; grenade detonates); PRD/master-
   plan/tuning-sheet notes; cspell; full suite + three-peer E2E green.
 
-**Buy integration:** `slip`/`wraith`/`grenades` become buyable — Economy's
-`_deliver` already routes weapons; add an ability-delivery branch that calls a
-new `FPSController.grant_ability(name)` (sets an owned-abilities set; casts
-check it). Grenades grant stock. Kept minimal here; full ability-ownership UI
-is later.
+**Buy integration (deferred, decided during execution):** Slip and Wraith are
+kept **always-castable**, matching the existing Repulse/Glide prototype
+precedent (those are not ownership-gated either). Adding partial ability-buy
+for only Slip/Wraith would be inconsistent with Repulse/Glide. The full
+ability-ownership system (covering Repulse/Glide/Slip/Wraith uniformly) is its
+own pass alongside the later G5 waves. Grenades are free 2/round (re-granted
+by `_apply_archetype_config` on spawn and round reset).
+
+---
+
+> **Status: EXECUTED 2026-07-20.** 98 GdUnit tests green; three-peer E2E green;
+> live MCP arena verification: Slip blinked exactly −8 m, Wraith toggled +
+> drained (5.1 → 3.4), grenade thrown (stock 2 → 1) and detonated after its
+> 3 s fuse (group empties). Learned: a rollback-simulated projectile must free
+> itself in `_process` (idle) once `detonated` is set — freeing during the
+> rollback tick leaves the node valid and breaks suite teardown.
 
 **Anti-cheat Layer 1:** every cast spends Resonance inside the authority tick;
 grenade damage is authority-simulated; no client-reported hits.

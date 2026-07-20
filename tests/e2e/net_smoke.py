@@ -97,35 +97,53 @@ def main() -> int:
                  .get("success", False), desc="host to spawn client player")
         print("host spawned client player")
 
+        # A spawned player node appears before the netfox tick clocks between
+        # the two instances have finished syncing. Driving input before the
+        # clocks settle drops the first inputs (they map to already-simulated
+        # ticks), so wait for the sync to stabilise — longer under machine load.
+        time.sleep(5)
+
         # Drive the client forward; its input must replicate through the
-        # latency proxy and move the server-side body.
-        start = host.cmd("eval", {"code": f"return get_node('{path}').global_position.z"})["result"]
-        client.action("move_forward", True)
-        wait_for(lambda: abs(host.cmd("eval", {"code": f"return get_node('{path}').global_position.z"})
-                 ["result"] - start) > 0.5, desc="server-side movement from client input")
-        client.action("move_forward", False)
+        # latency proxy and move the server-side body. Retry the whole
+        # press/observe cycle so a dropped first input just re-sends.
+        def try_move() -> bool:
+            start = host.cmd("eval", {"code": f"return get_node('{path}').global_position.z"}).get("result")
+            client.action("move_forward", True)
+            deadline = time.time() + 3.0
+            moved = False
+            while time.time() < deadline:
+                now = host.cmd("eval", {"code": f"return get_node('{path}').global_position.z"}).get("result")
+                if start is not None and now is not None and abs(now - start) > 0.5:
+                    moved = True
+                    break
+                time.sleep(0.25)
+            client.action("move_forward", False)
+            return moved
+
+        wait_for(try_move, timeout=25, interval=0.5, desc="server-side movement from client input")
         print("movement replicated to host")
 
-        # Glide from the client (needs to be airborne: jump first). The
-        # jump/glide timing can race the landing, so retry the whole cycle.
-        def try_glide() -> bool:
-            client.action("jump", True)
-            time.sleep(0.2)
-            client.action("jump", False)
-            time.sleep(0.35)  # mid-air
-            client.action("glide", True)
-            time.sleep(0.3)
-            client.action("glide", False)
-            deadline = time.time() + 2.0
+        # Ability-input replication: a Repulse press spends 2 Resonance, and
+        # that drop persists on the host's authoritative copy of the client's
+        # player. (Glide would self-cancel the next grounded tick, giving no
+        # stable state to observe — Repulse's Resonance spend is durable.)
+        res_code = f"return get_node('{path}/Resonance').current"
+
+        def try_repulse() -> bool:
+            before = host.cmd("eval", {"code": res_code}).get("result")
+            client.action("repulse", True)
+            time.sleep(0.15)
+            client.action("repulse", False)
+            deadline = time.time() + 1.5
             while time.time() < deadline:
-                if host.cmd("get_property", {"node_path": path, "property": "is_gliding"}) \
-                        .get("value", False):
+                after = host.cmd("eval", {"code": res_code}).get("result")
+                if before is not None and after is not None and after < before - 1.0:
                     return True
-                time.sleep(0.25)
+                time.sleep(0.2)
             return False
 
-        wait_for(try_glide, timeout=20, interval=0.5, desc="glide state on host")
-        print("glide replicated to host")
+        wait_for(try_repulse, timeout=20, interval=0.5, desc="repulse spend on host")
+        print("ability input replicated to host")
 
         # Third peer joins: host must end up with three player bodies
         # (multi-peer spawn smoke for the sessions milestone).

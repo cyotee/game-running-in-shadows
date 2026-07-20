@@ -109,7 +109,7 @@ Each entry is the scope brief for a future `writing-plans` session. Decided desi
 
 Framework rules are decided (MECHANICS_REFERENCE §4.A — Resonance-only pacing, instant/placement casts, effects die with caster, full friendly fire). Repulse + Glide Harness already exist. Suggested wave split, one plan per wave:
 
-1. **Wave 1 — instant/self abilities:** Slip (velocity blink, safe-fail refund), Wraith (toggle + drain, weapons locked, instant rematerialize), Grenades (cookable fuse, Repulse-able).
+1. **Wave 1 — instant/self abilities:** Slip (velocity blink, safe-fail refund), Wraith (toggle + drain, weapons locked, instant rematerialize), Grenades (cookable fuse, Repulse-able). ✅ DONE (2026-07-20 — `2026-07-20-abilities-wave1.md`)
 2. **Wave 2 — placed/persistent world objects:** Lifebloom, Tangle (pull applied inside each victim's own rollback tick — decided), Null Charge. These are the "persistent networked objects" the PRD flags in §7 — netcode approach per MECHANICS_REFERENCE §10.
 3. **Wave 3 — dependent abilities:** Reclaim (needs G6 corpses), Familiar (needs G7 ping), Pulse Sight, Smart Rig (forced view tracking), Overclock Rig (grace-period HP drain).
 
