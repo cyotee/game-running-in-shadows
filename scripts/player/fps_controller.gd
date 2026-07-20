@@ -37,6 +37,7 @@ var is_dead: bool = false
 var is_wraithed: bool = false
 var grenade_stock: int = 2
 var grenade_cook_ticks: int = 0
+var null_stock: int = 4
 var lifebloom_reserved: bool = false
 var tangle_reserved: bool = false
 var lifebloom_cast_tick: int = -(1 << 30)
@@ -151,6 +152,7 @@ func _apply_archetype_config() -> void:
 	health = _config("max_health")
 	grenade_stock = int(MatchConfig.get_value("ability.grenade_stock"))
 	grenade_cook_ticks = 0
+	null_stock = int(MatchConfig.get_value("ability.null_stock"))
 
 
 func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
@@ -205,10 +207,10 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 			is_wraithed = false  # forced out on empty pool
 
 	if not is_wraithed and input.repulse_press_tick == tick:
-		if resonance.try_spend(MatchConfig.get_value("resonance.repulse_cost")):
+		if not _in_null_field() and resonance.try_spend(MatchConfig.get_value("resonance.repulse_cost")):
 			_cast_repulse(tick, is_fresh)
 		elif is_fresh:
-			# Hard block (decided): clear denial feedback, no overdraft.
+			# Hard block (decided): no overdraft; Null suppresses casting.
 			cast_denied.emit()
 	if not is_wraithed and input.slip_press_tick == tick:
 		_try_slip(is_fresh)
@@ -223,6 +225,10 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 		_cast_lifebloom(tick, is_fresh)
 	if not is_wraithed and input.tangle_press_tick == tick:
 		_cast_tangle(tick, is_fresh)
+	if not is_wraithed and input.null_press_tick == tick and null_stock > 0:
+		null_stock -= 1
+		if is_fresh:
+			_place_field("null_charge")
 	_reconcile_field_reservations(tick)
 	# Contextual jump (controller A): airborne and not gliding -> deploy glide.
 	var wants_glide := not is_wraithed and (
@@ -505,6 +511,10 @@ func _toggle_wraith(is_fresh: bool) -> void:
 	if is_wraithed:
 		is_wraithed = false  # instant rematerialize, no cost (decided)
 		return
+	if _in_null_field():
+		if is_fresh:
+			cast_denied.emit()
+		return
 	if resonance.try_spend(MatchConfig.get_value("resonance.wraith_cost")):
 		is_wraithed = true
 		is_gliding = false  # glide is locked while phased
@@ -517,7 +527,7 @@ func _try_slip(is_fresh: bool) -> void:
 	# through solids as long as the DESTINATION is clear; a blocked
 	# destination refunds (never spends) and fizzles. Decided 2026-07-16.
 	var cost := MatchConfig.get_value("resonance.slip_cost")
-	if not resonance.can_afford(cost):
+	if _in_null_field() or not resonance.can_afford(cost):
 		if is_fresh:
 			cast_denied.emit()
 		return

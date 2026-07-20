@@ -4,6 +4,7 @@ extends NetSuite
 const CONTROLLER_SCENE := "res://scenes/player/fps_controller.tscn"
 const LIFEBLOOM_SCENE := "res://scenes/abilities/lifebloom.tscn"
 const TANGLE_SCENE := "res://scenes/abilities/tangle.tscn"
+const NULL_SCENE := "res://scenes/abilities/null_charge.tscn"
 const ARENA_SCENE := "res://scenes/levels/test_arena.tscn"
 
 
@@ -130,6 +131,72 @@ func test_tangle_blocks_direct_fire() -> void:
 	await await_ticks(8)
 
 	assert_float(victim.health).is_equal(hp)  # ray blocked by the vortex
+
+
+func test_null_drains_nearby_enemy_resonance() -> void:
+	var runner := scene_runner(CONTROLLER_SCENE)
+	var victim: FPSController = runner.scene()
+	_add_enemy_caster(victim, 2)
+	var field: NullCharge = (load(NULL_SCENE) as PackedScene).instantiate()
+	victim.get_parent().add_child(field)
+	field.setup(victim.global_position, 2, 200.0, 6000)  # enemy null on the victim
+
+	var res0 := victim.resonance.current
+	await await_ticks(30)
+
+	assert_float(victim.resonance.current).is_less(res0)
+
+
+func test_null_field_suppresses_casting() -> void:
+	var runner := scene_runner(CONTROLLER_SCENE)
+	var controller: FPSController = runner.scene()
+	_add_enemy_caster(controller, 2)
+	var field: NullCharge = (load(NULL_SCENE) as PackedScene).instantiate()
+	controller.get_parent().add_child(field)
+	field.setup(controller.global_position, 2, 200.0, 6000)
+	await await_ticks(3)
+
+	var denials: Array = []
+	controller.cast_denied.connect(func() -> void: denials.append(true))
+	var res_before := controller.resonance.current
+	press(controller.input, &"repulse")
+	await await_ticks(6)
+
+	# Cast suppressed inside the Null field: denial, and no 2-Resonance spend
+	# (only the ~1/s Null drain reduces the pool).
+	assert_array(denials).has_size(1)
+	assert_float(res_before - controller.resonance.current).is_less(1.0)
+
+
+func test_null_destroys_lifebloom_inside() -> void:
+	var runner := scene_runner(CONTROLLER_SCENE)
+	var caster: FPSController = runner.scene()
+	var peer := caster.input.get_multiplayer_authority()
+	var life: Lifebloom = (load(LIFEBLOOM_SCENE) as PackedScene).instantiate()
+	caster.get_parent().add_child(life)
+	life.setup(caster.global_position + Vector3(0.0, 0.0, -2.0), peer, 200.0, 6000)
+	var nullf: NullCharge = (load(NULL_SCENE) as PackedScene).instantiate()
+	caster.get_parent().add_child(nullf)
+	nullf.setup(caster.global_position + Vector3(0.0, 0.0, -2.0), peer, 200.0, 6000)
+
+	await await_ticks(4)
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	assert_bool(is_instance_valid(life)).is_false()
+
+
+func test_null_cast_consumes_stock() -> void:
+	var runner := scene_runner(ARENA_SCENE)
+	await await_ticks(5)
+	var controller: FPSController = runner.scene().get_node("FPSController")
+	var stock0 := controller.null_stock
+
+	press(controller.input, &"null_charge")
+	await await_ticks(8)
+
+	assert_int(controller.null_stock).is_equal(stock0 - 1)
+	assert_int(controller.get_tree().get_nodes_in_group("null_fields").size()).is_greater_equal(1)
 
 
 func test_cast_lifebloom_places_field_and_holds_reservation() -> void:
