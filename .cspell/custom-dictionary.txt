@@ -65,6 +65,7 @@ Killcams
 Knockback
 knockback
 Krypto
+lerps
 Lifebloom
 loadouts
 megacorp
