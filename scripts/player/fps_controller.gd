@@ -40,7 +40,12 @@ var last_attacker_peer: int = 0
 var _pending_respawn: Vector3 = Vector3.ZERO
 var _has_pending_respawn: bool = false
 
+# Weapon grant queue (rig slots are rollback state; grants must apply
+# inside the tick, same pattern as respawn).
+var _pending_grants: Array[Array] = []
+
 signal died(victim_peer: int, attacker_peer: int)
+signal cast_denied()
 
 @onready var input: PlayerInput = $Input
 @onready var camera: Camera3D = $Camera3D
@@ -142,6 +147,10 @@ func _apply_archetype_config() -> void:
 func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 	if _has_pending_respawn and is_fresh:
 		_apply_pending_respawn()
+	if not _pending_grants.is_empty() and is_fresh:
+		for grant in _pending_grants:
+			weapon_rig.grant(grant[0], grant[1])
+		_pending_grants.clear()
 
 	# Death is simulation state: a dead body freezes where it fell (full
 	# body persistence is a pillar; the corpse system extends this later).
@@ -177,11 +186,12 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 	# Capture boost intent before contextual deploy can consume the press.
 	var jump_for_boost := jump_pressed and is_gliding
 
-	if (
-		input.repulse_press_tick == tick
-		and resonance.try_spend(MatchConfig.get_value("resonance.repulse_cost"))
-	):
-		_cast_repulse(tick, is_fresh)
+	if input.repulse_press_tick == tick:
+		if resonance.try_spend(MatchConfig.get_value("resonance.repulse_cost")):
+			_cast_repulse(tick, is_fresh)
+		elif is_fresh:
+			# Hard block (decided): clear denial feedback, no overdraft.
+			cast_denied.emit()
 	# Contextual jump (controller A): airborne and not gliding -> deploy glide.
 	var wants_glide := (
 		input.glide_press_tick == tick
@@ -288,6 +298,10 @@ func take_damage(amount: float, attacker: FPSController, tick: int) -> void:
 	# External mutation of rollback state must be registered or the next
 	# restore discards it (netfox upstream pattern).
 	NetworkRollback.mutate(self)
+
+
+func queue_grant(key: String, slot: int) -> void:
+	_pending_grants.append([key, slot])
 
 
 func reset_for_round(spawn_position: Vector3) -> void:

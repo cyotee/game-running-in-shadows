@@ -103,7 +103,7 @@ We follow Godot best practices: scene-per-folder where practical, clear autoload
 
 1. Solid Godot + GodotSteam foundation in this repo.
 2. Responsive FPS prototype (movement + shooting).
-3. Core mechanics foundation (Anima resource + signature combos from MECHANICS_REFERENCE.md).
+3. Core mechanics foundation (Resonance resource + signature combos from MECHANICS_REFERENCE.md).
 4. Multiplayer core (Steam P2P lobbies + basic replication).
 5. First two modes: Arena + Capture the Flag.
 6. Steam features: Overlay, achievements, cloud, rich presence.
@@ -125,8 +125,8 @@ All names, lore, mechanics, and content here are original or generically inspire
 ## Next Steps for the Team
 
 - Finish reading [docs/PRD.md](docs/PRD.md) and [docs/MECHANICS_REFERENCE.md](docs/MECHANICS_REFERENCE.md).
-- Review and lock core names (Anima, archetypes, key abilities) from the Mechanics Reference.
-- Prototype the signature movement combo (Repulse + Glide launch) + basic Anima resource.
+- Review and lock core names (Resonance, archetypes, key abilities) from the Mechanics Reference.
+- Prototype the signature movement combo (Repulse + Glide launch) + basic Resonance resource.
 - Continue building the FPS prototype (one weapon + one Manifestation/Augment).
 - Create first networked test.
 - Expand docs with architecture decisions and playtest notes.

@@ -62,8 +62,8 @@ GODOT_BIN=/Applications/Godot.app/Contents/MacOS/Godot \
 |---|-----------|----------|--------|
 | 6 | `2026-07-16-steam-lobbies-sessions.md` | GodotSteam 4.20; `SessionManager`; lobby create/invite/browse/join; SteamMultiplayerPeer under netfox; 16-player spawning; join-in-progress spectate; host-migration spike scoped as its final task | ✅ code-complete (2026-07-19; live two-machine Steam verification pending owner — see tuning sheet §9) |
 | 7 | `2026-07-19-match-flow-arena.md` (G2 + G1 crouch) | Round state machine, respawn/death, win conditions, results | ✅ DONE (2026-07-19) |
-| 8 | *(to write — Gap G3)* Buy phase, economy & loadouts | Wages, buy menu, shopping-list loadouts, cybernetic slots | ☐ |
-| 9 | *(to write — Gap G4)* Core HUD | Resonance pips, health, ammo, scoreboard, kill feed | ☐ |
+| 8 | `2026-07-19-economy-loadouts.md` (G3) | Wages, buy menu, shopping-list loadouts, cybernetic slots | ✅ DONE (2026-07-19; suite re-verification gated on machine load — see note) |
+| 9 | `2026-07-19-core-hud.md` (G4) | Resonance pips, health, ammo, scoreboard, kill feed | ✅ DONE (2026-07-19) |
 
 ### Milestone C — Two Modes + Playtests (gate: playtesters return voluntarily; movement/combat feel scores well)
 

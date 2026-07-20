@@ -1,5 +1,5 @@
 class_name TestWeaponVariants
-extends GdUnitTestSuite
+extends NetSuite
 
 const CONTROLLER_SCENE := "res://scenes/player/fps_controller.tscn"
 
@@ -29,10 +29,10 @@ func test_smg_full_auto_and_bloom() -> void:
 	var smg := controller.weapon_rig.weapon_by_key("smg")
 
 	runner.simulate_action_press("fire_primary")
-	await runner.simulate_frames(30)
+	await await_ticks(30)
 	# Sample bloom mid-burst (it decays fast once firing stops).
 	var bloom_mid: float = smg.bloom_deg
-	await runner.simulate_frames(50)
+	await await_ticks(50)
 	runner.simulate_action_release("fire_primary")
 
 	assert_float(smg.mag).is_less(26.0)      # multiple shots from one hold
@@ -47,9 +47,8 @@ func test_shotgun_multi_pellet_damage() -> void:
 	controller.get_parent().add_child(victim)
 	victim.global_position = controller.global_position + Vector3(0, 0, -3)
 
-	runner.simulate_action_press("fire_primary")
-	await runner.simulate_frames(10)
-	runner.simulate_action_release("fire_primary")
+	press(controller.input, &"fire")
+	await await_ticks(10)
 
 	var lost: float = victim._config("max_health") - victim.health
 	assert_float(lost).is_greater(6.0)
@@ -62,10 +61,8 @@ func test_rifle_fires_three_round_burst_per_trigger() -> void:
 	var controller: FPSController = pair[1]
 	var rifle := controller.weapon_rig.weapon_by_key("rifle")
 
-	runner.simulate_action_press("fire_primary")
-	await runner.simulate_frames(3)
-	runner.simulate_action_release("fire_primary")
-	await runner.simulate_frames(60)  # let the burst play out (tick/frame jitter)
+	press(controller.input, &"fire")
+	await await_ticks(60)  # let the burst play out
 
 	assert_float(rifle.mag).is_equal(21.0)  # exactly 3 rounds
 
@@ -76,7 +73,7 @@ func test_ads_zoom_applies_to_camera() -> void:
 	var controller: FPSController = pair[1]
 
 	runner.simulate_action_press("ads")
-	await runner.simulate_frames(30)
+	await await_ticks(30)
 
 	assert_float(controller.camera.fov).is_less(60.0)  # zooming toward 75/1.6
 	runner.simulate_action_release("ads")
@@ -93,12 +90,10 @@ func test_sniper_single_shot_and_bolt_cooldown() -> void:
 	# shot lands on the body zone.
 	controller.input.local_pitch = -0.1
 
-	runner.simulate_action_press("fire_primary")
-	await runner.simulate_frames(3)
-	runner.simulate_action_release("fire_primary")
-	runner.simulate_action_press("fire_primary")
-	await runner.simulate_frames(10)   # within bolt time
-	runner.simulate_action_release("fire_primary")
+	press(controller.input, &"fire")
+	await await_ticks(3)
+	press(controller.input, &"fire")
+	await await_ticks(10)   # second trigger within bolt time
 
 	assert_float(victim._config("max_health") - victim.health).is_equal(55.0)
 	assert_float(controller.weapon_rig.weapon_by_key("sniper").mag).is_equal(4.0)

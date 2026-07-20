@@ -1,8 +1,11 @@
-[gd_scene load_steps=6 format=3 uid="uid://matchsession1"]
+[gd_scene load_steps=9 format=3 uid="uid://matchsession1"]
 
 [ext_resource type="Script" path="res://scripts/session/match_session.gd" id="1_session"]
 [ext_resource type="Script" path="res://scripts/match/match_state.gd" id="2_matchstate"]
 [ext_resource type="Script" path="res://scripts/ui/match_hud.gd" id="3_matchhud"]
+[ext_resource type="Script" path="res://scripts/match/economy.gd" id="4_economy"]
+[ext_resource type="Script" path="res://scripts/ui/buy_menu.gd" id="5_buymenu"]
+[ext_resource type="PackedScene" uid="uid://playerhud1" path="res://scenes/ui/player_hud.tscn" id="6_playerhud"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_Floor"]
 size = Vector3(80, 1, 80)
@@ -15,6 +18,9 @@ script = ExtResource("1_session")
 
 [node name="MatchState" type="Node" parent="."]
 script = ExtResource("2_matchstate")
+
+[node name="Economy" type="Node" parent="."]
+script = ExtResource("4_economy")
 
 [node name="Floor" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
@@ -46,6 +52,39 @@ offset_bottom = 90.0
 theme_override_font_sizes/font_size = 18
 text = "match..."
 script = ExtResource("3_matchhud")
+
+[node name="BuyMenu" type="Panel" parent="CanvasLayer"]
+visible = false
+offset_left = 40.0
+offset_top = 120.0
+offset_right = 400.0
+offset_bottom = 480.0
+script = ExtResource("5_buymenu")
+
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/BuyMenu"]
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 348.0
+offset_bottom = 348.0
+
+[node name="MoneyLabel" type="Label" parent="CanvasLayer/BuyMenu/VBox"]
+unique_name_in_owner = true
+text = "$0"
+
+[node name="ItemList" type="ItemList" parent="CanvasLayer/BuyMenu/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 220)
+size_flags_vertical = 3
+
+[node name="BuyButton" type="Button" parent="CanvasLayer/BuyMenu/VBox"]
+unique_name_in_owner = true
+text = "Buy"
+
+[node name="LoadoutButton" type="Button" parent="CanvasLayer/BuyMenu/VBox"]
+unique_name_in_owner = true
+text = "Buy Default Loadout"
+
+[node name="PlayerHud" parent="." instance=ExtResource("6_playerhud")]
 
 [node name="SpawnPoints" type="Node3D" parent="."]
 

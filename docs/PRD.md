@@ -137,11 +137,11 @@ Loadouts are **ordered shopping lists, not classes or kits**. They are never mut
 - Steam initialization (with dev fallback). ✅ (SteamManager autoload)
 - Steam Lobbies + SteamMultiplayerPeer (P2P). ✅ code-complete 2026-07-19 (GodotSteam 4.20.1; SessionManager + lobby browser + 16-player match session + join-in-progress spectators; live two-machine Steam verification pending)
 - **Client prediction + server reconciliation from day one** (netfox: predicted movement, snapshot interpolation, lag compensation), host-authoritative over Steam P2P.
-- Buy phase + economy + loadout system (shopping-list semantics, §5).
-- Match flow: lobby → map vote or fixed → buy phase → round → results.
+- Buy phase + economy + loadout system (shopping-list semantics, §5). ✅ 2026-07-19 (wages/kill+win bonuses, skip-and-continue loadouts, cyber-slot framework, debug buy menu)
+- Match flow: lobby → map vote or fixed → buy phase → round → results. ✅ 2026-07-19 (host-authoritative round state machine, TDM scoring, round respawns; map vote deferred)
 - Anti-cheat Layer 1: authority-side validation rules written with each mechanic (movement caps, Resonance costs, cooldowns); input-trace logging hooks.
 - 2 modes fully playable (Arena + CTF with variable objective item).
-- Basic UI: main menu, lobby, buy menu, HUD (Resonance display), scoreboard.
+- Basic UI: main menu, lobby, buy menu, HUD (Resonance display), scoreboard. ✅ 2026-07-19 (debug-grade; art pass in Phase 2)
 - Steam: achievements, stats, rich presence, cloud saves.
 
 **Phase 2 — Early Access Polish & Content**

@@ -1,5 +1,5 @@
 class_name TestBlade
-extends GdUnitTestSuite
+extends NetSuite
 
 const CONTROLLER_SCENE := "res://scenes/player/fps_controller.tscn"
 
@@ -25,10 +25,12 @@ func _blade_duel() -> Array:
 	return [runner, attacker, victim]
 
 
-func _swing(runner: GdUnitSceneRunner) -> void:
-	runner.simulate_action_press("fire_primary")
-	await runner.simulate_frames(10)
-	runner.simulate_action_release("fire_primary")
+func _swing(attacker: FPSController) -> void:
+	# Let per-test setup (victim orientation via input) propagate through a
+	# tick before the strike, or the swing can land in the same batch.
+	await await_ticks(2)
+	press(attacker.input, &"fire")
+	await await_ticks(10)
 
 
 func test_blade_switches_to_third_person_camera() -> void:
@@ -36,12 +38,14 @@ func test_blade_switches_to_third_person_camera() -> void:
 	var controller: FPSController = runner.scene()
 	controller.weapon_rig.grant("blade", 1)
 	controller.weapon_rig.active_slot = 1
-	await runner.simulate_frames(5)
+	# Camera swap is frame-driven view logic (_process) — await frames.
+	await runner.simulate_frames(10)
 
 	assert_bool(controller.third_person_camera.current).is_true()
 	assert_bool(controller.camera.current).is_false()
 
-	runner.simulate_action_press("weapon_slot_2")
+	select_slot(controller.input, 2)
+	await await_ticks(5)
 	await runner.simulate_frames(10)
 	assert_bool(controller.camera.current).is_true()
 	assert_bool(controller.third_person_camera.current).is_false()
@@ -55,7 +59,7 @@ func test_frontal_swing_damages_without_bleed() -> void:
 	# Orientation goes through input: the victim's own simulation re-derives
 	# rotation from aim_yaw every tick.
 	victim.input.local_yaw = PI - 0.01
-	await _swing(runner)
+	await _swing(trio[1])
 
 	assert_float(victim._config("max_health") - victim.health).is_equal_approx(25.0, 0.1)
 	assert_int(victim.bleed_ticks_remaining).is_equal(0)
@@ -66,7 +70,7 @@ func test_backstab_multiplies_and_bleeds() -> void:
 	var runner: GdUnitSceneRunner = trio[0]
 	var victim: FPSController = trio[2]
 	# Victim faces AWAY from the attacker: backstab (default yaw 0).
-	await _swing(runner)
+	await _swing(trio[1])
 
 	# Bleed starts ticking immediately after the strike (4 HP/s); the awaited
 	# frame count varies with load, so allow up to ~1s of bleed on top.
@@ -82,7 +86,7 @@ func test_troll_melee_hits_harder() -> void:
 	attacker.archetype = &"troll"
 	attacker._apply_archetype_config()
 	victim.input.local_yaw = PI - 0.01
-	await _swing(runner)
+	await _swing(attacker)
 
 	assert_float(victim._config("max_health") - victim.health).is_equal_approx(35.0, 0.1)
 
@@ -97,8 +101,8 @@ func test_frontal_block_reduces_blade_damage() -> void:
 	# Block via the real input path: both players gather the global ads
 	# action; only the victim's matters here.
 	Input.action_press("ads")
-	await runner.simulate_frames(5)
-	await _swing(runner)
+	await await_ticks(5)
+	await _swing(trio[1])
 	Input.action_release("ads")
 
 	assert_float(victim._config("max_health") - victim.health).is_equal_approx(7.5, 0.1)

@@ -90,6 +90,13 @@ const DEFAULTS: Dictionary = {
 	"session.max_players": 16.0,
 	# --- Movement ---
 	"movement.crouch_speed_mult": 0.55,
+	# --- Economy ---
+	"economy.start_money": 800.0,
+	"economy.wage_base": 1000.0,
+	"economy.wage_win_bonus": 600.0,
+	"economy.kill_bonus": 200.0,
+	"price.pistol": 0.0, "price.smg": 600.0, "price.shotgun": 1200.0,
+	"price.rifle": 1600.0, "price.sniper": 2800.0, "price.blade": 1200.0,
 	# --- Match flow ---
 	"match.buy_phase_s": 15.0,
 	"match.round_time_s": 180.0,
