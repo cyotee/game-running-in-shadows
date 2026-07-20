@@ -30,6 +30,10 @@ var glide_press_tick: int = -1
 var fire_press_tick: int = -1
 var swap_press_tick: int = -1
 var reload_press_tick: int = -1
+var slip_press_tick: int = -1
+var wraith_press_tick: int = -1
+var grenade_press_tick: int = -1
+var grenade_held: bool = false
 var slot_select: int = 0
 
 # --- Local-only view state (never rolled back) ---
@@ -45,6 +49,9 @@ var _pending_glide: bool = false
 var _pending_fire: bool = false
 var _pending_swap: bool = false
 var _pending_reload: bool = false
+var _pending_slip: bool = false
+var _pending_wraith: bool = false
+var _pending_grenade: bool = false
 var _pending_slot: int = 0
 
 var _held_jump: bool = false
@@ -53,6 +60,9 @@ var _held_glide: bool = false
 var _held_fire: bool = false
 var _held_swap: bool = false
 var _held_reload: bool = false
+var _held_slip: bool = false
+var _held_wraith: bool = false
+var _held_grenade: bool = false
 var _held_slot_1: bool = false
 var _held_slot_2: bool = false
 
@@ -79,6 +89,9 @@ func _process(delta: float) -> void:
 	var fire_now := Input.is_action_pressed("fire_primary")
 	var swap_now := Input.is_action_pressed("weapon_swap")
 	var reload_now := Input.is_action_pressed("reload")
+	var slip_now := Input.is_action_pressed("slip")
+	var wraith_now := Input.is_action_pressed("wraith")
+	var grenade_now := Input.is_action_pressed("grenade")
 	var slot_1_now := Input.is_action_pressed("weapon_slot_1")
 	var slot_2_now := Input.is_action_pressed("weapon_slot_2")
 	_pending_jump = _pending_jump or (jump_now and not _held_jump)
@@ -87,6 +100,10 @@ func _process(delta: float) -> void:
 	_pending_fire = _pending_fire or (fire_now and not _held_fire)
 	_pending_swap = _pending_swap or (swap_now and not _held_swap)
 	_pending_reload = _pending_reload or (reload_now and not _held_reload)
+	_pending_slip = _pending_slip or (slip_now and not _held_slip)
+	_pending_wraith = _pending_wraith or (wraith_now and not _held_wraith)
+	# Grenade press-tick fires on RELEASE (throw); the fuse cooks while held.
+	_pending_grenade = _pending_grenade or (not grenade_now and _held_grenade)
 	if slot_1_now and not _held_slot_1:
 		_pending_slot = 1
 	elif slot_2_now and not _held_slot_2:
@@ -97,6 +114,9 @@ func _process(delta: float) -> void:
 	_held_fire = fire_now
 	_held_swap = swap_now
 	_held_reload = reload_now
+	_held_slip = slip_now
+	_held_wraith = wraith_now
+	_held_grenade = grenade_now
 	_held_slot_1 = slot_1_now
 	_held_slot_2 = slot_2_now
 
@@ -126,6 +146,7 @@ func _gather() -> void:
 	fire_held = Input.is_action_pressed("fire_primary")
 	ads = Input.is_action_pressed("ads")
 	crouch = Input.is_action_pressed("crouch")
+	grenade_held = Input.is_action_pressed("grenade")
 	aim_yaw = local_yaw
 	aim_pitch = local_pitch
 	if _pending_jump:
@@ -140,6 +161,12 @@ func _gather() -> void:
 		swap_press_tick = NetworkTime.tick
 	if _pending_reload:
 		reload_press_tick = NetworkTime.tick
+	if _pending_slip:
+		slip_press_tick = NetworkTime.tick
+	if _pending_wraith:
+		wraith_press_tick = NetworkTime.tick
+	if _pending_grenade:
+		grenade_press_tick = NetworkTime.tick
 	slot_select = _pending_slot
 	_pending_jump = false
 	_pending_repulse = false
@@ -147,4 +174,7 @@ func _gather() -> void:
 	_pending_fire = false
 	_pending_swap = false
 	_pending_reload = false
+	_pending_slip = false
+	_pending_wraith = false
+	_pending_grenade = false
 	_pending_slot = 0
