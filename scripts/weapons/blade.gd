@@ -12,6 +12,7 @@ func initialize_ammo() -> void:
 
 func _can_fire(tick: int) -> bool:
 	return _rig.active_weapon() == self \
+		and not _controller().is_wraithed \
 		and NetworkTime.seconds_between(last_fire_tick, tick) >= config("swing_interval_s")
 
 

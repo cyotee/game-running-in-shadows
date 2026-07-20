@@ -34,6 +34,7 @@ var health: float = 100.0
 var bleed_ticks_remaining: int = 0
 var bleed_hp_per_s: float = 0.0
 var is_dead: bool = false
+var is_wraithed: bool = false
 var last_attacker_peer: int = 0
 
 # Respawn request (plain vars, consumed inside the tick simulation).
@@ -186,23 +187,33 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 	# Capture boost intent before contextual deploy can consume the press.
 	var jump_for_boost := jump_pressed and is_gliding
 
-	if input.repulse_press_tick == tick:
+	# Wraith (toggle phase form). While phased: casts/weapons/glide locked,
+	# walk speed only, bullet + fall immunity (see take_damage).
+	if input.wraith_press_tick == tick:
+		_toggle_wraith(is_fresh)
+	if is_wraithed:
+		resonance.drain(MatchConfig.get_value("resonance.wraith_drain_per_s") * delta)
+		if resonance.current <= 0.0:
+			is_wraithed = false  # forced out on empty pool
+
+	if not is_wraithed and input.repulse_press_tick == tick:
 		if resonance.try_spend(MatchConfig.get_value("resonance.repulse_cost")):
 			_cast_repulse(tick, is_fresh)
 		elif is_fresh:
 			# Hard block (decided): clear denial feedback, no overdraft.
 			cast_denied.emit()
-	if input.slip_press_tick == tick:
+	if not is_wraithed and input.slip_press_tick == tick:
 		_try_slip(is_fresh)
 	# Contextual jump (controller A): airborne and not gliding -> deploy glide.
-	var wants_glide := (
+	var wants_glide := not is_wraithed and (
 		input.glide_press_tick == tick
 		or (jump_pressed and not is_on_floor() and not is_gliding)
 	)
 	if wants_glide and not is_gliding:
 		_try_deploy_glide(tick)
 
-	var speed := (sprint_speed if input.sprint else walk_speed) * weapon_rig.carry_weight_mult()
+	var base_speed := walk_speed if is_wraithed else (sprint_speed if input.sprint else walk_speed)
+	var speed := base_speed * weapon_rig.carry_weight_mult()
 	if input.crouch:
 		speed *= MatchConfig.get_value("movement.crouch_speed_mult")
 	var direction := (transform.basis * Vector3(input.movement.x, 0, input.movement.y)).normalized()
@@ -292,6 +303,10 @@ func take_zone_damage(base_damage: float, weapon_key: String, zone: String,
 
 
 func take_damage(amount: float, attacker: FPSController, tick: int) -> void:
+	if is_wraithed:
+		# Bullet + fall immunity while phased (decided). The Repulse
+		# resonance-burn counter is a Resonance effect, handled separately.
+		return
 	health = maxf(health - amount, 0.0)
 	resonance.mark_combat(tick)
 	if attacker != null and attacker != self:
@@ -327,6 +342,17 @@ func _apply_pending_respawn() -> void:
 	for key in [weapon_rig.slot1, weapon_rig.slot2]:
 		if key != "":
 			weapon_rig.weapon_by_key(key).initialize_ammo()
+
+
+func _toggle_wraith(is_fresh: bool) -> void:
+	if is_wraithed:
+		is_wraithed = false  # instant rematerialize, no cost (decided)
+		return
+	if resonance.try_spend(MatchConfig.get_value("resonance.wraith_cost")):
+		is_wraithed = true
+		is_gliding = false  # glide is locked while phased
+	elif is_fresh:
+		cast_denied.emit()
 
 
 func _try_slip(is_fresh: bool) -> void:

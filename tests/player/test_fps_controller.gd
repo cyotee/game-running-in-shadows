@@ -224,6 +224,62 @@ func test_slip_blocked_destination_refunds_and_fizzles() -> void:
 	assert_float(controller.resonance.current).is_equal_approx(res_before, 0.3)
 
 
+func test_wraith_toggles_and_drains() -> void:
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+
+	press(controller.input, &"wraith")
+	await await_ticks(3)
+	assert_bool(controller.is_wraithed).is_true()
+	var after_toggle := controller.resonance.current  # ~7 (8 - 1 cost)
+
+	await await_ticks(30)  # ~0.5s of drain
+	assert_bool(controller.is_wraithed).is_true()
+	assert_float(controller.resonance.current).is_less(after_toggle)
+
+
+func test_wraith_forced_out_when_pool_empties() -> void:
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+	controller.resonance.current = 2.0
+
+	press(controller.input, &"wraith")
+	await await_ticks(3)
+	assert_bool(controller.is_wraithed).is_true()
+
+	await await_ticks(120)  # drains past zero (net ~1.15/s)
+	assert_bool(controller.is_wraithed).is_false()
+
+
+func test_wraith_immune_to_bullets() -> void:
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+
+	press(controller.input, &"wraith")
+	await await_ticks(3)
+	assert_bool(controller.is_wraithed).is_true()
+
+	var hp := controller.health
+	controller.take_damage(50.0, null, NetworkTime.tick)
+	assert_float(controller.health).is_equal(hp)
+
+
+func test_wraith_blocks_weapon_fire() -> void:
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+	controller.weapon_rig.active_slot = 2  # pistol (semi-auto)
+
+	press(controller.input, &"wraith")
+	await await_ticks(3)
+	var pistol := controller.weapon_rig.weapon_by_key("pistol")
+	var mag0 := pistol.mag
+
+	press(controller.input, &"fire")
+	await await_ticks(6)
+
+	assert_float(pistol.mag).is_equal(mag0)
+
+
 func test_elf_archetype_reservation_scaled() -> void:
 	var runner := scene_runner(CONTROLLER_SCENE)
 	var controller: FPSController = runner.scene()
