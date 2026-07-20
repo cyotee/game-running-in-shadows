@@ -36,7 +36,9 @@ var grenade_press_tick: int = -1
 var lifebloom_press_tick: int = -1
 var tangle_press_tick: int = -1
 var null_press_tick: int = -1
+var interact_press_tick: int = -1
 var grenade_held: bool = false
+var interact_held: bool = false
 var slot_select: int = 0
 
 # --- Local-only view state (never rolled back) ---
@@ -58,6 +60,7 @@ var _pending_grenade: bool = false
 var _pending_lifebloom: bool = false
 var _pending_tangle: bool = false
 var _pending_null: bool = false
+var _pending_interact: bool = false
 var _pending_slot: int = 0
 
 var _held_jump: bool = false
@@ -72,6 +75,7 @@ var _held_grenade: bool = false
 var _held_lifebloom: bool = false
 var _held_tangle: bool = false
 var _held_null: bool = false
+var _held_interact: bool = false
 var _held_slot_1: bool = false
 var _held_slot_2: bool = false
 
@@ -104,6 +108,7 @@ func _process(delta: float) -> void:
 	var lifebloom_now := Input.is_action_pressed("lifebloom")
 	var tangle_now := Input.is_action_pressed("tangle")
 	var null_now := Input.is_action_pressed("null_charge")
+	var interact_now := Input.is_action_pressed("interact")
 	var slot_1_now := Input.is_action_pressed("weapon_slot_1")
 	var slot_2_now := Input.is_action_pressed("weapon_slot_2")
 	_pending_jump = _pending_jump or (jump_now and not _held_jump)
@@ -119,6 +124,7 @@ func _process(delta: float) -> void:
 	_pending_lifebloom = _pending_lifebloom or (lifebloom_now and not _held_lifebloom)
 	_pending_tangle = _pending_tangle or (tangle_now and not _held_tangle)
 	_pending_null = _pending_null or (null_now and not _held_null)
+	_pending_interact = _pending_interact or (interact_now and not _held_interact)
 	if slot_1_now and not _held_slot_1:
 		_pending_slot = 1
 	elif slot_2_now and not _held_slot_2:
@@ -135,6 +141,7 @@ func _process(delta: float) -> void:
 	_held_lifebloom = lifebloom_now
 	_held_tangle = tangle_now
 	_held_null = null_now
+	_held_interact = interact_now
 	_held_slot_1 = slot_1_now
 	_held_slot_2 = slot_2_now
 
@@ -165,6 +172,7 @@ func _gather() -> void:
 	ads = Input.is_action_pressed("ads")
 	crouch = Input.is_action_pressed("crouch")
 	grenade_held = Input.is_action_pressed("grenade")
+	interact_held = Input.is_action_pressed("interact")
 	aim_yaw = local_yaw
 	aim_pitch = local_pitch
 	if _pending_jump:
@@ -191,6 +199,8 @@ func _gather() -> void:
 		tangle_press_tick = NetworkTime.tick
 	if _pending_null:
 		null_press_tick = NetworkTime.tick
+	if _pending_interact:
+		interact_press_tick = NetworkTime.tick
 	slot_select = _pending_slot
 	_pending_jump = false
 	_pending_repulse = false
@@ -204,4 +214,5 @@ func _gather() -> void:
 	_pending_lifebloom = false
 	_pending_tangle = false
 	_pending_null = false
+	_pending_interact = false
 	_pending_slot = 0

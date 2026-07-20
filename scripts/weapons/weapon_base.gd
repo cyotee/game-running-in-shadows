@@ -75,6 +75,7 @@ func _wants_fire(tick: int) -> bool:
 func _can_fire(tick: int) -> bool:
 	return _rig.active_weapon() == self \
 		and not _controller().is_wraithed \
+		and _controller().can_use_weapon(weapon_key) \
 		and not is_reloading(tick) \
 		and mag > 0.0 \
 		and NetworkTime.seconds_between(last_fire_tick, tick) >= config("fire_interval_s")
