@@ -32,6 +32,12 @@ func press(input: PlayerInput, action: StringName) -> void:
 			input._pending_swap = true
 		&"reload":
 			input._pending_reload = true
+		&"slip":
+			input._pending_slip = true
+		&"wraith":
+			input._pending_wraith = true
+		&"grenade":
+			input._pending_grenade = true
 		_:
 			assert(false, "unknown edge action %s" % action)
 

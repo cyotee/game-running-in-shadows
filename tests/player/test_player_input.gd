@@ -112,3 +112,29 @@ func test_reload_is_edge_latched() -> void:
 	await await_millis(50)
 	assert_bool(_input._pending_reload).is_false()
 	assert_int(_input.reload_press_tick).is_greater(-1)
+
+
+func test_slip_and_wraith_stamp_press_ticks() -> void:
+	Input.action_press("slip")
+	Input.action_press("wraith")
+	await await_millis(100)
+	Input.action_release("slip")
+	Input.action_release("wraith")
+	await await_millis(50)
+
+	assert_int(_input.slip_press_tick).is_greater(-1)
+	assert_int(_input.wraith_press_tick).is_greater(-1)
+
+
+func test_grenade_stamps_on_release_not_press() -> void:
+	Input.action_press("grenade")
+	await await_millis(100)
+	# Still held: cooking, no throw yet.
+	assert_int(_input.grenade_press_tick).is_equal(-1)
+	assert_bool(_input.grenade_held).is_true()
+
+	Input.action_release("grenade")
+	await await_millis(100)
+	# Released: throw stamped.
+	assert_int(_input.grenade_press_tick).is_greater(-1)
+	assert_bool(_input.grenade_held).is_false()

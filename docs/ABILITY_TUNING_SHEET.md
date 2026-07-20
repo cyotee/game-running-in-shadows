@@ -306,6 +306,11 @@ Current prototype has basic raycast hitscan. Need real damage, spread, recoil, e
 - All five Milestone A plans executed (netfox core, controller support, Resonance, weapons, blade).
 - **PENDING (owner):** the subjective PRD §11 gate — play the client instance at ≥100 ms (`NET_TEST_LATENCY_MS=100`, two windowed instances of `scenes/dev/net_test.tscn`) and judge whether Repulse+Glide, weapon fire, and blade duels *feel* responsive. Record the verdict here.
 
+**Abilities Wave 1 shipped (2026-07-20)**
+- Slip: 3 Resonance, 8 m blink (velocity dir when moving, aim dir when stationary); destination-clear check (world layer 1 sphere) refunds+fizzles on block. Passes through walls if landing is clear.
+- Wraith: toggle 1 Resonance + 1.5/s drain; forced out on empty. Walk-speed only, glide/cast/weapon locked, bullet+fall immune (`take_damage` early-returns while phased). Net drain ~1.15/s vs out-of-combat regen. Watch: drain rate vs escape value; the Repulse resonance-burn counter is not yet implemented.
+- Grenades: free 2/round, 3 s fuse, cook up to 2.5 s (min fuse 0.5 s), 70 dmg / 5 m radius (full inside 1.5 m, linear falloff), throw speed 18. Rollback-simulated ballistic projectile with raycast bounce (0.5 dampen); Repulse-able (nudges "grenades" group). Watch: bounce dampen feel, cook-vs-Repulse-return tradeoff.
+
 **Weapon implementation notes (2026-07-18)**
 - SMG bloom now decays only after sustained fire stops: at the recorded baselines (0.15°/shot at 12.5 shots/s vs 3°/s decay) continuous-decay bloom could never accumulate. Behavior: grows while firing, decays at 3°/s once fire stops.
 - Player bodies moved to collision layer 4 (world 1, hit zones 2) so weapon rays resolve zones instead of the body shell; capsule offset so feet sit at node origin (camera 1.6 is inside the 1.8 m body).

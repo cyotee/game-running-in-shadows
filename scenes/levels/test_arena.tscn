@@ -1,9 +1,10 @@
-[gd_scene load_steps=10 format=3 uid="uid://testarenastub"]
+[gd_scene load_steps=11 format=3 uid="uid://testarenastub"]
 
 [ext_resource type="PackedScene" uid="uid://fpscontrollerstub" path="res://scenes/player/fps_controller.tscn" id="1_player"]
 [ext_resource type="Script" path="res://scenes/levels/steam_status.gd" id="2_steamstatus_script"]
 [ext_resource type="Script" path="res://scripts/levels/test_arena.gd" id="3_arena_script"]
 [ext_resource type="PackedScene" uid="uid://playerhud1" path="res://scenes/ui/player_hud.tscn" id="4_player_hud"]
+[ext_resource type="Script" path="res://scripts/weapons/projectile_spawner.gd" id="5_projectiles"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_Floor"]
 size = Vector3(60, 1, 60)
@@ -71,6 +72,12 @@ light_energy = 1.2
 shadow_enabled = true
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+
+[node name="Projectiles" type="Node3D" parent="."]
+
+[node name="ProjectileSpawner" type="MultiplayerSpawner" parent="Projectiles"]
+spawn_path = NodePath("..")
+script = ExtResource("5_projectiles")
 
 [node name="FPSController" parent="." instance=ExtResource("1_player")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)

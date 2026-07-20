@@ -90,6 +90,21 @@ const DEFAULTS: Dictionary = {
 	"session.max_players": 16.0,
 	# --- Movement ---
 	"movement.crouch_speed_mult": 0.55,
+	# --- Abilities Wave 1 ---
+	"resonance.slip_cost": 3.0,
+	"ability.slip_distance_m": 8.0,
+	"resonance.wraith_cost": 1.0,
+	"resonance.wraith_drain_per_s": 1.5,
+	"ability.grenade_stock": 2.0,
+	"ability.grenade_fuse_s": 3.0,
+	"ability.grenade_cook_max_s": 2.5,
+	"ability.grenade_damage": 70.0,
+	"ability.grenade_radius_m": 5.0,
+	"ability.grenade_inner_radius_m": 1.5,
+	"ability.grenade_throw_speed": 18.0,
+	"price.slip": 2000.0,
+	"price.wraith": 1700.0,
+	"price.grenades": 0.0,
 	# --- Economy ---
 	"economy.start_money": 800.0,
 	"economy.wage_base": 1000.0,

@@ -34,6 +34,9 @@ var health: float = 100.0
 var bleed_ticks_remaining: int = 0
 var bleed_hp_per_s: float = 0.0
 var is_dead: bool = false
+var is_wraithed: bool = false
+var grenade_stock: int = 2
+var grenade_cook_ticks: int = 0
 var last_attacker_peer: int = 0
 
 # Respawn request (plain vars, consumed inside the tick simulation).
@@ -142,6 +145,8 @@ func _apply_archetype_config() -> void:
 		MatchConfig.get_value("resonance.glide_harness_reservation") * _config("tech_mult"))
 	resonance.fill_to_cap()
 	health = _config("max_health")
+	grenade_stock = int(MatchConfig.get_value("ability.grenade_stock"))
+	grenade_cook_ticks = 0
 
 
 func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
@@ -186,21 +191,39 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 	# Capture boost intent before contextual deploy can consume the press.
 	var jump_for_boost := jump_pressed and is_gliding
 
-	if input.repulse_press_tick == tick:
+	# Wraith (toggle phase form). While phased: casts/weapons/glide locked,
+	# walk speed only, bullet + fall immunity (see take_damage).
+	if input.wraith_press_tick == tick:
+		_toggle_wraith(is_fresh)
+	if is_wraithed:
+		resonance.drain(MatchConfig.get_value("resonance.wraith_drain_per_s") * delta)
+		if resonance.current <= 0.0:
+			is_wraithed = false  # forced out on empty pool
+
+	if not is_wraithed and input.repulse_press_tick == tick:
 		if resonance.try_spend(MatchConfig.get_value("resonance.repulse_cost")):
 			_cast_repulse(tick, is_fresh)
 		elif is_fresh:
 			# Hard block (decided): clear denial feedback, no overdraft.
 			cast_denied.emit()
+	if not is_wraithed and input.slip_press_tick == tick:
+		_try_slip(is_fresh)
+	# Grenade cook (while held) + throw (on release).
+	var cook_max := int(roundf(MatchConfig.get_value("ability.grenade_cook_max_s") * NetworkTime.tickrate))
+	if not is_wraithed and input.grenade_held and grenade_stock > 0:
+		grenade_cook_ticks = mini(grenade_cook_ticks + 1, cook_max)
+	if not is_wraithed and input.grenade_press_tick == tick and grenade_stock > 0:
+		_throw_grenade(is_fresh, cook_max)
 	# Contextual jump (controller A): airborne and not gliding -> deploy glide.
-	var wants_glide := (
+	var wants_glide := not is_wraithed and (
 		input.glide_press_tick == tick
 		or (jump_pressed and not is_on_floor() and not is_gliding)
 	)
 	if wants_glide and not is_gliding:
 		_try_deploy_glide(tick)
 
-	var speed := (sprint_speed if input.sprint else walk_speed) * weapon_rig.carry_weight_mult()
+	var base_speed := walk_speed if is_wraithed else (sprint_speed if input.sprint else walk_speed)
+	var speed := base_speed * weapon_rig.carry_weight_mult()
 	if input.crouch:
 		speed *= MatchConfig.get_value("movement.crouch_speed_mult")
 	var direction := (transform.basis * Vector3(input.movement.x, 0, input.movement.y)).normalized()
@@ -290,6 +313,10 @@ func take_zone_damage(base_damage: float, weapon_key: String, zone: String,
 
 
 func take_damage(amount: float, attacker: FPSController, tick: int) -> void:
+	if is_wraithed:
+		# Bullet + fall immunity while phased (decided). The Repulse
+		# resonance-burn counter is a Resonance effect, handled separately.
+		return
 	health = maxf(health - amount, 0.0)
 	resonance.mark_combat(tick)
 	if attacker != null and attacker != self:
@@ -325,6 +352,75 @@ func _apply_pending_respawn() -> void:
 	for key in [weapon_rig.slot1, weapon_rig.slot2]:
 		if key != "":
 			weapon_rig.weapon_by_key(key).initialize_ammo()
+
+
+func _throw_grenade(is_fresh: bool, cook_max: int) -> void:
+	# Stock decrement + fuse computation are deterministic (state); the
+	# actual spawn is a world side-effect, fresh-tick only.
+	grenade_stock -= 1
+	var fuse_total := int(roundf(MatchConfig.get_value("ability.grenade_fuse_s") * NetworkTime.tickrate))
+	var fuse_ticks := maxi(fuse_total - grenade_cook_ticks, fuse_total - cook_max)
+	grenade_cook_ticks = 0
+	if is_fresh:
+		_spawn_grenade(fuse_ticks)
+
+
+func _spawn_grenade(fuse_ticks: int) -> void:
+	var spawner := get_tree().get_first_node_in_group("projectile_spawner")
+	if spawner == null:
+		return
+	var aim := Basis(Vector3.UP, input.aim_yaw) * Basis(Vector3.RIGHT, input.aim_pitch)
+	var dir := aim * Vector3.FORWARD
+	var spawn_pos := camera.global_position + dir * 0.6
+	var launch_vel := velocity + dir * MatchConfig.get_value("ability.grenade_throw_speed")
+	spawner.throw_grenade(spawn_pos, launch_vel, fuse_ticks, input.get_multiplayer_authority())
+
+
+func _toggle_wraith(is_fresh: bool) -> void:
+	if is_wraithed:
+		is_wraithed = false  # instant rematerialize, no cost (decided)
+		return
+	if resonance.try_spend(MatchConfig.get_value("resonance.wraith_cost")):
+		is_wraithed = true
+		is_gliding = false  # glide is locked while phased
+	elif is_fresh:
+		cast_denied.emit()
+
+
+func _try_slip(is_fresh: bool) -> void:
+	# Velocity-directional blink; aim direction when stationary. Passes
+	# through solids as long as the DESTINATION is clear; a blocked
+	# destination refunds (never spends) and fizzles. Decided 2026-07-16.
+	var cost := MatchConfig.get_value("resonance.slip_cost")
+	if not resonance.can_afford(cost):
+		if is_fresh:
+			cast_denied.emit()
+		return
+
+	var horizontal := Vector3(velocity.x, 0.0, velocity.z)
+	var dir: Vector3
+	if horizontal.length() > 0.5:
+		dir = velocity.normalized()
+	else:
+		dir = (Basis(Vector3.UP, input.aim_yaw) * Basis(Vector3.RIGHT, input.aim_pitch)) * Vector3.FORWARD
+	var destination := global_position + dir * MatchConfig.get_value("ability.slip_distance_m")
+
+	if _slip_destination_clear(destination):
+		resonance.try_spend(cost)
+		global_position = destination
+	elif is_fresh:
+		cast_denied.emit()
+
+
+func _slip_destination_clear(destination: Vector3) -> bool:
+	var sphere := SphereShape3D.new()
+	sphere.radius = 0.4
+	var query := PhysicsShapeQueryParameters3D.new()
+	query.shape = sphere
+	query.transform = Transform3D(Basis.IDENTITY, destination + Vector3(0.0, 0.9, 0.0))
+	query.collision_mask = 0b1  # world geometry only
+	query.exclude = [get_rid()]
+	return get_world_3d().direct_space_state.intersect_shape(query, 1).is_empty()
 
 
 func _cast_repulse(tick: int, is_fresh: bool) -> void:
@@ -366,6 +462,15 @@ func _push_nearby_bodies(cast_dir: Vector3) -> void:
 				body.velocity += push_dir * repulse_strength + Vector3(0, 4, 0)
 			elif body is RigidBody3D:
 				body.apply_central_impulse(push_dir * repulse_strength * 3.0)
+
+	# Grenades are Node3D (not physics bodies) — nudge them by group.
+	for node in get_tree().get_nodes_in_group("grenades"):
+		var grenade := node as Grenade
+		if grenade == null:
+			continue
+		var offset := grenade.global_position - global_position
+		if offset.length() <= repulse_range:
+			grenade.velocity += offset.normalized() * repulse_strength + Vector3(0, 4, 0)
 
 
 func _try_deploy_glide(tick: int) -> void:

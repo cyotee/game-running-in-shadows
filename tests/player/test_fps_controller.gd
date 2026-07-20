@@ -180,6 +180,106 @@ func test_repulse_hard_blocked_when_insufficient() -> void:
 	assert_float(delta_v.length()).is_less(2.0)
 
 
+func test_slip_blinks_in_open_space() -> void:
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+	var start := controller.global_position
+	var res_before := controller.resonance.current
+
+	press(controller.input, &"slip")
+	await await_ticks(5)
+
+	# Stationary -> blinks along aim (default forward, ~8 m).
+	assert_float(controller.global_position.distance_to(start)).is_greater(6.0)
+	assert_float(controller.resonance.current).is_equal_approx(res_before - 3.0, 0.3)
+
+
+func test_slip_blocked_destination_refunds_and_fizzles() -> void:
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+	# Solid block filling the destination (8 m along -Z at body height).
+	var wall: StaticBody3D = auto_free(StaticBody3D.new())
+	wall.collision_layer = 1
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(4, 4, 4)
+	shape.shape = box
+	wall.add_child(shape)
+	controller.get_parent().add_child(wall)
+	wall.global_position = controller.global_position + Vector3(0, 0.9, -8)
+
+	var start := controller.global_position
+	var res_before := controller.resonance.current
+	var denials: Array = []
+	controller.cast_denied.connect(func() -> void: denials.append(true))
+
+	press(controller.input, &"slip")
+	await await_ticks(5)
+
+	# Blocked: no horizontal blink, cost refunded (never spent), fizzle emitted.
+	var horiz := Vector2(controller.global_position.x - start.x,
+		controller.global_position.z - start.z).length()
+	assert_float(horiz).is_less(1.0)
+	assert_array(denials).has_size(1)
+	assert_float(controller.resonance.current).is_equal_approx(res_before, 0.3)
+
+
+func test_wraith_toggles_and_drains() -> void:
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+
+	press(controller.input, &"wraith")
+	await await_ticks(3)
+	assert_bool(controller.is_wraithed).is_true()
+	var after_toggle := controller.resonance.current  # ~7 (8 - 1 cost)
+
+	await await_ticks(30)  # ~0.5s of drain
+	assert_bool(controller.is_wraithed).is_true()
+	assert_float(controller.resonance.current).is_less(after_toggle)
+
+
+func test_wraith_forced_out_when_pool_empties() -> void:
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+	controller.resonance.current = 2.0
+
+	press(controller.input, &"wraith")
+	await await_ticks(3)
+	assert_bool(controller.is_wraithed).is_true()
+
+	await await_ticks(120)  # drains past zero (net ~1.15/s)
+	assert_bool(controller.is_wraithed).is_false()
+
+
+func test_wraith_immune_to_bullets() -> void:
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+
+	press(controller.input, &"wraith")
+	await await_ticks(3)
+	assert_bool(controller.is_wraithed).is_true()
+
+	var hp := controller.health
+	controller.take_damage(50.0, null, NetworkTime.tick)
+	assert_float(controller.health).is_equal(hp)
+
+
+func test_wraith_blocks_weapon_fire() -> void:
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+	controller.weapon_rig.active_slot = 2  # pistol (semi-auto)
+
+	press(controller.input, &"wraith")
+	await await_ticks(3)
+	var pistol := controller.weapon_rig.weapon_by_key("pistol")
+	var mag0 := pistol.mag
+
+	press(controller.input, &"fire")
+	await await_ticks(6)
+
+	assert_float(pistol.mag).is_equal(mag0)
+
+
 func test_elf_archetype_reservation_scaled() -> void:
 	var runner := scene_runner(CONTROLLER_SCENE)
 	var controller: FPSController = runner.scene()
@@ -341,23 +441,22 @@ func test_crouch_slows_movement() -> void:
 	var runner := _spawn_controller()
 	var controller: FPSController = runner.scene()
 
+	# Compare steady-state speeds (robust to the acceleration ramp):
+	# walk up to full speed, then crouch and let it settle.
 	runner.simulate_action_press("move_forward")
-	await await_ticks(30)
-	var walk_dz := absf(controller.global_position.z)
+	await await_ticks(40)
+	var walk_speed := Vector2(controller.velocity.x, controller.velocity.z).length()
 
-	# Measure the crouched window as a delta (rollback owns the transform,
-	# so mid-test position resets cannot be relied on).
-	var crouch_start_z := controller.global_position.z
 	runner.simulate_action_press("crouch")
-	await await_ticks(30)
+	await await_ticks(40)
 	# Collider swap follows the input while crouched.
 	assert_bool(controller.crouch_shape.disabled).is_false()
 	assert_bool(controller.standing_shape.disabled).is_true()
-	var crouch_dz := absf(controller.global_position.z - crouch_start_z)
+	var crouch_speed := Vector2(controller.velocity.x, controller.velocity.z).length()
 	runner.simulate_action_release("crouch")
 	runner.simulate_action_release("move_forward")
 
-	assert_float(crouch_dz).is_less(walk_dz)
+	assert_float(crouch_speed).is_less(walk_speed)
 
 
 func test_lethal_damage_freezes_and_signals_once() -> void:
