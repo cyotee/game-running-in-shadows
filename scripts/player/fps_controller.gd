@@ -221,6 +221,8 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 	# Placed fields (instant placement at an aimed point; held reservations).
 	if not is_wraithed and input.lifebloom_press_tick == tick:
 		_cast_lifebloom(tick, is_fresh)
+	if not is_wraithed and input.tangle_press_tick == tick:
+		_cast_tangle(tick, is_fresh)
 	_reconcile_field_reservations(tick)
 	# Contextual jump (controller A): airborne and not gliding -> deploy glide.
 	var wants_glide := not is_wraithed and (
@@ -257,6 +259,8 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 		var target := direction * speed
 		velocity.x = move_toward(velocity.x, target.x, acceleration * delta)
 		velocity.z = move_toward(velocity.z, target.z, acceleration * delta)
+
+	_apply_tangle_pull(delta)
 
 	# netfox CharacterBody3D pattern: move_and_slide assumes engine delta.
 	velocity *= NetworkTime.physics_factor
@@ -381,6 +385,46 @@ func _cast_lifebloom(tick: int, is_fresh: bool) -> void:
 	lifebloom_cast_tick = tick
 	if is_fresh:
 		_place_field("lifebloom")
+
+
+func _cast_tangle(tick: int, is_fresh: bool) -> void:
+	var cost := MatchConfig.get_value("resonance.tangle_cost")
+	if tangle_reserved or _in_null_field() or resonance.current < cost:
+		if is_fresh:
+			cast_denied.emit()
+		return
+	resonance.reserve(cost)
+	tangle_reserved = true
+	tangle_cast_tick = tick
+	if is_fresh:
+		_place_field("tangle")
+
+
+func _apply_tangle_pull(delta: float) -> void:
+	# Deterministic: the victim reads each Tangle's world position and drags
+	# itself toward the center. A caster's own Tangle does not pull them.
+	# (Team-based ally exemption folds in with team data — for now the caster
+	# is the only exemption.)
+	if is_wraithed:
+		return
+	var radius := MatchConfig.get_value("ability.tangle_radius_m")
+	var pull_speed := MatchConfig.get_value("ability.tangle_pull_speed")
+	var my_peer := input.get_multiplayer_authority()
+	for node in get_tree().get_nodes_in_group("tangle_fields"):
+		var field := node as PlacedField
+		if field == null or field._is_dead() or field.caster_peer == my_peer:
+			continue
+		var offset := field.global_position - global_position
+		offset.y = 0.0
+		var dist := offset.length()
+		if dist > 0.3 and dist <= radius:
+			# Conveyor-style drag: enforce a minimum inward speed so the pull
+			# is not swamped by the movement decay (this is the final velocity
+			# for move_and_slide this tick).
+			var inward := offset.normalized()
+			var inward_speed := velocity.dot(inward)
+			if inward_speed < pull_speed:
+				velocity += inward * (pull_speed - inward_speed)
 
 
 func _reconcile_field_reservations(tick: int) -> void:

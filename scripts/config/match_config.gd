@@ -114,7 +114,7 @@ const DEFAULTS: Dictionary = {
 	"ability.lifebloom_lifetime_s": 180.0,
 	"resonance.tangle_cost": 2.0,
 	"ability.tangle_radius_m": 4.0,
-	"ability.tangle_pull_accel": 12.0,
+	"ability.tangle_pull_speed": 4.0,
 	"ability.tangle_hp": 120.0,
 	"ability.tangle_lifetime_s": 75.0,
 	"ability.null_stock": 4.0,

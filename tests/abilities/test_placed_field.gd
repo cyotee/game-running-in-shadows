@@ -3,7 +3,18 @@ extends NetSuite
 
 const CONTROLLER_SCENE := "res://scenes/player/fps_controller.tscn"
 const LIFEBLOOM_SCENE := "res://scenes/abilities/lifebloom.tscn"
+const TANGLE_SCENE := "res://scenes/abilities/tangle.tscn"
 const ARENA_SCENE := "res://scenes/levels/test_arena.tscn"
+
+
+func _add_enemy_caster(near: FPSController, peer: int) -> FPSController:
+	# A living player under a distinct peer, so PlacedField._caster_gone is
+	# false and the field is an "enemy" field for `near`.
+	var caster: FPSController = auto_free((load(CONTROLLER_SCENE) as PackedScene).instantiate())
+	near.get_parent().add_child(caster)
+	caster.input.set_multiplayer_authority(peer)
+	caster.global_position = near.global_position + Vector3(30.0, 0.0, 0.0)
+	return caster
 
 
 func before_test() -> void:
@@ -69,6 +80,56 @@ func test_take_field_damage_kills_field() -> void:
 	await get_tree().process_frame
 
 	assert_bool(is_instance_valid(field)).is_false()
+
+
+func test_tangle_drags_enemy_toward_center() -> void:
+	var runner := scene_runner(CONTROLLER_SCENE)
+	var victim: FPSController = runner.scene()
+	_add_enemy_caster(victim, 2)
+	var field: Tangle = (load(TANGLE_SCENE) as PackedScene).instantiate()
+	victim.get_parent().add_child(field)
+	field.setup(victim.global_position + Vector3(3.0, 0.0, 0.0), 2, 200.0, 6000)
+
+	var x0 := victim.global_position.x
+	await await_ticks(20)
+
+	# Pulled toward the field at +X.
+	assert_float(victim.global_position.x).is_greater(x0 + 0.5)
+
+
+func test_tangle_does_not_pull_its_own_caster() -> void:
+	var runner := scene_runner(CONTROLLER_SCENE)
+	var caster: FPSController = runner.scene()  # peer 1
+	var field: Tangle = (load(TANGLE_SCENE) as PackedScene).instantiate()
+	caster.get_parent().add_child(field)
+	field.setup(caster.global_position + Vector3(3.0, 0.0, 0.0), 1, 200.0, 6000)
+
+	var x0 := caster.global_position.x
+	await await_ticks(20)
+
+	# Caster is exempt from their own Tangle: no inward drift.
+	assert_float(absf(caster.global_position.x - x0)).is_less(0.5)
+
+
+func test_tangle_blocks_direct_fire() -> void:
+	var runner := scene_runner(CONTROLLER_SCENE)
+	var shooter: FPSController = runner.scene()
+	shooter.weapon_rig.active_slot = 2  # pistol
+	var victim: FPSController = auto_free((load(CONTROLLER_SCENE) as PackedScene).instantiate())
+	shooter.get_parent().add_child(victim)
+	victim.global_position = shooter.global_position + Vector3(0.0, 0.0, -8.0)
+	# Tangle vortex between shooter and victim, far enough that the shooter's
+	# camera is outside the block sphere (a ray from inside reports no hit).
+	var field: Tangle = (load(TANGLE_SCENE) as PackedScene).instantiate()
+	shooter.get_parent().add_child(field)
+	field.setup(shooter.global_position + Vector3(0.0, 0.0, -4.5), 1, 200.0, 6000)
+	await await_ticks(3)  # let the block collider settle
+
+	var hp := victim.health
+	press(shooter.input, &"fire")
+	await await_ticks(8)
+
+	assert_float(victim.health).is_equal(hp)  # ray blocked by the vortex
 
 
 func test_cast_lifebloom_places_field_and_holds_reservation() -> void:
