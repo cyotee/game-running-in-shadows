@@ -44,5 +44,23 @@ Per-owner limit enforced at spawn (free the oldest by `spawn_tick`).
 
 **Deferred (documented):** corpse destruction to deny Reclaim (objective-weapon
 interaction — lands with G8 objective items); scavenging reserve ammo into the
-weapon system beyond the looted weapon's own mag/reserve; the Power Arm idea
+weapon system beyond the looted weapon's own mag/reserve (loot currently grants
+a fresh weapon via `queue_grant`, ammo-carry not yet wired); the Power Arm idea
 (upgrades drag weapon restriction — docs/ideas/power-arm.md).
+
+---
+
+> **Status: Tasks 1–3 EXECUTED 2026-07-20 (feat/corpse-system branch, NOT yet
+> merged to main).** All 7 corpse tests pass; the branch's other suites pass in
+> isolation. The full-suite + E2E merge gate was NOT completed because the host
+> machine was under extreme sustained load (loadavg 130–375) — three unrelated
+> real-Input / frame-driven tests (`test_moves_forward_on_input`,
+> `test_ads_zoom_applies_to_camera`, `test_tangle_drags_enemy_toward_center`)
+> flake under that load and pass in isolation / at lower load. **Next agent:**
+> re-run the full suite + `tests/e2e/net_smoke.py` when loadavg < ~15, confirm
+> green, then merge `feat/corpse-system` to main (Task 4's live MCP arena check
+> also needs a calm machine — the arena couldn't boot its MCP server under load).
+> Learned: out-of-band rollback-state writes from tests (health, active_slot)
+> are discarded by the state restore — use in-tick paths (`queue_damage`,
+> `select_slot`); a corpse follow/drag test needs a floor (a falling dragger
+> drifts out of drag range).

@@ -113,9 +113,10 @@ Framework rules are decided (MECHANICS_REFERENCE §4.A — Resonance-only pacing
 2. **Wave 2 — placed/persistent world objects:** Lifebloom, Tangle (pull applied inside each victim's own rollback tick — decided), Null Charge. These are the "persistent networked objects" the PRD flags in §7 — netcode approach per MECHANICS_REFERENCE §10. ✅ DONE (2026-07-20 — `2026-07-20-abilities-wave2.md`; shared `PlacedField` base)
 3. **Wave 3 — dependent abilities:** Reclaim (needs G6 corpses), Familiar (needs G7 ping), Pulse Sight, Smart Rig (forced view tracking), Overclock Rig (grace-period HP drain).
 
-### G6 — Corpse system *(Milestone C; before Wave 3)*
+### G6 — Corpse system ✅ code-complete (2026-07-20 — `2026-07-20-corpse-system.md`, branch `feat/corpse-system`, merge pending a clean full-suite run under lower machine load)
 
 - **Scope:** full body persistence in all modes, per-player corpse limit, corpse inventory (weapons/ammo/grenades as at death), looting, dragging with Pistol/SMG-only restriction (MECHANICS_REFERENCE §11, decided 2026-07-17).
+- Shipped: `Corpse` entity (`scripts/abilities/corpse.gd`) spawned on death via the generalized spawner (`"corpse"` kind); per-owner limit; loot grants a carried weapon; drag follows + restricts weapon use. Ammo-carry on loot deferred (grants fresh weapon).
 
 ### G7 — Ping system *(Milestone C; before Familiar)*
 
