@@ -192,6 +192,8 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 		elif is_fresh:
 			# Hard block (decided): clear denial feedback, no overdraft.
 			cast_denied.emit()
+	if input.slip_press_tick == tick:
+		_try_slip(is_fresh)
 	# Contextual jump (controller A): airborne and not gliding -> deploy glide.
 	var wants_glide := (
 		input.glide_press_tick == tick
@@ -325,6 +327,42 @@ func _apply_pending_respawn() -> void:
 	for key in [weapon_rig.slot1, weapon_rig.slot2]:
 		if key != "":
 			weapon_rig.weapon_by_key(key).initialize_ammo()
+
+
+func _try_slip(is_fresh: bool) -> void:
+	# Velocity-directional blink; aim direction when stationary. Passes
+	# through solids as long as the DESTINATION is clear; a blocked
+	# destination refunds (never spends) and fizzles. Decided 2026-07-16.
+	var cost := MatchConfig.get_value("resonance.slip_cost")
+	if not resonance.can_afford(cost):
+		if is_fresh:
+			cast_denied.emit()
+		return
+
+	var horizontal := Vector3(velocity.x, 0.0, velocity.z)
+	var dir: Vector3
+	if horizontal.length() > 0.5:
+		dir = velocity.normalized()
+	else:
+		dir = (Basis(Vector3.UP, input.aim_yaw) * Basis(Vector3.RIGHT, input.aim_pitch)) * Vector3.FORWARD
+	var destination := global_position + dir * MatchConfig.get_value("ability.slip_distance_m")
+
+	if _slip_destination_clear(destination):
+		resonance.try_spend(cost)
+		global_position = destination
+	elif is_fresh:
+		cast_denied.emit()
+
+
+func _slip_destination_clear(destination: Vector3) -> bool:
+	var sphere := SphereShape3D.new()
+	sphere.radius = 0.4
+	var query := PhysicsShapeQueryParameters3D.new()
+	query.shape = sphere
+	query.transform = Transform3D(Basis.IDENTITY, destination + Vector3(0.0, 0.9, 0.0))
+	query.collision_mask = 0b1  # world geometry only
+	query.exclude = [get_rid()]
+	return get_world_3d().direct_space_state.intersect_shape(query, 1).is_empty()
 
 
 func _cast_repulse(tick: int, is_fresh: bool) -> void:

@@ -180,6 +180,50 @@ func test_repulse_hard_blocked_when_insufficient() -> void:
 	assert_float(delta_v.length()).is_less(2.0)
 
 
+func test_slip_blinks_in_open_space() -> void:
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+	var start := controller.global_position
+	var res_before := controller.resonance.current
+
+	press(controller.input, &"slip")
+	await await_ticks(5)
+
+	# Stationary -> blinks along aim (default forward, ~8 m).
+	assert_float(controller.global_position.distance_to(start)).is_greater(6.0)
+	assert_float(controller.resonance.current).is_equal_approx(res_before - 3.0, 0.3)
+
+
+func test_slip_blocked_destination_refunds_and_fizzles() -> void:
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+	# Solid block filling the destination (8 m along -Z at body height).
+	var wall: StaticBody3D = auto_free(StaticBody3D.new())
+	wall.collision_layer = 1
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(4, 4, 4)
+	shape.shape = box
+	wall.add_child(shape)
+	controller.get_parent().add_child(wall)
+	wall.global_position = controller.global_position + Vector3(0, 0.9, -8)
+
+	var start := controller.global_position
+	var res_before := controller.resonance.current
+	var denials: Array = []
+	controller.cast_denied.connect(func() -> void: denials.append(true))
+
+	press(controller.input, &"slip")
+	await await_ticks(5)
+
+	# Blocked: no horizontal blink, cost refunded (never spent), fizzle emitted.
+	var horiz := Vector2(controller.global_position.x - start.x,
+		controller.global_position.z - start.z).length()
+	assert_float(horiz).is_less(1.0)
+	assert_array(denials).has_size(1)
+	assert_float(controller.resonance.current).is_equal_approx(res_before, 0.3)
+
+
 func test_elf_archetype_reservation_scaled() -> void:
 	var runner := scene_runner(CONTROLLER_SCENE)
 	var controller: FPSController = runner.scene()
