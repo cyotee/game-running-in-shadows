@@ -16,6 +16,13 @@ var _key_map: Dictionary
 var _held_keys: Dictionary = {}
 
 func _ready() -> void:
+	# Release builds strip/disable the interaction server (G13 / docs/TESTING.md).
+	# Opt-out: COUNTERSPELL_RELEASE=1 or ProjectSettings feature flag.
+	if OS.get_environment("COUNTERSPELL_RELEASE") == "1" \
+			or ProjectSettings.get_setting("counterspell/release_build", false):
+		print("McpInteractionServer: disabled (release build)")
+		set_process(false)
+		return
 	# Ensure MCP server keeps processing even when game is paused
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_init_key_map()

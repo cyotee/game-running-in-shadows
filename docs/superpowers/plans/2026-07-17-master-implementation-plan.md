@@ -111,7 +111,7 @@ Framework rules are decided (MECHANICS_REFERENCE §4.A — Resonance-only pacing
 
 1. **Wave 1 — instant/self abilities:** Slip (velocity blink, safe-fail refund), Wraith (toggle + drain, weapons locked, instant rematerialize), Grenades (cookable fuse, Repulse-able). ✅ DONE (2026-07-20 — `2026-07-20-abilities-wave1.md`)
 2. **Wave 2 — placed/persistent world objects:** Lifebloom, Tangle (pull applied inside each victim's own rollback tick — decided), Null Charge. These are the "persistent networked objects" the PRD flags in §7 — netcode approach per MECHANICS_REFERENCE §10. ✅ DONE (2026-07-20 — `2026-07-20-abilities-wave2.md`; shared `PlacedField` base)
-3. **Wave 3 — dependent abilities:** **Reclaim ✅ DONE** (2026-07-20 — `2026-07-20-reclaim.md`; corpse-gated radius revive at 50% HP with restored unlooted gear, 4 Resonance held while revived allies live, caster-death bleed-out; H / D-pad Left). Remaining: Familiar (needs G7 ping ✅ — consume `PingService.latest_enemy_tag`), Pulse Sight, Smart Rig (forced view tracking), Overclock Rig (grace-period HP drain).
+3. **Wave 3 — dependent abilities:** **Reclaim ✅ DONE** (2026-07-20). **Familiar ✅ DONE** (2026-07-20). **Pulse Sight / Smart Rig / Overclock ✅ DONE** (2026-07-20 — press-tick casts; MatchConfig baselines; tests in `test_wave3_augments.gd`).
 
 ### G6 — Corpse system ✅ DONE (2026-07-20 — `2026-07-20-corpse-system.md`, branch `feat/corpse-system` merged to main; full suite 117/117, E2E PASS)
 
@@ -123,21 +123,21 @@ Framework rules are decided (MECHANICS_REFERENCE §4.A — Resonance-only pacing
 - **Scope:** aimed ping (world point + enemy tag), minimal comms wheel; Familiar consumes the enemy-tag ping as its hunt target (MECHANICS_REFERENCE §4.A).
 - **Shipped (pass 1 — aimed ping):** `PingService` autoload (host-authoritative, team-scoped, outside the rollback path); `FPSController.try_ping` raycast classifies enemy-tag vs world-point; HUD markers (world→screen projection + edge arrow + distance); `latest_enemy_tag()` ready for Familiar. Input: P / middle-mouse / D-pad Up. **Deferred:** the minimal comms wheel (a G7 follow-up).
 
-### G8 — CTF + variable objective item *(Milestone C)*
+### G8 — CTF + variable objective item ✅ DONE (2026-07-20)
 
-- **Scope:** CTF on the G2 match framework; the flag is a **variable item**, first version replicating source behavior — a powerful melee weapon that disables some abilities while carried (MECHANICS_REFERENCE §11 "Objective Items").
+- **Shipped:** `scripts/match/ctf_objective.gd` host-authoritative flag; goals groups `ctf_goal_0/1`; interact pickup; score-to-win; scene `map_objective.tscn`. Melee-while-carried polish deferred.
 
-### G9 — Maps *(Milestone C)*
+### G9 — Maps ✅ DONE (2026-07-20 greybox)
 
-- **Scope:** 2 polished greybox-then-art maps (one close-quarters, one objective-scaled — PRD §5 says 2–4 total for EA; start with 2). Placeholder art stays Quaternius CC0 with `models/placeholders/ATTRIBUTION.md` kept accurate until the commissioned-art budget decision (PRD §9).
+- **Shipped:** `scenes/levels/map_close_quarters.tscn` (30×30), `scenes/levels/map_objective.tscn` (90×90 + CTF). Art polish deferred.
 
-### G10 — True host migration *(Milestone C; SPIKE FIRST)*
+### G10 — True host migration *(SPIKE COMPLETE 2026-07-20)*
 
-- PRD §7 (decided): migration requires a **feasibility spike** (netfox authority handoff + peer re-mesh) before its implementation plan is written. Graceful match-end is the interim behavior. The sessions plan's final task scopes the spike.
+- **Findings:** mid-round netfox exact resume **NO-GO** for EA; Steam remesh + round restart preserving economy **GO** when prioritized. Interim: graceful match-end. See `SPIKE-host-migration.md`.
 
-### G11 — Anti-cheat Layer-1 audit *(end of Milestone C)*
+### G11 — Anti-cheat Layer-1 audit ✅ DONE (2026-07-20)
 
-- Layer 1 is written incrementally with each mechanic (movement caps, Resonance costs, no client-reported hits — already constraints inside plans 1–5 and G2). This item is a dedicated audit pass: verify every state-mutating path is authority-validated, and land the structured input-trace logging (PRD §7) if any earlier plan deferred it.
+- **Shipped:** audit doc `2026-07-20-g11-anticheat-audit.md`; `InputTrace` autoload records edge press-ticks; disabled in release.
 
 ---
 

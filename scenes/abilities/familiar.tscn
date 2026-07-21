@@ -1,0 +1,31 @@
+[gd_scene load_steps=5 format=3 uid="uid://familiar1minion"]
+
+[ext_resource type="Script" path="res://scripts/abilities/familiar.gd" id="1_fam"]
+[ext_resource type="Script" path="res://addons/netfox/rollback/rollback-synchronizer.gd" id="2_rbs"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_1"]
+radius = 0.35
+height = 1.0
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_1"]
+radius = 0.5
+
+[node name="Familiar" type="Node3D"]
+script = ExtResource("1_fam")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+mesh = SubResource("CapsuleMesh_1")
+
+[node name="HitBody" type="StaticBody3D" parent="." groups=["familiar_hit"]]
+collision_layer = 16
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="HitBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("SphereShape3D_1")
+
+[node name="RollbackSynchronizer" type="Node" parent="." node_paths=PackedStringArray("root")]
+script = ExtResource("2_rbs")
+root = NodePath("..")
+state_properties = Array[String]([":transform", ":hp", ":mode", ":guard_pos", ":attack_cooldown_ticks"])
