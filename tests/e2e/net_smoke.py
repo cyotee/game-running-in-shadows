@@ -36,10 +36,11 @@ class Instance:
         self.sock = None
         self.reader = None
         self._id = 0
-        deadline = time.time() + 20
+        deadline = time.time() + 45
         while time.time() < deadline:
             try:
-                self.sock = socket.create_connection(("127.0.0.1", mcp_port), timeout=2)
+                self.sock = socket.create_connection(("127.0.0.1", mcp_port), timeout=3)
+                self.sock.settimeout(15)
                 self.reader = self.sock.makefile("r")
                 return
             except OSError:
@@ -50,7 +51,10 @@ class Instance:
         self._id += 1
         msg = {"id": self._id, "command": command, "params": params or {}}
         self.sock.sendall((json.dumps(msg) + "\n").encode())
-        return json.loads(self.reader.readline())
+        line = self.reader.readline()
+        if not line:
+            raise RuntimeError(f"MCP {command}: empty response (peer closed)")
+        return json.loads(line)
 
     def action(self, action: str, pressed: bool) -> dict:
         # Raw Input.action_press/_release: robust across frame timing, unlike
@@ -101,7 +105,7 @@ def main() -> int:
         # the two instances have finished syncing. Driving input before the
         # clocks settle drops the first inputs (they map to already-simulated
         # ticks), so wait for the sync to stabilise — longer under machine load.
-        time.sleep(5)
+        time.sleep(8)
 
         # Drive the client forward; its input must replicate through the
         # latency proxy and move the server-side body. Retry the whole
