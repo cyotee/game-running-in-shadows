@@ -35,6 +35,7 @@ var bleed_ticks_remaining: int = 0
 var bleed_hp_per_s: float = 0.0
 var is_dead: bool = false
 var is_wraithed: bool = false
+var is_dragging: bool = false
 var grenade_stock: int = 2
 var grenade_cook_ticks: int = 0
 var null_stock: int = 4
@@ -51,6 +52,11 @@ var _has_pending_respawn: bool = false
 # Weapon grant queue (rig slots are rollback state; grants must apply
 # inside the tick, same pattern as respawn).
 var _pending_grants: Array[Array] = []
+
+# Damage queued to apply inside the tick. Out-of-band health writes are
+# discarded by the rollback state restore, so external/test-initiated damage
+# must be applied in-simulation (weapons already call take_damage in-tick).
+var _pending_damage: float = 0.0
 
 signal died(victim_peer: int, attacker_peer: int)
 signal cast_denied()
@@ -167,9 +173,13 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 	# body persistence is a pillar; the corpse system extends this later).
 	if is_dead:
 		return
+	if _pending_damage > 0.0 and is_fresh:
+		health = maxf(health - _pending_damage, 0.0)
+		_pending_damage = 0.0
 	if health <= 0.0:
 		is_dead = true
 		if is_fresh:
+			_spawn_corpse(tick)
 			died.emit(input.get_multiplayer_authority(), last_attacker_peer)
 		return
 
@@ -230,6 +240,7 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 		if is_fresh:
 			_place_field("null_charge")
 	_reconcile_field_reservations(tick)
+	_process_interact(tick, is_fresh)
 	# Contextual jump (controller A): airborne and not gliding -> deploy glide.
 	var wants_glide := not is_wraithed and (
 		input.glide_press_tick == tick
@@ -312,6 +323,13 @@ func apply_bleed(hp_per_s: float, duration_s: float) -> void:
 	bleed_hp_per_s = maxf(bleed_hp_per_s, hp_per_s)
 
 
+func can_use_weapon(weapon_key: String) -> bool:
+	# Dragging a corpse restricts weapon use to Pistol / SMG (decided).
+	if is_dragging:
+		return weapon_key == "pistol" or weapon_key == "smg"
+	return true
+
+
 func is_blocking() -> bool:
 	var active := weapon_rig.active_weapon()
 	return active != null and active.weapon_key == "blade" and input.ads
@@ -378,6 +396,81 @@ func _apply_pending_respawn() -> void:
 	for key in [weapon_rig.slot1, weapon_rig.slot2]:
 		if key != "":
 			weapon_rig.weapon_by_key(key).initialize_ammo()
+
+
+func queue_damage(amount: float) -> void:
+	# Test/debug in-tick kill helper; applied on the next fresh tick.
+	_pending_damage += amount
+
+
+func _spawn_corpse(tick: int) -> void:
+	var spawner := get_tree().get_first_node_in_group("projectile_spawner")
+	if spawner == null:
+		return
+	var my_peer := input.get_multiplayer_authority()
+	# Per-owner limit: remove the oldest owned corpse if at capacity.
+	var owned: Array[Corpse] = []
+	for node in get_tree().get_nodes_in_group("corpses"):
+		var corpse := node as Corpse
+		if corpse != null and corpse.owner_peer == my_peer and not corpse.removed:
+			owned.append(corpse)
+	if owned.size() >= int(MatchConfig.get_value("corpse.max_per_owner")):
+		var oldest: Corpse = owned[0]
+		for corpse in owned:
+			if corpse.spawn_tick < oldest.spawn_tick:
+				oldest = corpse
+		oldest.destroy()
+	# Flat snapshot: [w1_key, w1_mag, w1_reserve, w2_key, w2_mag, w2_reserve, grenades]
+	var w1_mag := 0.0
+	var w1_reserve := 0.0
+	if weapon_rig.slot1 != "":
+		var w1 := weapon_rig.weapon_by_key(weapon_rig.slot1)
+		w1_mag = w1.mag
+		w1_reserve = w1.reserve
+	var w2_mag := 0.0
+	var w2_reserve := 0.0
+	if weapon_rig.slot2 != "":
+		var w2 := weapon_rig.weapon_by_key(weapon_rig.slot2)
+		w2_mag = w2.mag
+		w2_reserve = w2.reserve
+	var snapshot: Array = [weapon_rig.slot1, w1_mag, w1_reserve,
+		weapon_rig.slot2, w2_mag, w2_reserve, grenade_stock]
+	spawner.spawn_corpse(global_position, my_peer, tick, snapshot)
+
+
+func _process_interact(_tick: int, _is_fresh: bool) -> void:
+	# Drag (held) takes priority over loot (press) on the same corpse.
+	var drag_range := MatchConfig.get_value("corpse.drag_range_m")
+	if input.interact_held:
+		var corpse := _nearest_corpse(drag_range)
+		if corpse != null:
+			is_dragging = true
+			corpse.set_dragged_by(input.get_multiplayer_authority())
+		else:
+			is_dragging = false
+	else:
+		is_dragging = false
+	if input.interact_press_tick == _tick:
+		var loot_range := MatchConfig.get_value("corpse.loot_range_m")
+		var corpse := _nearest_corpse(loot_range)
+		if corpse != null:
+			var w: Dictionary = corpse.loot_weapon()
+			if not w.is_empty():
+				queue_grant(w["key"], 1)
+
+
+func _nearest_corpse(radius: float) -> Corpse:
+	var best: Corpse = null
+	var best_dist := radius
+	for node in get_tree().get_nodes_in_group("corpses"):
+		var corpse := node as Corpse
+		if corpse == null or corpse.removed:
+			continue
+		var d := corpse.global_position.distance_to(global_position)
+		if d <= best_dist:
+			best_dist = d
+			best = corpse
+	return best
 
 
 func _cast_lifebloom(tick: int, is_fresh: bool) -> void:

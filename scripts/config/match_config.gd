@@ -125,6 +125,11 @@ const DEFAULTS: Dictionary = {
 	"price.lifebloom": 1800.0,
 	"price.tangle": 1800.0,
 	"price.null_charge": 1400.0,
+	# --- Corpses ---
+	"corpse.max_per_owner": 3.0,
+	"corpse.loot_range_m": 2.5,
+	"corpse.drag_range_m": 2.0,
+	"corpse.drag_speed": 6.0,
 	# --- Economy ---
 	"economy.start_money": 800.0,
 	"economy.wage_base": 1000.0,

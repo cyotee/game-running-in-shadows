@@ -32,8 +32,17 @@ func throw_grenade(spawn_position: Vector3, launch_velocity: Vector3,
 	spawn(["grenade", spawn_position, launch_velocity, fuse_ticks, owner_peer])
 
 
+const CORPSE_SCENE := preload("res://scenes/abilities/corpse.tscn")
+
+
 func place_field(kind: String, spawn_position: Vector3, caster_peer: int) -> void:
 	spawn([kind, spawn_position, caster_peer])
+
+
+func spawn_corpse(spawn_position: Vector3, owner_peer: int, tick: int, snapshot: Array) -> void:
+	# Flat primitives only — MultiplayerSpawner serializes the spawn data.
+	# snapshot = [w1_key, w1_mag, w1_reserve, w2_key, w2_mag, w2_reserve, grenades]
+	spawn(["corpse", spawn_position, owner_peer, tick] + snapshot)
 
 
 func _spawn(data: Array) -> Node:
@@ -42,6 +51,10 @@ func _spawn(data: Array) -> Node:
 		var grenade: Grenade = GRENADE_SCENE.instantiate()
 		grenade.launch(data[1], data[2], data[3], data[4])
 		return grenade
+	if kind == "corpse":
+		var corpse: Corpse = CORPSE_SCENE.instantiate()
+		corpse.init(data[1], data[2], data[3], data.slice(4))
+		return corpse
 	var field: PlacedField = (load(FIELD_SCENES[kind]) as PackedScene).instantiate()
 	var cfg: Array = FIELD_CONFIG[kind]
 	field.setup(data[1], data[2], MatchConfig.get_value(cfg[0]),
