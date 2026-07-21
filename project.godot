@@ -35,6 +35,7 @@ NetworkEvents="*uid://bdmobxxptryj0"
 NetworkPerformance="*uid://cqgf7aqmjfoa3"
 WindowTiler="*uid://cmqjajhjgffm1"
 NetworkSimulator="*uid://1y2ey1e6qjwr"
+PingService="*res://scripts/abilities/ping_service.gd"
 
 [debug]
 
