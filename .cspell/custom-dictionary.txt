@@ -3,6 +3,7 @@ agentic
 aimbot
 aimbots
 asyncio
+autobind
 autoloads
 Aztechnology
 Azuro
@@ -60,8 +61,8 @@ joypad
 Kalshi
 Katana
 killcam
-killcams
 Killcams
+killcams
 Knockback
 knockback
 Krypto
@@ -100,8 +101,8 @@ Polymarket
 poseable
 puppeted
 puppeteer
-puppeting
 Puppeting
+puppeting
 Pushable
 Quaternius
 Quoterv
@@ -114,6 +115,7 @@ regen
 Remappable
 Rematerialization
 rematerialize
+renderable
 replayable
 respawn
 respawns
@@ -143,6 +145,8 @@ unblockable
 uncollateralized
 unlooted
 unpausable
+unproject
+unrenderable
 unshovable
 untargetable
 Unzoom
