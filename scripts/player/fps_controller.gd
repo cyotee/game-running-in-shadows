@@ -215,6 +215,8 @@ func _apply_archetype_config() -> void:
 func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 	if _has_pending_respawn and is_fresh:
 		_apply_pending_respawn()
+	if _has_pending_reclaim and is_fresh:
+		_apply_pending_reclaim()
 	if not _pending_grants.is_empty() and is_fresh:
 		for grant in _pending_grants:
 			weapon_rig.grant(grant[0], grant[1])
@@ -445,10 +447,44 @@ func _apply_pending_respawn() -> void:
 	is_gliding = false
 	velocity = Vector3.ZERO
 	global_position = _pending_respawn
+	reclaim_reserved = false
+	revived_by_peer = 0
 	_apply_archetype_config()
 	for key in [weapon_rig.slot1, weapon_rig.slot2]:
 		if key != "":
 			weapon_rig.weapon_by_key(key).initialize_ammo()
+
+
+func _apply_pending_reclaim() -> void:
+	# Runs in the revived player's OWN tick (dispatched before the is_dead
+	# return), so these rollback-state writes stick. Revives at a fraction of
+	# max health with the corpse's unlooted gear restored.
+	_has_pending_reclaim = false
+	is_dead = false
+	last_attacker_peer = 0
+	bleed_ticks_remaining = 0
+	bleed_hp_per_s = 0.0
+	is_gliding = false
+	velocity = Vector3.ZERO
+	global_position = _pending_reclaim_pos
+	_apply_archetype_config()
+	var snap := _pending_reclaim_snapshot
+	if snap.size() >= 7:
+		_restore_reclaim_weapon(snap[0], 1 if snap[0] != "pistol" else 2, snap[1], snap[2])
+		_restore_reclaim_weapon(snap[3], 1 if snap[3] != "pistol" else 2, snap[4], snap[5])
+		grenade_stock = int(snap[6])
+	health = _config("max_health") * MatchConfig.get_value("reclaim.revive_health_frac")
+	revived_by_peer = _pending_reclaim_reviver
+
+
+func _restore_reclaim_weapon(key: String, slot: int, mag: float, reserve: float) -> void:
+	if key == "":
+		return
+	weapon_rig.grant(key, slot)
+	var w := weapon_rig.weapon_by_key(key)
+	if w != null:
+		w.mag = mag
+		w.reserve = reserve
 
 
 func queue_damage(amount: float) -> void:

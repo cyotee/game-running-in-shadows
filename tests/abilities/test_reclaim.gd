@@ -1,9 +1,13 @@
 class_name TestReclaim
 extends NetSuite
 
-const ARENA_SCENE := "res://scenes/levels/test_arena.tscn"
-const CORPSE_SCENE := "res://scenes/abilities/corpse.tscn"
 const CONTROLLER_SCENE := "res://scenes/player/fps_controller.tscn"
+const CORPSE_SCENE := "res://scenes/abilities/corpse.tscn"
+
+# In these offline tests only the runner's authority-1 controller is simulated
+# (netfox gives `is_fresh` ticks to the local-authority node only — verified).
+# So each test makes the entity-under-test the runner scene, and any other
+# controller a STATIC prop whose forced state persists (it is never simulated).
 
 
 func before_test() -> void:
@@ -18,7 +22,16 @@ func after_test() -> void:
 		node.free()
 
 
-func _spawn_ally_corpse(host: FPSController, offset: Vector3, owner_peer: int) -> Corpse:
+func _static_dead_ally(host: FPSController, offset: Vector3, peer: int) -> FPSController:
+	var ally: FPSController = auto_free((load(CONTROLLER_SCENE) as PackedScene).instantiate())
+	host.get_parent().add_child(ally)
+	ally.input.set_multiplayer_authority(peer)
+	ally.global_position = host.global_position + offset
+	ally.is_dead = true  # static prop: not simulated, so the forced write persists
+	return ally
+
+
+func _corpse_at(host: FPSController, offset: Vector3, owner_peer: int) -> Corpse:
 	var corpse: Corpse = (load(CORPSE_SCENE) as PackedScene).instantiate()
 	host.get_parent().add_child(corpse)
 	corpse.init(host.global_position + offset, owner_peer, 0,
@@ -26,27 +39,47 @@ func _spawn_ally_corpse(host: FPSController, offset: Vector3, owner_peer: int) -
 	return corpse
 
 
-# Spawns a second controller, drives it dead, and drops a matching corpse in
-# range of the caster. Returns [ally, corpse].
-func _downed_ally_with_corpse(caster: FPSController, offset: Vector3, peer: int) -> Array:
-	var ally: FPSController = (load(CONTROLLER_SCENE) as PackedScene).instantiate()
-	caster.get_parent().add_child(ally)
-	ally.input.set_multiplayer_authority(peer)
-	await await_ticks(2)
-	ally.global_position = caster.global_position + offset
-	ally.queue_damage(9999.0)
-	await await_ticks(6)
-	var corpse := _spawn_ally_corpse(caster, offset, peer)
-	await await_ticks(2)
-	return [ally, corpse]
-
+# --- Caster side (deny) ---
 
 func test_reclaim_denied_with_no_corpse() -> void:
-	var runner := scene_runner(ARENA_SCENE)
-	await await_ticks(5)
-	var caster: FPSController = runner.scene().get_node("FPSController")
+	var runner := scene_runner(CONTROLLER_SCENE)
+	var caster: FPSController = runner.scene()
 	var before := caster.resonance.reserved
 	press(caster.input, &"reclaim")
 	await await_ticks(6)
 	assert_bool(caster.reclaim_reserved).is_false()
 	assert_float(caster.resonance.reserved).is_equal(before)
+
+
+# --- Ally side (revive applied in the revived player's own tick) ---
+
+func test_reclaim_revives_ally_at_half_health_with_gear() -> void:
+	var runner := scene_runner(CONTROLLER_SCENE)
+	var ally: FPSController = runner.scene()
+	ally.queue_damage(9999.0)
+	await await_ticks(6)
+	assert_bool(ally.is_dead).is_true()
+
+	ally.queue_reclaim_revive(ally.global_position, 2,
+		["smg", 10.0, 30.0, "", 0.0, 0.0, 1])
+	await await_ticks(6)
+
+	assert_bool(ally.is_dead).is_false()
+	assert_float(ally.health).is_equal_approx(ally._config("max_health") * 0.5, 1.0)
+	assert_str(ally.weapon_rig.slot1).is_equal("smg")  # restored from snapshot
+	assert_int(ally.revived_by_peer).is_equal(2)
+
+
+# --- Corpse side (consumed by the corpse's own tick) ---
+
+func test_corpse_consumed_by_reclaim_destroy() -> void:
+	var runner := scene_runner(CONTROLLER_SCENE)
+	var host: FPSController = runner.scene()
+	var corpse := _corpse_at(host, Vector3(1.0, 0, 0), 2)
+	await await_ticks(2)
+	assert_bool(corpse.removed).is_false()
+
+	corpse.queue_reclaim_destroy()
+	await await_ticks(4)
+
+	assert_bool(corpse.removed).is_true()
