@@ -29,6 +29,12 @@ var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 # --- Rollback state (registered as state_properties) ---
 var is_gliding: bool = false
 var glide_ticks_remaining: int = 0
+# Ground jump once per contact: disarmed on takeoff, re-armed only after a real land.
+var jump_armed: bool = true
+# One contextual jump→glide per airborne period (not unlimited multi-jump).
+var air_glide_from_jump_available: bool = true
+# One upward boost from jump while a single glide is active.
+var glide_boost_used: bool = false
 var last_down_repulse_tick: int = -(1 << 30)
 var health: float = 100.0
 var bleed_ticks_remaining: int = 0
@@ -257,6 +263,10 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 
 	transform.basis = Basis(Vector3.UP, input.aim_yaw)
 	_force_update_is_on_floor()
+	# Re-arm ground jump / jump→glide only after a firm landing (not mid-launch).
+	if is_on_floor() and velocity.y <= 0.01:
+		jump_armed = true
+		air_glide_from_jump_available = true
 
 	# Crouch: deterministic collider swap + speed multiplier from input.
 	standing_shape.disabled = input.crouch
@@ -276,8 +286,8 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 
 	# Press-tick inputs match exactly one simulated tick (see PlayerInput).
 	var jump_pressed := input.jump_press_tick == tick
-	# Capture boost intent before contextual deploy can consume the press.
-	var jump_for_boost := jump_pressed and is_gliding
+	# One glide-boost per glide activation (not unlimited climb-mashing).
+	var jump_for_boost := jump_pressed and is_gliding and not glide_boost_used
 
 	# Wraith (toggle phase form). While phased: casts/weapons/glide locked,
 	# walk speed only, bullet + fall immunity (see take_damage).
@@ -327,12 +337,18 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 	_reconcile_field_reservations(tick)
 	_process_reclaim_bleedout()
 	_process_interact(tick, is_fresh)
-	# Contextual jump (controller A): airborne and not gliding -> deploy glide.
+	# Glide power: dedicated key always; jump→glide only once per airborne period
+	# (no multi-jump climb by re-deploying glide / mashing jump in air).
+	var jump_wants_air_glide := (
+		jump_pressed and not is_on_floor() and not is_gliding
+		and air_glide_from_jump_available
+	)
 	var wants_glide := not is_wraithed and (
-		input.glide_press_tick == tick
-		or (jump_pressed and not is_on_floor() and not is_gliding)
+		input.glide_press_tick == tick or jump_wants_air_glide
 	)
 	if wants_glide and not is_gliding:
+		if jump_wants_air_glide:
+			air_glide_from_jump_available = false
 		_try_deploy_glide(tick)
 
 	var base_speed := walk_speed if is_wraithed else (sprint_speed if input.sprint else walk_speed)
@@ -354,11 +370,16 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 			velocity.y = maxf(velocity.y, -6.0)
 			if jump_for_boost:
 				velocity.y = maxf(velocity.y + 9.0, 9.0)
+				glide_boost_used = true
 	else:
 		if not is_on_floor():
 			velocity.y -= gravity * delta
-		if jump_pressed and is_on_floor():
+		# Ground jump only — never a free air jump. Requires jump_armed so
+		# multi-frame floor contact after takeoff cannot re-fire.
+		if jump_pressed and is_on_floor() and jump_armed:
 			velocity.y = jump_velocity * _overclock_jump_mult()
+			jump_armed = false
+			air_glide_from_jump_available = false
 		var target := direction * speed
 		velocity.x = move_toward(velocity.x, target.x, acceleration * delta)
 		velocity.z = move_toward(velocity.z, target.z, acceleration * delta)
@@ -1197,13 +1218,14 @@ func _try_deploy_glide(tick: int) -> void:
 
 	is_gliding = true
 	glide_ticks_remaining = int(roundf(glide_duration * NetworkTime.tickrate))
+	glide_boost_used = false
 
 	if is_combo:
 		velocity.y = combo_launch_velocity
 		print(">>> GLIDE LAUNCH COMBO! (tick=%d)" % tick)
 	else:
-		if not is_on_floor():
-			velocity.y = maxf(velocity.y, 8.0)
-		if velocity.y < 0:
+		# Soften fall only — never grant free upward impulse on redeploy
+		# (that allowed climb-mashing jump/glide in mid-air).
+		if velocity.y < 0.0:
 			velocity.y *= 0.3
 		print("Glide deployed (tick=%d)" % tick)

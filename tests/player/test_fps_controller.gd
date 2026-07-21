@@ -563,6 +563,10 @@ func test_airborne_jump_deploys_glide() -> void:
 	assert_bool(controller.is_gliding).is_true()
 
 
+# Multi-jump / climb-mash limits live in test_jump_limits.gd (isolated from
+# load-flaky movement Input.action_press tests in this suite).
+
+
 func test_combo_expires_after_window() -> void:
 	var runner := _spawn_controller()
 	var controller: FPSController = runner.scene()

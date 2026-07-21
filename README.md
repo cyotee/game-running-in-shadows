@@ -1,138 +1,237 @@
 # CounterSpell
 
-**A spiritual successor to the Shadowrun FPS experience — built in Godot with Steam infrastructure.**
+Fast-paced cyber-fantasy first-person shooter: guns, Manifestations, Augments, and the Grid — an original-IP *spiritual successor* to the 2007 Shadowrun FPS (not affiliated with that IP).
 
-Fast-paced cyber-fantasy first-person shooter where runners blend guns, magic, chrome, and Grid hacking.
+**Engine:** Godot **4.7.1** (pinned) · **Language:** GDScript · **Netcode:** netfox · **Distribution:** Steam (GodotSteam)
 
-> **Status:** Early development / repository foundation. See [docs/PRD.md](docs/PRD.md) for the full product requirements.
-
-## Vision (Short)
-
-- Start with competitive PvP: Arena and Capture the Flag.
-- Release on Steam as Early Access.
-- Later expand to co-op PvE "runs" and a single-player campaign.
-- Original IP (inspired by, not affiliated with Shadowrun or its owners).
-
-Repo name and branding deliberately avoid direct trademarks.
-
-## Tech Stack
-
-- **Engine:** Godot 4.7.1 (pinned)
-- **Language:** GDScript (primary)
-- **Steam Integration:** GodotSteam GDExtension + SteamMultiplayerPeer
-- **Networking:** Godot High-Level Multiplayer (P2P via Steam + dedicated server path)
-- **Platforms:** Windows, Linux (Steam Deck support planned), macOS secondary
-
-## Quick Start (Development)
-
-### Prerequisites
-1. Godot 4.7.1 (editor) — the pinned project version, see `docs/SETUP.md`.
-2. A Steam client running in the background (for full features).
-3. (Optional but recommended for real Steam features later) Steamworks partner account + App ID.
-
-### Setup Steps
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-org/game-running-in-shadows.git
-   cd game-running-in-shadows
-   ```
-
-2. Open the project in Godot.
-
-3. Install GodotSteam GDExtension:
-   - Preferred: Search "GodotSteam" in the Asset Library inside Godot and install the latest compatible GDExtension version.
-   - Or download manually from https://godotsteam.com/ or Codeberg releases and place in `addons/godotsteam/`.
-
-4. Steamworks SDK binaries:
-   - For local development with App ID 480 (Spacewar), the editor can often work with the plugin-provided libraries.
-   - When you have real SDK access, copy the required `steam_api*.dll` / `.so` / `.dylib` into the appropriate addon subfolders (follow GodotSteam docs exactly).
-
-5. For running outside Steam during development:
-   - Create a file named `steam_appid.txt` in the project root containing just:
-     ```
-     480
-     ```
-   - **Do not commit this file** (it is gitignored).
-
-6. **Add the Steam manager autoload** (required):
-   - Go to **Project > Project Settings > Globals > Autoload**
-   - Add `res://scripts/steamworks.gd` with the name `SteamManager` (recommended)
-
-7. Restart the Godot editor after installing or updating the GodotSteam GDExtension.
-8. Launch the project while the Steam client is running. Watch the Output panel for the initialization message.
-
-The SteamManager script has been updated specifically for Godot 4.7 + latest GodotSteam.
-
-### Verifying Steam Works
-- You should see your Steam persona name or successful init logs.
-- Use `Steam.run_callbacks()` (usually in an autoload `_process`).
-- Test lobbies and P2P once the multiplayer systems are implemented.
-
-See `docs/` for more detailed guides (to be expanded):
-- Steam & GodotSteam setup
-- Multiplayer architecture decisions
-- Building dedicated servers
-- Exporting for Steam
-
-## Repository Structure
-
-```
-.
-├── .github/                  # Issue templates, workflows
-├── addons/                   # GodotSteam and other addons (committed)
-├── assets/                   # Art, textures, materials (consider LFS)
-├── audio/                    # SFX, music
-├── models/                   # Or combine under assets/
-├── scenes/                   # Godot scenes (organize by feature)
-├── scripts/                  # GDScript (or autoloads, systems)
-├── docs/                     # PRD, design docs, guides
-│   └── PRD.md
-├── exports/                  # Build outputs (gitignored)
-├── builds/                   # Dedicated server builds etc.
-├── .gitignore
-├── .gitattributes
-├── project.godot             # Created when you save the Godot project
-├── LICENSE
-└── README.md
-```
-
-We follow Godot best practices: scene-per-folder where practical, clear autoloads, documented addons.
-
-## Current Priorities (from PRD)
-
-1. Solid Godot + GodotSteam foundation in this repo.
-2. Responsive FPS prototype (movement + shooting).
-3. Core mechanics foundation (Resonance resource + signature combos from MECHANICS_REFERENCE.md).
-4. Multiplayer core (Steam P2P lobbies + basic replication).
-5. First two modes: Arena + Capture the Flag.
-6. Steam features: Overlay, achievements, cloud, rich presence.
-
-See the [PRD](docs/PRD.md) for vision/roadmap, [docs/MECHANICS_REFERENCE.md](docs/MECHANICS_REFERENCE.md) for detailed mechanics, and [docs/ABILITY_TUNING_SHEET.md](docs/ABILITY_TUNING_SHEET.md) for the active tuning scratch pad and investigations.
-
-## Contributing
-
-TBD — for now, open issues or discussions. Code style and architecture decisions will be documented as the project grows.
-
-Before submitting larger changes, check that they align with the PRD goals and current phase.
-
-## Legal & Attribution
-
-This is an original work and a **spiritual successor** only. It is not affiliated with, endorsed by, or licensed from The Topps Company, Catalyst Game Labs, Microsoft, Harebrained Schemes, Paradox, or any owners of the Shadowrun IP.
-
-All names, lore, mechanics, and content here are original or generically inspired to capture the cyberpunk-fantasy "runner" fantasy.
-
-## Next Steps for the Team
-
-- Finish reading [docs/PRD.md](docs/PRD.md) and [docs/MECHANICS_REFERENCE.md](docs/MECHANICS_REFERENCE.md).
-- Review and lock core names (Resonance, archetypes, key abilities) from the Mechanics Reference.
-- Prototype the signature movement combo (Repulse + Glide launch) + basic Resonance resource.
-- Continue building the FPS prototype (one weapon + one Manifestation/Augment).
-- Create first networked test.
-- Expand docs with architecture decisions and playtest notes.
+> Product vision and roadmap: [docs/PRD.md](docs/PRD.md) · Mechanics: [docs/MECHANICS_REFERENCE.md](docs/MECHANICS_REFERENCE.md) · Tuning: [docs/ABILITY_TUNING_SHEET.md](docs/ABILITY_TUNING_SHEET.md) · Agent resume: [docs/superpowers/RESUME-HERE.md](docs/superpowers/RESUME-HERE.md)
 
 ---
 
-**Let's build something runners would be proud of.** 
+## Prerequisites
 
-Questions? Open an issue or start a discussion.
+1. **Godot 4.7.1** (editor). See [docs/SETUP.md](docs/SETUP.md) if present.
+2. **Steam client running** for full Steam features (lobbies, etc.). Offline arena still runs without Steam.
+3. Optional: `steam_appid.txt` in the project root containing only:
+   ```
+   480
+   ```
+   (Spacewar dev App ID; **gitignored — never commit**.)
+4. After installing/updating any **GDExtension** (e.g. GodotSteam): **restart the editor**.
+
+On macOS, prefer launching from the app bundle for full logs:
+
+```bash
+/Applications/Godot.app/Contents/MacOS/Godot --editor --path .
+```
+
+---
+
+## Running the game in the Godot Editor
+
+### Keyboard shortcuts in the editor
+
+| Shortcut | Action |
+|----------|--------|
+| **F5** | Run main scene (`project.godot` → Application → Run → Main Scene) |
+| **F6** | Run **currently open** scene |
+| **F8** | Stop |
+
+**Default main scene:** `scenes/levels/test_arena.tscn` (FPS prototype arena).
+
+### Scene cheat sheet
+
+| What you want to test | Open this scene | Run with |
+|----------------------|-----------------|----------|
+| **FPS sandbox** (movement, guns, abilities) | `scenes/levels/test_arena.tscn` | F5 or F6 |
+| **CTF greybox** (flag, goals) | `scenes/levels/map_objective.tscn` | F6 |
+| **Close-quarters map** | `scenes/levels/map_close_quarters.tscn` | F6 |
+| **Full match session** (spawn, MatchState, economy hooks) | `scenes/session/match_session.tscn` | F6 |
+| **Main menu / lobby UI** | `scenes/ui/main_menu.tscn`, `scenes/ui/lobby_browser.tscn` | F6 |
+| **Two-instance netcode** (latency) | `scenes/dev/net_test.tscn` | Prefer shell E2E (below) |
+| **Placeholder art review** | `scenes/dev/model_review.tscn` | F6 |
+
+**Tip:** For day-to-day ability feel, use **test_arena** (F5). For CTF, open **map_objective** and press **F6**.
+
+---
+
+## Default controls (keyboard / mouse)
+
+Bindings live under **Project → Project Settings → Input Map**. Defaults:
+
+### Movement & view
+
+| Action | Default |
+|--------|---------|
+| Move | **W A S D** (arrows also bound) |
+| Jump | **Space** (ground only; mid-air Jump deploys Glide once, not multi-jump) |
+| Sprint | **Shift** |
+| Crouch | **Ctrl** |
+| Look | Mouse |
+| Toggle mouse capture | **Esc** |
+| Scoreboard | **Tab** |
+
+### Combat
+
+| Action | Default |
+|--------|---------|
+| Fire | **LMB** |
+| ADS | **RMB** |
+| Reload | **R** |
+| Weapon swap | **Q** |
+| Weapon slot 1 / 2 | **1** / **2** |
+| Interact (loot / CTF flag) | **T** |
+
+### Manifestations & utility
+
+| Action | Default |
+|--------|---------|
+| Repulse | **E** |
+| Glide | **G** (airborne jump can also deploy glide on controller) |
+| Slip | **F** |
+| Wraith | **V** |
+| Grenade (hold to cook, release to throw) | **C** |
+| Lifebloom | **Z** |
+| Tangle | **X** |
+| Null Charge | **B** |
+| Ping (world / enemy tag) | **P** or **middle mouse** |
+| Reclaim | **H** |
+| Familiar | **N** |
+| Pulse Sight | **Y** |
+| Smart Rig | **U** |
+| Overclock | **O** |
+
+Controller (joypad) events are also bound for many actions — see Input Map for full layout (MECHANICS_REFERENCE §11).
+
+---
+
+## Playtest guides by aspect
+
+### 1. Movement & signature combo
+
+1. Run **test_arena** (F5).
+2. Walk, sprint, jump, crouch.
+3. **Repulse + Glide launch:** look **down**, press **E** (Repulse), then **G** (Glide) quickly for the vertical launch combo.
+
+### 2. Weapons & melee
+
+1. Fire (**LMB**), ADS (**RMB**), reload (**R**), swap (**Q** / **1** / **2**).
+2. If a blade is equipped: switching to it should go third-person; swing with fire / ADS as bound.
+
+### 3. Resonance
+
+1. Cast Repulse (**E**) — spend Resonance; spam until empty and confirm cast deny feedback on the HUD.
+2. Watch reserved pips when holding Lifebloom, Familiar, Pulse Sight, Smart Rig, Overclock, etc.
+
+### 4. Wave 1 abilities
+
+| Ability | Key | Try |
+|---------|-----|-----|
+| Slip | **F** | Blink along velocity / aim; blocked destination should fizzle |
+| Wraith | **V** | Phase in/out; weapons locked while phased |
+| Grenade | **C** | Hold to cook, release to throw |
+
+### 5. Wave 2 placed fields
+
+| Ability | Key | Try |
+|---------|-----|-----|
+| Lifebloom | **Z** | Place near self; heal aura |
+| Tangle | **X** | Place so enemies are pulled (needs a second body or net instance) |
+| Null Charge | **B** | Place; casting should be suppressed inside the field |
+
+### 6. Corpses, ping, Reclaim
+
+1. Die or force a kill path so a **corpse** remains (match flow or damage).
+2. **T** near corpse — loot / hold interact to drag (Pistol/SMG only while dragging).
+3. **P** / MMB — world ping or enemy tag under reticle.
+4. **H** — Reclaim near a dead ally’s corpse (needs a dead ally + corpse in range).
+
+### 7. Wave 3 (Familiar + augments)
+
+| Ability | Key | Try |
+|---------|-----|-----|
+| Familiar | **N** | Summon minion; aim at ground for GUARD; ping an enemy for HUNT |
+| Pulse Sight | **Y** | Short wall-reveal of nearby enemies |
+| Smart Rig | **U** | Forced view tracking toward nearest living enemy |
+| Overclock | **O** | Overdrive: speed/reload boost; HP drain after ~2 s grace |
+
+### 8. CTF (Capture the Flag)
+
+1. Open `scenes/levels/map_objective.tscn` → **F6**.
+2. Flag starts near the origin; team goals are at the map ends.
+3. **T** (interact) near the flag to pick it up.
+4. Carry to **your team’s goal** to score (host-authoritative objective).
+5. On death, the flag should drop and eventually return home.
+
+### 9. Match session / multiplayer shell
+
+1. Open `scenes/session/match_session.tscn` → **F6** (offline: local peer + MatchState).
+2. Or use **main menu** / **lobby browser** scenes if testing Steam lobby UI.
+3. Full Steam two-machine match: both clients on Steam, same build, host create lobby / join — **owner playtest** (not fully automated).
+
+### 10. Network latency smoke (two instances)
+
+Prefer the automated E2E (no editor required):
+
+```bash
+# From repo root; kills stragglers first if needed
+python3 tests/e2e/net_smoke.py
+# Expect: E2E NET SMOKE: PASS
+```
+
+Or run two Godot instances of `scenes/dev/net_test.tscn` with different `GODOT_MCP_PORT` values if driving MCP manually.
+
+---
+
+## Automated tests (headless)
+
+```bash
+# Warm import on fresh clone
+/Applications/Godot.app/Contents/MacOS/Godot --headless --path . --import --quit
+
+# Full suite
+GODOT_BIN=/Applications/Godot.app/Contents/MacOS/Godot \
+  /Applications/Godot.app/Contents/MacOS/Godot --headless --path . -s \
+  addons/gdUnit4/bin/GdUnitCmdTool.gd -a ./tests --ignoreHeadlessMode
+```
+
+Reports land under `reports/` (gitignored). Details: [docs/TESTING.md](docs/TESTING.md).
+
+---
+
+## Dev-only tools
+
+| Tool | Notes |
+|------|--------|
+| **McpInteractionServer** | TCP `127.0.0.1:9090` for AI/tooling live control. Disabled when `COUNTERSPELL_RELEASE=1` or Project Setting `counterspell/release_build`. |
+| **InputTrace** | Edge-input ring buffer for anti-cheat audit; same release disable. |
+| **MatchConfig** | All gameplay numbers; optional override `user://match_config.json` or `--match-config=<path>`. |
+
+---
+
+## Project layout (high level)
+
+```
+scenes/levels/     # test_arena, CTF/CQ maps
+scenes/session/    # match_session
+scenes/ui/         # menu, lobby, HUD
+scenes/player/     # FPS controller
+scripts/           # gameplay, match, session, Steam
+tests/             # GdUnit4 (mirrors scripts/)
+docs/              # PRD, mechanics, plans, RESUME-HERE
+addons/            # GodotSteam, netfox, GdUnit4, …
+```
+
+---
+
+## Legal
+
+Original IP only. **Not** affiliated with Shadowrun or its rights holders. Use project terms: Resonance, Runners, the Grid, Manifestations, Augments, Repulse, Glide — never Shadowrun trademarks in code, docs, or assets.
+
+---
+
+## Contributing
+
+Prefer small, test-backed changes. Respect netfox tick rules (see `CLAUDE.md` / `docs/superpowers/RESUME-HERE.md`): press-tick inputs, MatchConfig-only tunables, no wall-clock in simulation.
+
+Questions? Open an issue or discussion.
