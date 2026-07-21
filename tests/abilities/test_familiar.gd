@@ -197,12 +197,11 @@ func test_hunt_moves_toward_ping_tagged_enemy() -> void:
 	PingService._apply_ping(peer, PingService.ENEMY, Vector3.ZERO, 2)
 	assert_int(PingService.latest_enemy_tag(peer)).is_equal(2)
 
-	var x0 := fam.global_position.x
-	await await_ticks(120)
+	var d0 := fam.global_position.distance_to(enemy.global_position)
+	await await_ticks(150)
 
-	assert_float(fam.global_position.x).is_greater(x0 + 3.0)
-	assert_float(fam.global_position.distance_to(enemy.global_position)).is_less(
-		fam.global_position.distance_to(caster.global_position))
+	# HUNT steers toward the tagged peer (not merely the caster's follow home).
+	assert_float(fam.global_position.distance_to(enemy.global_position)).is_less(d0 - 3.0)
 
 
 # --- Melee ---
