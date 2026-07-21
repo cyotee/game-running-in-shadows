@@ -1,6 +1,6 @@
 # Resume Here — CounterSpell Implementation Progress
 
-**Last updated:** 2026-07-20 (G6 merged to main; queue advanced to G7)
+**Last updated:** 2026-07-20 (G6 + G7 merged to main; queue advanced to G5 Wave 3)
 **Goal being executed:** Implement the entire master plan
 (`docs/superpowers/plans/2026-07-17-master-implementation-plan.md`) — every
 subsystem plan, all tests passing. Milestones advance on quality gates.
@@ -9,26 +9,35 @@ subsystem plan, all tests passing. Milestones advance on quality gates.
 
 ## TL;DR for the next agent
 
-1. **You are on `main`.** G6 (corpse system) is **merged** (`main` head is the
-   `Merge feat/corpse-system` commit). Git tree is clean.
-2. **The prior "drag test failure" is RESOLVED — it was a test-isolation leak,
-   not load flakiness and not a production bug.** `_spawn_corpse_near` parents
-   the corpse under `host.get_parent()`, which for the CONTROLLER_SCENE loot
-   tests is the runner's container (a *sibling* of the scene the runner frees
-   in `after_test`) — so those corpses survived and piled up in the global
-   `corpses` group. The arena drag test then found a leaked loot-test corpse at
-   x=1.0, closer than its own x=1.5 corpse, and `FPSController._nearest_corpse`
-   selected the leaked one, so the intended corpse never moved. The same leak is
-   why one run reported only 6 of 7 tests. Fixed by freeing all `corpses` in
-   `after_test` (commit `3393474`). **Verified green:** corpse suite 7/7, full
-   suite **117/117** (exit 0, at loadavg ~10), three-peer E2E `net_smoke` PASS.
-3. **Machine-load caveat still applies:** timing-sensitive tests can flake and
+1. **You are on `main`.** Both **G6 (corpse system)** and **G7 (ping system)**
+   are **merged** (`main` head is the `Merge feat/ping-system` commit + a
+   follow-up fix `8c881d9`). Git tree is clean. **Full suite 125/125, exit 0;
+   three-peer E2E `net_smoke` PASS (incl. enemy-tag ping replication).**
+2. **G7 shipped (pass 1 — aimed ping):** `PingService` autoload
+   (`scripts/abilities/ping_service.gd`) — host-authoritative, team-scoped ping
+   store **outside** the netfox rollback path (economy.gd `is_authority()` +
+   `call_remote` RPC pattern; `NetworkTime.tick` used only as a monotonic expiry
+   clock). `FPSController.try_ping` raycasts (reusing `enemy_under_reticle`) and
+   classifies enemy-tag vs world-point; HUD markers project world→screen
+   (`player_hud._render_pings`). **`PingService.latest_enemy_tag(peer)` is the
+   hook Familiar (G5 W3) consumes.** Input: P / middle-mouse / D-pad Up.
+   **Comms wheel is a deferred G7 follow-up** (not built).
+3. **Watch the commit hygiene lesson from this session:** a `git add a b c
+   missing.uid 2>/dev/null` aborted and staged nothing, so a HUD impl commit
+   captured only its test file — `main` briefly lacked the implementation until
+   fix `8c881d9`. Verify `git show --stat <commit>` after committing.
+4. **Machine-load caveat still applies:** timing-sensitive tests can flake and
    the full suite can abort mid-run under extreme sustained CPU load. Check
    `sysctl -n vm.loadavg` before trusting a red result and rerun when low.
-4. **First action on resume: start G7 (ping system)** — the next queue item.
-   Brainstorm → write a plan under `docs/superpowers/plans/` → branch
-   `feat/ping-system` → TDD. Then **G5 Wave 3** (Reclaim now unblocked by G6;
-   Familiar needs G7).
+   (`test_tangle_drags_enemy_toward_center` flaked in one heavy-load full run
+   this session; passed in isolation and in the clean 125/125 run.)
+5. **First action on resume: start G5 Wave 3.** Per the master plan: **Reclaim**
+   (needs G6 corpses ✅), **Familiar** (needs G7 ping ✅ — consume
+   `PingService.latest_enemy_tag`), **Pulse Sight**, **Smart Rig** (forced view
+   tracking), **Overclock Rig** (grace-period HP drain). Framework rules in
+   MECHANICS_REFERENCE §4.A. Brainstorm → plan → branch `feat/abilities-wave3`
+   (or split per ability) → TDD. Then G8 (CTF), G9 (maps), G10 (host-migration
+   SPIKE), G11 (anti-cheat audit).
 
 ---
 
@@ -82,8 +91,8 @@ worrying.
 
 ## What is DONE and merged to `main`
 
-`main` head: the `Merge feat/corpse-system` commit. Full suite **117/117** green
-on main. Completed & merged, in order:
+`main` head: the `Merge feat/ping-system` commit (+ fix `8c881d9`). Full suite
+**125/125** green on main. Completed & merged, in order:
 
 - **Milestone A** (predicted core): netfox integration, native controller
   support, Resonance system, weapon system (5 guns), Combat Blade / melee.
@@ -94,27 +103,28 @@ on main. Completed & merged, in order:
   loadouts (G3); core HUD (G4). CI workflow (G0) at `.github/workflows/tests.yml`.
 - **Milestone C so far:** G5 Wave 1 (Slip, Wraith, Grenades), G5 Wave 2
   (Lifebloom, Tangle, Null Charge), **G6 Corpse system** (persistence, per-owner
-  limit, inventory/looting, dragging).
+  limit, inventory/looting, dragging), **G7 Ping system** (aimed ping: world
+  point + enemy tag; team-scoped HUD markers; `latest_enemy_tag` for Familiar —
+  comms wheel deferred).
 
 Each plan lives in `docs/superpowers/plans/` with a `Status: EXECUTED` footer.
 The master plan's queue tables and Gap Backlog are marked ✅ per item.
 
 ## What is code-complete but NOT merged
 
-- *(nothing — G6 merged 2026-07-20. Next work starts fresh on `feat/ping-system`.)*
+- *(nothing — G7 merged 2026-07-20. Next work starts fresh on `feat/abilities-wave3`.)*
 
 ## What remains in the queue (Milestone C, then D)
 
 Order per the master plan §Milestone C / Gap Backlog:
-1. **G7 — Ping system** (aimed ping: world point + enemy tag; minimal comms
-   wheel). Prerequisite for Familiar. *Next up after the G6 merge.*
-2. **G5 Wave 3** — Reclaim (needs G6 corpses ✅), Familiar (needs G7 ping),
-   Pulse Sight, Smart Rig (forced view tracking), Overclock Rig (grace-period
-   HP drain). Write one plan per wave-ish; framework rules in MECHANICS_REFERENCE §4.A.
-3. **G8 — CTF + variable objective item** (on the G2 match framework).
-4. **G9 — two polished maps** (greybox then art; placeholder Quaternius CC0).
-5. **G10 — True host migration** — SPIKE FIRST (`docs/superpowers/plans/SPIKE-host-migration.md`).
-6. **G11 — Anti-cheat Layer-1 audit** (dedicated pass; input-trace logging).
+1. **G5 Wave 3** — Reclaim (needs G6 corpses ✅), Familiar (needs G7 ping ✅ —
+   consume `PingService.latest_enemy_tag`), Pulse Sight, Smart Rig (forced view
+   tracking), Overclock Rig (grace-period HP drain). Write one plan per wave-ish;
+   framework rules in MECHANICS_REFERENCE §4.A. *Next up.*
+2. **G8 — CTF + variable objective item** (on the G2 match framework).
+3. **G9 — two polished maps** (greybox then art; placeholder Quaternius CC0).
+4. **G10 — True host migration** — SPIKE FIRST (`docs/superpowers/plans/SPIKE-host-migration.md`).
+5. **G11 — Anti-cheat Layer-1 audit** (dedicated pass; input-trace logging).
 Then **Milestone D** (Steam achievements/cloud/rich-presence G12, EAC/EOS G13 +
 release-build stripping of `McpInteractionServer`/ENet dev path, store page).
 
