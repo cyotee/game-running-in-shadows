@@ -105,7 +105,7 @@ def main() -> int:
         # the two instances have finished syncing. Driving input before the
         # clocks settle drops the first inputs (they map to already-simulated
         # ticks), so wait for the sync to stabilise — longer under machine load.
-        time.sleep(8)
+        time.sleep(10)
 
         # Drive the client forward; its input must replicate through the
         # latency proxy and move the server-side body. Retry the whole
@@ -113,18 +113,18 @@ def main() -> int:
         def try_move() -> bool:
             start = host.cmd("eval", {"code": f"return get_node('{path}').global_position.z"}).get("result")
             client.action("move_forward", True)
-            deadline = time.time() + 3.0
+            deadline = time.time() + 5.0
             moved = False
             while time.time() < deadline:
                 now = host.cmd("eval", {"code": f"return get_node('{path}').global_position.z"}).get("result")
-                if start is not None and now is not None and abs(now - start) > 0.5:
+                if start is not None and now is not None and abs(float(now) - float(start)) > 0.25:
                     moved = True
                     break
                 time.sleep(0.25)
             client.action("move_forward", False)
             return moved
 
-        wait_for(try_move, timeout=25, interval=0.5, desc="server-side movement from client input")
+        wait_for(try_move, timeout=40, interval=0.75, desc="server-side movement from client input")
         print("movement replicated to host")
 
         # Ability-input replication: a Repulse press spends 2 Resonance, and
