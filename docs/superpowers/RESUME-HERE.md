@@ -1,6 +1,6 @@
 # Resume Here — CounterSpell Implementation Progress
 
-**Last updated:** 2026-07-20 (paused again for the user to restart their system)
+**Last updated:** 2026-07-20 (G6 merged to main; queue advanced to G7)
 **Goal being executed:** Implement the entire master plan
 (`docs/superpowers/plans/2026-07-17-master-implementation-plan.md`) — every
 subsystem plan, all tests passing. Milestones advance on quality gates.
@@ -9,38 +9,26 @@ subsystem plan, all tests passing. Milestones advance on quality gates.
 
 ## TL;DR for the next agent
 
-1. **You are on branch `feat/corpse-system`.** Its work (G6 corpse system) is
-   code-complete and self-tested but **NOT merged to `main`**. The only thing
-   left for G6 is the merge, which is gated on a clean full-suite + E2E run.
-   Git tree is **clean** — no uncommitted work from the last session.
-2. **OPEN ITEM before the G6 merge:** in the 2026-07-20 (later) session I ran
-   the full suite at loadavg ~11 → **115/116 pass, 1 failure:**
-   `test_drag_moves_corpse_toward_dragger` (`tests/abilities/test_corpse.gd:125-126`
-   — `dragged_by` stayed 0, corpse didn't move). It **also failed when rerun in
-   isolation at loadavg ~8.7.** BUT it drives the drag via raw
-   `Input.action_press("interact")` — the *same* real-`Input` / level-input
-   mechanism as the documented load-flaky movement tests (`interact_held` is a
-   polled bool, not a press-tick, so it can't use deterministic injection). The
-   drag code itself looks correct: `corpse.drag_range_m` default is **2.0** and
-   the test spawns the corpse at **1.5m**, so it's in range; `_process_interact`
-   (`fps_controller.gd:441`) sets `dragged_by` when `interact_held` + a corpse is
-   within range. **Next step:** rerun this suite alone when loadavg is genuinely
-   low (< ~5). If it goes green → it was load-flaky; add it to the flaky list and
-   proceed with the merge. If it *still* fails at low load → it's a real bug in
-   the `interact_held`→drag path under headless; debug before merging (systematic
-   debugging was mid-Phase-1 when this session was paused — no fix attempted).
-   *(Also note: the isolated corpse run reported only 6 test cases, not 7 —
-   `test_weapon_restricted_to_pistol_smg_while_dragging` didn't appear. Worth a
-   glance; may be discovery noise, may be related.)*
-3. **The host machine had been under extreme sustained CPU load** (loadavg
-   130–375 from VS Code / Path Finder / solc / browsermcp — not our processes).
-   Under that load, timing-sensitive tests flake and the full suite aborts
-   mid-run. Before trusting any red result, check `sysctl -n vm.loadavg` and
-   rerun when the 1-min avg is low.
-4. **First action on resume:** resolve open item #2 (rerun corpse suite at low
-   load; green→merge, red→debug). Once the full suite + E2E are clean, merge
-   `feat/corpse-system` to `main`. Then continue the queue at **G7 (ping
-   system)**, then **G5 Wave 3**.
+1. **You are on `main`.** G6 (corpse system) is **merged** (`main` head is the
+   `Merge feat/corpse-system` commit). Git tree is clean.
+2. **The prior "drag test failure" is RESOLVED — it was a test-isolation leak,
+   not load flakiness and not a production bug.** `_spawn_corpse_near` parents
+   the corpse under `host.get_parent()`, which for the CONTROLLER_SCENE loot
+   tests is the runner's container (a *sibling* of the scene the runner frees
+   in `after_test`) — so those corpses survived and piled up in the global
+   `corpses` group. The arena drag test then found a leaked loot-test corpse at
+   x=1.0, closer than its own x=1.5 corpse, and `FPSController._nearest_corpse`
+   selected the leaked one, so the intended corpse never moved. The same leak is
+   why one run reported only 6 of 7 tests. Fixed by freeing all `corpses` in
+   `after_test` (commit `3393474`). **Verified green:** corpse suite 7/7, full
+   suite **117/117** (exit 0, at loadavg ~10), three-peer E2E `net_smoke` PASS.
+3. **Machine-load caveat still applies:** timing-sensitive tests can flake and
+   the full suite can abort mid-run under extreme sustained CPU load. Check
+   `sysctl -n vm.loadavg` before trusting a red result and rerun when low.
+4. **First action on resume: start G7 (ping system)** — the next queue item.
+   Brainstorm → write a plan under `docs/superpowers/plans/` → branch
+   `feat/ping-system` → TDD. Then **G5 Wave 3** (Reclaim now unblocked by G6;
+   Familiar needs G7).
 
 ---
 
@@ -80,21 +68,22 @@ for m in re.finditer(r'<testcase name=\"([^\"]+)\"[^>]*>(.*?)</testcase>',xml,re
 - `test_ads_zoom_applies_to_camera`, `test_blade_switches_to_third_person_camera`
   — assert on `_process` view logic (FOV lerp / camera swap), frame-driven.
 - `test_tangle_drags_enemy_toward_center` — occasionally flakes under extreme load.
-- `test_drag_moves_corpse_toward_dragger` (`tests/abilities/test_corpse.gd`) —
-  **SUSPECTED flaky, NOT yet confirmed.** Drives drag via real
-  `Input.action_press("interact")` (level input, same class as the movement
-  tests above). Failed at loadavg ~11 AND ~8.7 in the 2026-07-20 session — needs
-  a rerun at genuinely low load (< ~5) to classify. See TL;DR open item #2. Do
-  NOT merge G6 while this is red without first proving it's load, not a bug.
 If one of these is the ONLY failure, rerun that suite alone to confirm before
 worrying.
+
+> **Not flaky (resolved):** `test_drag_moves_corpse_toward_dragger` was flagged
+> as suspected-flaky but turned out to be a deterministic **test-isolation
+> leak** — leaked loot-test corpses in the global `corpses` group skewed
+> `_nearest_corpse`. Fixed in `after_test` (commit `3393474`). It now passes
+> reliably. Lesson: a test that spawns a persistent grouped node beside the
+> scene must free that group in `after_test`.
 
 ---
 
 ## What is DONE and merged to `main`
 
-`main` head: `354d435` (Merge feat/abilities-wave2). Suite was 110/110 green on
-main after Wave 2. Completed & merged, in order:
+`main` head: the `Merge feat/corpse-system` commit. Full suite **117/117** green
+on main. Completed & merged, in order:
 
 - **Milestone A** (predicted core): netfox integration, native controller
   support, Resonance system, weapon system (5 guns), Combat Blade / melee.
@@ -104,20 +93,15 @@ main after Wave 2. Completed & merged, in order:
   pending the owner**); match flow & Arena/TDM + crouch (G1+G2); economy &
   loadouts (G3); core HUD (G4). CI workflow (G0) at `.github/workflows/tests.yml`.
 - **Milestone C so far:** G5 Wave 1 (Slip, Wraith, Grenades), G5 Wave 2
-  (Lifebloom, Tangle, Null Charge).
+  (Lifebloom, Tangle, Null Charge), **G6 Corpse system** (persistence, per-owner
+  limit, inventory/looting, dragging).
 
 Each plan lives in `docs/superpowers/plans/` with a `Status: EXECUTED` footer.
 The master plan's queue tables and Gap Backlog are marked ✅ per item.
 
 ## What is code-complete but NOT merged
 
-- **G6 Corpse system** — branch `feat/corpse-system` (4 commits ahead of main;
-  `d61b4eb` is the tip). All 7 corpse tests pass; other suites pass in
-  isolation. Merge is pending a clean full-suite + E2E run (blocked only by
-  machine load). See `docs/superpowers/plans/2026-07-20-corpse-system.md`
-  footer. To finish: verify green, then
-  `git checkout main && git merge --no-ff feat/corpse-system` and update the
-  master plan's G6 line from "merge pending" to ✅ DONE.
+- *(nothing — G6 merged 2026-07-20. Next work starts fresh on `feat/ping-system`.)*
 
 ## What remains in the queue (Milestone C, then D)
 
