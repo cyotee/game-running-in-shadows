@@ -1,6 +1,6 @@
 # Resume Here — CounterSpell Implementation Progress
 
-**Last updated:** 2026-07-20 (G6, G7, and G5 W3 Reclaim merged; next up Familiar)
+**Last updated:** 2026-07-20 (G6, G7, Reclaim merged; Familiar spec written+approved — implement next)
 **Goal being executed:** Implement the entire master plan
 (`docs/superpowers/plans/2026-07-17-master-implementation-plan.md`) — every
 subsystem plan, all tests passing. Milestones advance on quality gates.
@@ -44,15 +44,21 @@ subsystem plan, all tests passing. Milestones advance on quality gates.
    `sysctl -n vm.loadavg` before trusting a red result and rerun when low.
    (`test_tangle_drags_enemy_toward_center` flaked in one heavy-load full run
    this session; passed in isolation and in the clean 133/133 run.)
-6. **First action on resume: G5 Wave 3 → Familiar** (next ability). It consumes
-   `PingService.latest_enemy_tag(caster_peer)` (built in G7) as its hunt target
-   — a ping'd enemy sends the summon after them; otherwise it follows the caster.
-   Destroyed by Null charges and Dwarves; minions fight each other
-   (MECHANICS_REFERENCE §4.A / line 188). Brainstorm → spec → plan → branch
-   `feat/familiar` → TDD (use the static-prop test pattern above). Then Pulse
-   Sight, Smart Rig (forced view tracking), Overclock Rig (grace-period HP
-   drain); then G8 (CTF), G9 (maps), G10 (host-migration SPIKE), G11 (anti-cheat
-   audit).
+6. **First action on resume: implement Familiar** (G5 W3, ability 2). **The
+   design is already brainstormed, approved, and spec'd** —
+   `docs/superpowers/specs/2026-07-20-familiar-design.md` (on `main`). It's a
+   rollback-simulated combat minion (a *mobile* `PlacedField`): FOLLOW / HUNT
+   (auto from `PingService.latest_enemy_tag`) / GUARD modes, deterministic melee
+   vs enemy players AND enemy Familiars, Null-field + Dwarf-proximity counters,
+   shootable, 4 Resonance held, dies with caster. Approved scope is the **full**
+   behavior (guard + minions-fight + both counters). **Next step: run
+   `superpowers:writing-plans` on that spec** (its §9 build order is the task
+   outline — ~8 TDD tasks), branch `feat/familiar`, then TDD with the static-prop
+   harness (lesson #4). Cross-node damage uses the weapon pattern (in-tick
+   `take_damage` + `NetworkRollback.mutate`); re-mode uses plain-pending like
+   Reclaim. Then Pulse Sight, Smart Rig (forced view tracking), Overclock Rig
+   (grace-period HP drain); then G8 (CTF), G9 (maps), G10 (host-migration SPIKE),
+   G11 (anti-cheat audit).
 
 ---
 
@@ -128,7 +134,10 @@ The master plan's queue tables and Gap Backlog are marked ✅ per item.
 
 ## What is code-complete but NOT merged
 
-- *(nothing — Reclaim merged 2026-07-20. Next work starts fresh on `feat/familiar`.)*
+- *No code pending.* The **Familiar design spec is written and approved** on
+  `main` (`docs/superpowers/specs/2026-07-20-familiar-design.md`) but **not yet
+  planned or implemented** — resume by running `writing-plans` on it (see TL;DR
+  #6), then TDD on a fresh `feat/familiar` branch.
 
 ## What remains in the queue (Milestone C, then D)
 

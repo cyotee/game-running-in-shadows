@@ -94,8 +94,10 @@ numpy
 Octo
 orderbooks
 Overfitting
+pathfinding
 Perps
 Phemex
+pkill
 Playstyle
 playstyles
 playtest

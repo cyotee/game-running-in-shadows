@@ -11,7 +11,7 @@ placed point** — dealing melee damage to enemies. Minions fight each other and
 are destroyed by Null charges and Dwarves.
 
 **In scope (this pass — the full approved behavior):**
-- One Familiar per caster, summoned/re-moded by a `familiar` press-tick.
+- One Familiar per caster, summoned/re-tasked by a `familiar` press-tick.
 - Three modes: FOLLOW (default), HUNT (auto from `PingService.latest_enemy_tag`),
   GUARD (a placed point).
 - Deterministic melee combat vs enemy players AND enemy Familiars.
@@ -105,7 +105,7 @@ field collision setup and mirror it so guns can shoot the Familiar).
   - Guard: need `resonance.current >= familiar_cost`; else deny (`cast_denied`).
   - `resonance.reserve(cost)`, `familiar_reserved = true`, `familiar_cast_tick = tick`.
   - `spawner.spawn_familiar(spawn_pos, my_peer, base_mode, guard_pos)`.
-- If a live Familiar exists: **re-mode** it — but re-moding is a cross-node write
+- If a live Familiar exists: **re-mode** it — but changing its mode is a cross-node write
   to the Familiar's rollback state, so route it through a plain-pending setter on
   the Familiar (`queue_set_mode(mode, guard_pos)`) applied in the Familiar's own
   tick (the Reclaim plain-pending pattern). No new reservation.
