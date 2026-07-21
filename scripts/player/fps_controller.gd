@@ -231,6 +231,7 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 		_pending_damage = 0.0
 	if health <= 0.0:
 		is_dead = true
+		revived_by_peer = 0  # a dead ally no longer carries the reviver link
 		if is_fresh:
 			_spawn_corpse(tick)
 			died.emit(input.get_multiplayer_authority(), last_attacker_peer)
@@ -295,6 +296,7 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 	if not is_wraithed and input.reclaim_press_tick == tick:
 		_cast_reclaim(tick, is_fresh)
 	_reconcile_field_reservations(tick)
+	_process_reclaim_bleedout()
 	_process_interact(tick, is_fresh)
 	# Contextual jump (controller A): airborne and not gliding -> deploy glide.
 	var wants_glide := not is_wraithed and (
@@ -699,6 +701,18 @@ func _reconcile_field_reservations(tick: int) -> void:
 			and not _any_revived_alive(input.get_multiplayer_authority()):
 		resonance.release(MatchConfig.get_value("resonance.reclaim_cost"))
 		reclaim_reserved = false
+
+
+func _process_reclaim_bleedout() -> void:
+	# Victim-side pull (Tangle pattern): a revived ally bleeds out once its
+	# reviver is dead or gone. One-shot — clears the link after applying.
+	if revived_by_peer == 0:
+		return
+	var reviver := _find_player_by_peer(revived_by_peer)
+	if reviver == null or reviver.is_dead:
+		apply_bleed(MatchConfig.get_value("reclaim.bleedout_hp_per_s"),
+			MatchConfig.get_value("reclaim.bleedout_duration_s"))
+		revived_by_peer = 0
 
 
 func _any_revived_alive(reviver_peer: int) -> bool:

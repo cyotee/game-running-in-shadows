@@ -56,6 +56,10 @@ func test_reclaim_denied_with_no_corpse() -> void:
 func test_reclaim_revives_ally_at_half_health_with_gear() -> void:
 	var runner := scene_runner(CONTROLLER_SCENE)
 	var ally: FPSController = runner.scene()
+	# An alive reviver (authority 2) so the revived ally does not bleed out.
+	var reviver: FPSController = auto_free((load(CONTROLLER_SCENE) as PackedScene).instantiate())
+	ally.get_parent().add_child(reviver)
+	reviver.input.set_multiplayer_authority(2)
 	ally.queue_damage(9999.0)
 	await await_ticks(6)
 	assert_bool(ally.is_dead).is_true()
@@ -157,3 +161,25 @@ func test_reclaim_reservation_released_when_no_revived_ally() -> void:
 	# No live revived ally -> released after the grace window.
 	await await_ticks(50)
 	assert_bool(caster.reclaim_reserved).is_false()
+
+
+# --- Bleed-out (revived ally bleeds when its reviver is dead) ---
+
+func test_caster_death_bleeds_revived_ally() -> void:
+	var runner := scene_runner(CONTROLLER_SCENE)
+	var ally: FPSController = runner.scene()
+	# The reviver is a static, already-dead prop (authority 2).
+	var reviver: FPSController = auto_free((load(CONTROLLER_SCENE) as PackedScene).instantiate())
+	ally.get_parent().add_child(reviver)
+	reviver.input.set_multiplayer_authority(2)
+	reviver.is_dead = true  # pre-tick -> persists
+
+	ally.queue_damage(9999.0)
+	await await_ticks(6)
+	ally.queue_reclaim_revive(ally.global_position, 2,
+		["smg", 10.0, 30.0, "", 0.0, 0.0, 1])
+	await await_ticks(8)
+
+	assert_bool(ally.is_dead).is_false()          # revived
+	assert_int(ally.bleed_ticks_remaining).is_greater(0)  # bleeding (reviver dead)
+	assert_int(ally.revived_by_peer).is_equal(0)  # link consumed (one-shot)
