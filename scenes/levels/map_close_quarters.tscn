@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://mapcloseq1"]
+[gd_scene format=3 uid="uid://mapcloseq1"]
 
 [ext_resource type="PackedScene" uid="uid://fpscontrollerstub" path="res://scenes/player/fps_controller.tscn" id="1_player"]
 [ext_resource type="Script" path="res://scenes/levels/steam_status.gd" id="2_steamstatus_script"]
