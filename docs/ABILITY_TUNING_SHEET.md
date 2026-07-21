@@ -128,6 +128,17 @@
   - [ ] How many corpses per player max before oldest despawns or is denied?
   - [ ] Visual state for "bleeding out" revived players.
 
+### Familiar
+- **Baselines (in `MatchConfig`, G5 W3 pass 2):** `resonance.familiar_cost` 4 (held), `familiar.hp` 100, `familiar.move_speed` 7, `familiar.aggro_radius_m` 12, `familiar.melee_range_m` 2, `familiar.melee_damage` 12, `familiar.attack_interval_s` 0.8, `familiar.dwarf_destroy_radius_m` 4, `familiar.follow_offset_m` 2.5, `familiar.guard_range_m` 30.
+- **Shipped behavior:** combat minion (one per caster). Aim ground hit within guard range → GUARD there; else FOLLOW. Live enemy-tag ping (`PingService.latest_enemy_tag`) redirects to HUNT. Melee vs enemy players and enemy Familiars. Destroyed by Null fields, nearby Dwarves, gunfire, or caster death. 4 Resonance held while it lives. Key: **N / D-pad Right**. **Deferred:** VFX, ranged Familiars, multi-minion, pathfinding.
+- **Buy Cost:** $2500 (ownership gating deferred with other Manifestations)
+- **Resonance Cost:** 4 held while the Familiar lives
+- **Effect:** Summon / re-task a melee minion (follow, guard point, or hunt ping-tagged enemy).
+- **Notes:** Payoff of the G7 ping system. Minions fight each other. Open-arena steering only (no navmesh).
+- **Investigations:**
+  - [ ] Melee damage / interval feel vs players
+  - [ ] Follow offset and aggro radius in arena playtests
+
 ### Tangle
 - **Buy Cost:** $1800
 - **Resonance Cost:** 2 held

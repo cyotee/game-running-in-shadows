@@ -5,9 +5,12 @@
 # Spawn data is [kind, ...args]:
 #   ["grenade", position, velocity, fuse_ticks, owner]
 #   ["<field>", position, caster]   (field = lifebloom / tangle / null_charge)
+#   ["familiar", position, caster, mode, guard_x, guard_y, guard_z]
+#   ["corpse", position, owner, tick, ...snapshot]
 extends MultiplayerSpawner
 
 const GRENADE_SCENE := preload("res://scenes/weapons/grenade.tscn")
+const FAMILIAR_SCENE := preload("res://scenes/abilities/familiar.tscn")
 
 const FIELD_SCENES := {
 	"lifebloom": "res://scenes/abilities/lifebloom.tscn",
@@ -45,6 +48,12 @@ func spawn_corpse(spawn_position: Vector3, owner_peer: int, tick: int, snapshot:
 	spawn(["corpse", spawn_position, owner_peer, tick] + snapshot)
 
 
+func spawn_familiar(spawn_position: Vector3, caster_peer: int, mode: int,
+		guard_pos: Vector3) -> void:
+	spawn(["familiar", spawn_position, caster_peer, mode,
+		guard_pos.x, guard_pos.y, guard_pos.z])
+
+
 func _spawn(data: Array) -> Node:
 	var kind: String = data[0]
 	if kind == "grenade":
@@ -55,6 +64,11 @@ func _spawn(data: Array) -> Node:
 		var corpse: Corpse = CORPSE_SCENE.instantiate()
 		corpse.init(data[1], data[2], data[3], data.slice(4))
 		return corpse
+	if kind == "familiar":
+		var familiar: Familiar = FAMILIAR_SCENE.instantiate()
+		familiar.setup(data[1], data[2], data[3],
+			Vector3(data[4], data[5], data[6]))
+		return familiar
 	var field: PlacedField = (load(FIELD_SCENES[kind]) as PackedScene).instantiate()
 	var cfg: Array = FIELD_CONFIG[kind]
 	field.setup(data[1], data[2], MatchConfig.get_value(cfg[0]),

@@ -141,6 +141,17 @@ const DEFAULTS: Dictionary = {
 	"reclaim.revive_health_frac": 0.5,
 	"reclaim.bleedout_hp_per_s": 8.0,
 	"reclaim.bleedout_duration_s": 10.0,
+	# --- Familiar (G5 Wave 3 — combat minion) ---
+	"resonance.familiar_cost": 4.0,
+	"familiar.hp": 100.0,
+	"familiar.move_speed": 7.0,
+	"familiar.aggro_radius_m": 12.0,
+	"familiar.melee_range_m": 2.0,
+	"familiar.melee_damage": 12.0,
+	"familiar.attack_interval_s": 0.8,
+	"familiar.dwarf_destroy_radius_m": 4.0,
+	"familiar.follow_offset_m": 2.5,
+	"familiar.guard_range_m": 30.0,
 	# --- Economy ---
 	"economy.start_money": 800.0,
 	"economy.wage_base": 1000.0,

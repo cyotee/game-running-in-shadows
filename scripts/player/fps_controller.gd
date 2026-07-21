@@ -49,6 +49,9 @@ var last_attacker_peer: int = 0
 var reclaim_reserved: bool = false
 var revived_by_peer: int = 0
 var reclaim_cast_tick: int = -(1 << 30)
+# Familiar (G5 W3): held reservation while a live owned Familiar exists.
+var familiar_reserved: bool = false
+var familiar_cast_tick: int = -(1 << 30)
 
 # Respawn request (plain vars, consumed inside the tick simulation).
 var _pending_respawn: Vector3 = Vector3.ZERO
@@ -295,6 +298,8 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 			_place_field("null_charge")
 	if not is_wraithed and input.reclaim_press_tick == tick:
 		_cast_reclaim(tick, is_fresh)
+	if not is_wraithed and input.familiar_press_tick == tick:
+		_cast_familiar(tick, is_fresh)
 	_reconcile_field_reservations(tick)
 	_process_reclaim_bleedout()
 	_process_interact(tick, is_fresh)
@@ -451,6 +456,7 @@ func _apply_pending_respawn() -> void:
 	global_position = _pending_respawn
 	reclaim_reserved = false
 	revived_by_peer = 0
+	familiar_reserved = false
 	_apply_archetype_config()
 	for key in [weapon_rig.slot1, weapon_rig.slot2]:
 		if key != "":
@@ -701,6 +707,77 @@ func _reconcile_field_reservations(tick: int) -> void:
 			and not _any_revived_alive(input.get_multiplayer_authority()):
 		resonance.release(MatchConfig.get_value("resonance.reclaim_cost"))
 		reclaim_reserved = false
+	# Familiar: held while a live owned minion exists.
+	if familiar_reserved and tick > familiar_cast_tick + 30 \
+			and not _has_owned_familiar():
+		resonance.release(MatchConfig.get_value("resonance.familiar_cost"))
+		familiar_reserved = false
+
+
+func _cast_familiar(tick: int, is_fresh: bool) -> void:
+	# Summon or re-task the combat minion. Aim ray: ground hit within
+	# guard_range_m -> GUARD there; else FOLLOW. Live Familiar is re-moded
+	# via plain-pending (applied in the Familiar's own tick).
+	var cost := MatchConfig.get_value("resonance.familiar_cost")
+	var guard_range := MatchConfig.get_value("familiar.guard_range_m")
+	var aim_point := _aim_placement_point_range(guard_range)
+	var base_mode := Familiar.FOLLOW
+	var guard := Vector3.ZERO
+	if _aim_hits_world(guard_range):
+		base_mode = Familiar.GUARD
+		guard = aim_point
+
+	var existing := _find_owned_familiar()
+	if existing != null:
+		existing.queue_set_mode(base_mode, guard)
+		return
+	if _in_null_field() or resonance.current < cost:
+		if is_fresh:
+			cast_denied.emit()
+		return
+	resonance.reserve(cost)
+	familiar_reserved = true
+	familiar_cast_tick = tick
+	if is_fresh:
+		var spawner := get_tree().get_first_node_in_group("projectile_spawner")
+		if spawner != null:
+			var spawn_pos := global_position + Vector3(0.0, 0.0, -1.0)
+			spawner.spawn_familiar(spawn_pos, input.get_multiplayer_authority(),
+				base_mode, guard)
+
+
+func _aim_placement_point_range(max_range: float) -> Vector3:
+	var aim := Basis(Vector3.UP, input.aim_yaw) * Basis(Vector3.RIGHT, input.aim_pitch)
+	var dir := aim * Vector3.FORWARD
+	var from := camera.global_position
+	var query := PhysicsRayQueryParameters3D.create(from, from + dir * max_range)
+	query.collision_mask = 0b1
+	query.exclude = [get_rid()]
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	return hit.position if hit else from + dir * max_range
+
+
+func _aim_hits_world(max_range: float) -> bool:
+	var aim := Basis(Vector3.UP, input.aim_yaw) * Basis(Vector3.RIGHT, input.aim_pitch)
+	var dir := aim * Vector3.FORWARD
+	var from := camera.global_position
+	var query := PhysicsRayQueryParameters3D.create(from, from + dir * max_range)
+	query.collision_mask = 0b1
+	query.exclude = [get_rid()]
+	return not get_world_3d().direct_space_state.intersect_ray(query).is_empty()
+
+
+func _has_owned_familiar() -> bool:
+	return _find_owned_familiar() != null
+
+
+func _find_owned_familiar() -> Familiar:
+	var my_peer := input.get_multiplayer_authority()
+	for node in get_tree().get_nodes_in_group("familiars"):
+		var fam := node as Familiar
+		if fam != null and fam.caster_peer == my_peer and not fam._is_dead():
+			return fam
+	return null
 
 
 func _process_reclaim_bleedout() -> void:

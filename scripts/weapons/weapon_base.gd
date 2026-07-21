@@ -149,6 +149,13 @@ func _hitscan(direction: Vector3, tick: int) -> void:
 	# Tangle blocks direct fire: the ray stops at the vortex, no damage past.
 	if collider is StaticBody3D and collider.is_in_group("tangle_block"):
 		return
+	# Familiar minion body (layer 5 / familiar_hit group).
+	if collider is StaticBody3D and collider.is_in_group("familiar_hit"):
+		var fam := collider.get_parent() as Familiar
+		if fam != null and not fam._is_dead():
+			var fam_dmg := config("damage") * _falloff(from.distance_to(result.position))
+			fam.take_familiar_damage(fam_dmg)
+		return
 	if collider is Area3D and collider.has_meta("player"):
 		var victim: FPSController = collider.get_meta("player")
 		if victim == me:
