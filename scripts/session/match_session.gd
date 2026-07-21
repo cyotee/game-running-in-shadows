@@ -29,6 +29,7 @@ func _ready() -> void:
 	match_state.round_ended.connect(economy.award_round_wages)
 	NetworkTime.on_tick.connect(func(_delta: float, tick: int) -> void:
 		match_state.process_tick(tick))
+	# CtfObjective self-connects to NetworkTime.on_tick in its _ready.
 	var peer := multiplayer.multiplayer_peer
 	if peer == null or peer is OfflineMultiplayerPeer:
 		# Offline dev path: run the tick loop locally, spawn player 1.
@@ -37,6 +38,7 @@ func _ready() -> void:
 		match_state.assign_team(1)
 		_do_spawn(1)
 		match_state.start_match()
+		_setup_ctf_objectives()
 		return
 	if multiplayer.is_server():
 		_match_started = true
@@ -47,6 +49,7 @@ func _ready() -> void:
 		multiplayer.peer_connected.connect(_admit_peer)
 		multiplayer.peer_disconnected.connect(_despawn)
 		match_state.start_match()
+		_setup_ctf_objectives()
 
 
 func _admit_peer(peer_id: int) -> void:
@@ -110,6 +113,13 @@ func _spawn_player(peer_id: int) -> Node:
 func promote_all_spectators() -> void:
 	for peer_id in _spectators.keys():
 		promote_spectator(peer_id)
+
+
+func _setup_ctf_objectives() -> void:
+	for node in get_tree().get_nodes_in_group("ctf_objective"):
+		var flag := node as CtfObjective
+		if flag != null:
+			flag.setup(match_state)
 
 
 func reset_players_for_round() -> void:

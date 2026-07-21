@@ -14,13 +14,14 @@ const PORT: int = 9090
 const BUSY_TIMEOUT: float = 120.0
 var _key_map: Dictionary
 var _held_keys: Dictionary = {}
+var _interaction_enabled: bool = false
 
 func _ready() -> void:
 	# Release builds strip/disable the interaction server (G13 / docs/TESTING.md).
 	# Opt-out: COUNTERSPELL_RELEASE=1 or ProjectSettings feature flag.
-	if OS.get_environment("COUNTERSPELL_RELEASE") == "1" \
-			or ProjectSettings.get_setting("counterspell/release_build", false):
+	if _release_mode():
 		print("McpInteractionServer: disabled (release build)")
+		_interaction_enabled = false
 		set_process(false)
 		return
 	# Ensure MCP server keeps processing even when game is paused
@@ -36,8 +37,19 @@ func _ready() -> void:
 	var err: int = _server.listen(port, "127.0.0.1")
 	if err != OK:
 		push_error("McpInteractionServer: Failed to listen on port %d, error: %d" % [port, err])
+		_interaction_enabled = false
 		return
+	_interaction_enabled = true
 	print("McpInteractionServer: Listening on 127.0.0.1:%d" % port)
+
+
+func is_interaction_enabled() -> bool:
+	return _interaction_enabled
+
+
+func _release_mode() -> bool:
+	return OS.get_environment("COUNTERSPELL_RELEASE") == "1" \
+		or bool(ProjectSettings.get_setting("counterspell/release_build", false))
 
 
 func _process(_delta: float) -> void:

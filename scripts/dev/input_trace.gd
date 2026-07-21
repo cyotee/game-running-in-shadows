@@ -11,9 +11,24 @@ var _enabled: bool = true
 
 
 func _ready() -> void:
-	if OS.get_environment("COUNTERSPELL_RELEASE") == "1" \
-			or ProjectSettings.get_setting("counterspell/release_build", false):
-		_enabled = false
+	reconfigure_from_env()
+
+
+func is_enabled() -> bool:
+	return _enabled
+
+
+## Re-read release flags (tests + runtime). Returns true when tracing is active.
+func reconfigure_from_env() -> bool:
+	_enabled = not _release_mode()
+	if not _enabled:
+		_entries.clear()
+	return _enabled
+
+
+func _release_mode() -> bool:
+	return OS.get_environment("COUNTERSPELL_RELEASE") == "1" \
+		or bool(ProjectSettings.get_setting("counterspell/release_build", false))
 
 
 func record(peer: int, action: StringName, tick: int) -> void:

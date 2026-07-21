@@ -1,11 +1,12 @@
-[gd_scene format=3 uid="uid://mapobjscale1"]
+[gd_scene load_steps=13 format=3 uid="uid://mapobjscale1"]
 
 [ext_resource type="PackedScene" uid="uid://fpscontrollerstub" path="res://scenes/player/fps_controller.tscn" id="1_player"]
 [ext_resource type="Script" path="res://scenes/levels/steam_status.gd" id="2_steamstatus_script"]
-[ext_resource type="Script" path="res://scripts/levels/test_arena.gd" id="3_arena_script"]
+[ext_resource type="Script" path="res://scripts/levels/ctf_map_bootstrap.gd" id="3_arena_script"]
 [ext_resource type="PackedScene" uid="uid://playerhud1" path="res://scenes/ui/player_hud.tscn" id="4_player_hud"]
 [ext_resource type="Script" path="res://scripts/weapons/projectile_spawner.gd" id="5_projectiles"]
 [ext_resource type="Script" path="res://scripts/match/ctf_objective.gd" id="6_ctf"]
+[ext_resource type="Script" path="res://scripts/match/match_state.gd" id="7_ms"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_Floor"]
 size = Vector3(90, 1, 90)
@@ -104,6 +105,9 @@ theme_override_font_sizes/font_size = 16
 text = "Steam: Checking..."
 vertical_alignment = 1
 script = ExtResource("2_steamstatus_script")
+
+[node name="MatchState" type="Node" parent="."]
+script = ExtResource("7_ms")
 
 [node name="CtfFlag" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)

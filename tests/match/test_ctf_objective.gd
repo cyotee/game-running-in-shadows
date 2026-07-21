@@ -38,7 +38,8 @@ func test_pickup_and_score() -> void:
 	assert_int(flag.carrier_peer).is_equal(1)
 
 	carrier.global_position = goal.global_position
-	flag.process_tick(NetworkTime.tick)
+	# Drive via NetworkTime ticks (CtfObjective connects on_tick in _ready).
+	await await_ticks(8)
 	assert_int(flag.team_scores[0]).is_equal(1)
 	assert_int(flag.carrier_peer).is_equal(0)
 	assert_bool(flag.at_home).is_true()

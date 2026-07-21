@@ -1,7 +1,7 @@
 # CTF variable objective item (G8). Host-authoritative plain state: the flag
 # is a world object peers simulate positionally via host RPC snapshots, not
-# rollback state. First version: heavy melee-like carry that disables glide
-# while held (MECHANICS_REFERENCE §11 objective-item spirit).
+# rollback state. Ticks via NetworkTime.on_tick (wired in _ready) so follow,
+# drop-on-death, return timer, and capture run in shipped scenes — not only tests.
 class_name CtfObjective
 extends Node3D
 
@@ -16,15 +16,52 @@ var drop_ticks_left: int = 0
 var team_scores: Array[int] = [0, 0]
 
 var _match_state: MatchState
+var _tick_connected: bool = false
 
 
 func _ready() -> void:
 	add_to_group("ctf_objective")
 	home_pos = global_position
+	_ensure_tick_connection()
+	call_deferred("_try_auto_setup")
+
+
+func _ensure_tick_connection() -> void:
+	if _tick_connected:
+		return
+	if not NetworkTime.on_tick.is_connected(_on_network_tick):
+		NetworkTime.on_tick.connect(_on_network_tick)
+	_tick_connected = true
+
+
+func _on_network_tick(_delta: float, tick: int) -> void:
+	process_tick(tick)
+
+
+func _try_auto_setup() -> void:
+	if _match_state != null:
+		return
+	var ms := get_tree().get_first_node_in_group("match_state") as MatchState
+	if ms == null:
+		# Offline CTF maps may ship without a MatchSession — create one.
+		ms = MatchState.new()
+		ms.name = "MatchState"
+		var host := get_parent()
+		if host == null:
+			host = get_tree().current_scene
+		if host != null:
+			host.add_child(ms)
+		else:
+			add_child(ms)
+		if ms.is_authority():
+			# Peer 1 is the offline local player (arena / map bootstrap).
+			ms.assign_team(1)
+	setup(ms)
 
 
 func setup(match_state: MatchState) -> void:
 	_match_state = match_state
+	_ensure_tick_connection()
 
 
 func is_authority() -> bool:
@@ -66,11 +103,10 @@ func process_tick(_tick: int) -> void:
 			try_drop()
 			return
 		global_position = carrier.global_position + Vector3(0, 1.6, 0)
-		# Capture: carrier reaches opposing base (home for other team = -home on X).
-		var carrier_team := _match_state.team_of(carrier_peer) if _match_state else -1
+		# Capture: bring the flag to this team's goal (return-to-base).
+		var carrier_team := _match_state.team_of(carrier_peer) if _match_state != null else -1
 		if carrier_team >= 0:
-			var goal := home_pos if carrier_team == 1 else home_pos + Vector3(0, 0, 0)
-			# Use spawn-side goals: team 0 goal at -home_z proxy via named markers.
+			var goal := home_pos
 			var goal_node := get_tree().get_first_node_in_group("ctf_goal_%d" % carrier_team)
 			if goal_node is Node3D:
 				goal = (goal_node as Node3D).global_position
