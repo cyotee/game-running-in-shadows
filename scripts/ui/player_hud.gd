@@ -16,6 +16,9 @@ var _feed: Array[String] = []
 @onready var denial_label: Label = %DenialLabel
 @onready var feed_label: Label = %FeedLabel
 @onready var scoreboard_label: Label = %ScoreboardLabel
+@onready var ping_layer: Control = %PingLayer
+
+const PING_EDGE_MARGIN := 24.0
 
 
 static func format_pips(current: float, max_resonance: float, cap: float) -> String:
@@ -96,3 +99,59 @@ func _process(delta: float) -> void:
 			_match_state.round_number,
 			_match_state.team_kills[0], _match_state.team_kills[1],
 			_match_state.round_wins[0], _match_state.round_wins[1]]
+
+	_render_pings()
+
+
+# --- Ping markers (view-only HUD projection; PingService is the source) ---
+
+func _ping_screen_target(record: Dictionary) -> Dictionary:
+	var out := {"visible": false, "pos": Vector2.ZERO, "behind": true, "distance": 0.0}
+	if _player == null or not is_instance_valid(_player):
+		return out
+	var cam := _player.camera
+	var world_pos: Vector3 = record["world_pos"]
+	if record["kind"] == PingService.ENEMY:
+		var enemy := _find_player(record["target_peer"])
+		if enemy == null or enemy.is_dead or enemy.is_wraithed:
+			return out  # unrenderable this frame (dead / hidden)
+		world_pos = enemy.global_position + Vector3(0.0, 1.5, 0.0)
+	out["distance"] = cam.global_position.distance_to(world_pos)
+	out["behind"] = cam.is_position_behind(world_pos)
+	out["pos"] = cam.unproject_position(world_pos)
+	out["visible"] = not out["behind"]
+	return out
+
+
+func _find_player(peer: int) -> FPSController:
+	for node in get_tree().get_nodes_in_group("players"):
+		var p := node as FPSController
+		if p != null and p.input.get_multiplayer_authority() == peer:
+			return p
+	return null
+
+
+func _render_pings() -> void:
+	if ping_layer == null:
+		return
+	for child in ping_layer.get_children():
+		child.queue_free()
+	if _player == null or not is_instance_valid(_player):
+		return
+	var local_peer := _player.input.get_multiplayer_authority()
+	var rect := ping_layer.get_rect()
+	for record in PingService.visible_pings(local_peer):
+		var target := _ping_screen_target(record)
+		var pos: Vector2 = target["pos"]
+		if not target["visible"]:
+			# Off-screen / behind: clamp to the nearest screen edge.
+			if target["behind"]:
+				pos = rect.get_center() + (rect.get_center() - pos)
+			pos = pos.clamp(
+				Vector2(PING_EDGE_MARGIN, PING_EDGE_MARGIN),
+				rect.size - Vector2(PING_EDGE_MARGIN, PING_EDGE_MARGIN))
+		var label := Label.new()
+		var glyph := "[!]" if record["kind"] == PingService.ENEMY else "[x]"
+		label.text = "%s %dm" % [glyph, int(target["distance"])]
+		label.position = pos
+		ping_layer.add_child(label)
