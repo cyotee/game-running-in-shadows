@@ -1,6 +1,6 @@
 # Resume Here — CounterSpell Implementation Progress
 
-**Last updated:** 2026-07-20 (paused for the user to update their system)
+**Last updated:** 2026-07-20 (paused again for the user to restart their system)
 **Goal being executed:** Implement the entire master plan
 (`docs/superpowers/plans/2026-07-17-master-implementation-plan.md`) — every
 subsystem plan, all tests passing. Milestones advance on quality gates.
@@ -12,15 +12,35 @@ subsystem plan, all tests passing. Milestones advance on quality gates.
 1. **You are on branch `feat/corpse-system`.** Its work (G6 corpse system) is
    code-complete and self-tested but **NOT merged to `main`**. The only thing
    left for G6 is the merge, which is gated on a clean full-suite + E2E run.
-2. **The host machine has been under extreme sustained CPU load** (loadavg
+   Git tree is **clean** — no uncommitted work from the last session.
+2. **OPEN ITEM before the G6 merge:** in the 2026-07-20 (later) session I ran
+   the full suite at loadavg ~11 → **115/116 pass, 1 failure:**
+   `test_drag_moves_corpse_toward_dragger` (`tests/abilities/test_corpse.gd:125-126`
+   — `dragged_by` stayed 0, corpse didn't move). It **also failed when rerun in
+   isolation at loadavg ~8.7.** BUT it drives the drag via raw
+   `Input.action_press("interact")` — the *same* real-`Input` / level-input
+   mechanism as the documented load-flaky movement tests (`interact_held` is a
+   polled bool, not a press-tick, so it can't use deterministic injection). The
+   drag code itself looks correct: `corpse.drag_range_m` default is **2.0** and
+   the test spawns the corpse at **1.5m**, so it's in range; `_process_interact`
+   (`fps_controller.gd:441`) sets `dragged_by` when `interact_held` + a corpse is
+   within range. **Next step:** rerun this suite alone when loadavg is genuinely
+   low (< ~5). If it goes green → it was load-flaky; add it to the flaky list and
+   proceed with the merge. If it *still* fails at low load → it's a real bug in
+   the `interact_held`→drag path under headless; debug before merging (systematic
+   debugging was mid-Phase-1 when this session was paused — no fix attempted).
+   *(Also note: the isolated corpse run reported only 6 test cases, not 7 —
+   `test_weapon_restricted_to_pistol_smg_while_dragging` didn't appear. Worth a
+   glance; may be discovery noise, may be related.)*
+3. **The host machine had been under extreme sustained CPU load** (loadavg
    130–375 from VS Code / Path Finder / solc / browsermcp — not our processes).
-   Under that load, ~3 timing-sensitive tests flake and the full suite aborts
-   mid-run. **They pass in isolation and at lower load.** Before trusting any
-   red result, check `sysctl -n vm.loadavg` and rerun when the 1-min avg is
-   under ~15.
-3. **First action on resume:** when load is low, run the full suite + E2E on
-   `feat/corpse-system` (commands below). If green, merge to `main`. Then
-   continue the queue at **G7 (ping system)**, then **G5 Wave 3**.
+   Under that load, timing-sensitive tests flake and the full suite aborts
+   mid-run. Before trusting any red result, check `sysctl -n vm.loadavg` and
+   rerun when the 1-min avg is low.
+4. **First action on resume:** resolve open item #2 (rerun corpse suite at low
+   load; green→merge, red→debug). Once the full suite + E2E are clean, merge
+   `feat/corpse-system` to `main`. Then continue the queue at **G7 (ping
+   system)**, then **G5 Wave 3**.
 
 ---
 
@@ -60,6 +80,12 @@ for m in re.finditer(r'<testcase name=\"([^\"]+)\"[^>]*>(.*?)</testcase>',xml,re
 - `test_ads_zoom_applies_to_camera`, `test_blade_switches_to_third_person_camera`
   — assert on `_process` view logic (FOV lerp / camera swap), frame-driven.
 - `test_tangle_drags_enemy_toward_center` — occasionally flakes under extreme load.
+- `test_drag_moves_corpse_toward_dragger` (`tests/abilities/test_corpse.gd`) —
+  **SUSPECTED flaky, NOT yet confirmed.** Drives drag via real
+  `Input.action_press("interact")` (level input, same class as the movement
+  tests above). Failed at loadavg ~11 AND ~8.7 in the 2026-07-20 session — needs
+  a rerun at genuinely low load (< ~5) to classify. See TL;DR open item #2. Do
+  NOT merge G6 while this is red without first proving it's load, not a bug.
 If one of these is the ONLY failure, rerun that suite alone to confirm before
 worrying.
 
