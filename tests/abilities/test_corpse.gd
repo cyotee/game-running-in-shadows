@@ -14,6 +14,11 @@ func before_test() -> void:
 func after_test() -> void:
 	NetworkTime.stop()
 	MatchConfig.reset_to_defaults()
+	# Corpses spawned via _spawn_corpse_near land beside the scene (a sibling of
+	# the runner's freed scene for CONTROLLER_SCENE tests), so they are NOT
+	# freed with it and leak into later tests' "corpses" group. Free them here.
+	for node in get_tree().get_nodes_in_group("corpses"):
+		node.free()
 
 
 func _spawn_corpse_near(host: FPSController, offset: Vector3, snap: Array) -> Corpse:
