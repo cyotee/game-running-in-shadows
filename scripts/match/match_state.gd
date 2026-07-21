@@ -26,6 +26,11 @@ var winning_team: int = -1
 var _session: Node
 
 
+func _ready() -> void:
+	# Discoverable for team lookups (e.g. Reclaim's ally check) via group.
+	add_to_group("match_state")
+
+
 func setup(session: Node) -> void:
 	_session = session
 

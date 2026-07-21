@@ -290,6 +290,8 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 		null_stock -= 1
 		if is_fresh:
 			_place_field("null_charge")
+	if not is_wraithed and input.reclaim_press_tick == tick:
+		_cast_reclaim(tick, is_fresh)
 	_reconcile_field_reservations(tick)
 	_process_interact(tick, is_fresh)
 	# Contextual jump (controller A): airborne and not gliding -> deploy glide.
@@ -522,6 +524,72 @@ func _nearest_corpse(radius: float) -> Corpse:
 			best_dist = d
 			best = corpse
 	return best
+
+
+func _cast_reclaim(tick: int, is_fresh: bool) -> void:
+	# Corpse-gated radius revive. Cross-node effects go through plain-pending +
+	# own-tick apply (the corpse-drag lesson) — never a direct rollback write.
+	var cost := MatchConfig.get_value("resonance.reclaim_cost")
+	var targets := _reclaim_targets(MatchConfig.get_value("reclaim.radius_m"))
+	if reclaim_reserved or _in_null_field() or resonance.current < cost or targets.is_empty():
+		if is_fresh:
+			cast_denied.emit()
+		return
+	for corpse in targets:
+		var revive_owner := _find_player_by_peer(corpse.owner_peer)
+		if revive_owner == null or not revive_owner.is_dead:
+			continue
+		revive_owner.queue_reclaim_revive(corpse.global_position,
+			input.get_multiplayer_authority(), _corpse_snapshot(corpse))
+		corpse.queue_reclaim_destroy()
+	resonance.reserve(cost)
+	reclaim_reserved = true
+	reclaim_cast_tick = tick
+
+
+func _reclaim_targets(radius: float) -> Array:
+	# Dead allies' corpses in range: same team (fallback to any-dead when the
+	# caster has no team, e.g. Arena/headless).
+	var my_team := _reclaim_team_of(input.get_multiplayer_authority())
+	var out: Array = []
+	for node in get_tree().get_nodes_in_group("corpses"):
+		var corpse := node as Corpse
+		if corpse == null or corpse.removed:
+			continue
+		if corpse.global_position.distance_to(global_position) > radius:
+			continue
+		var revive_owner := _find_player_by_peer(corpse.owner_peer)
+		if revive_owner == null or not revive_owner.is_dead:
+			continue
+		if my_team != -1 and _reclaim_team_of(corpse.owner_peer) != my_team:
+			continue
+		out.append(corpse)
+	return out
+
+
+func _reclaim_team_of(peer: int) -> int:
+	var ms := get_tree().get_first_node_in_group("match_state") as MatchState
+	return ms.team_of(peer) if ms != null else -1
+
+
+func _find_player_by_peer(peer: int) -> FPSController:
+	for node in get_tree().get_nodes_in_group("players"):
+		var p := node as FPSController
+		if p != null and p.input.get_multiplayer_authority() == peer:
+			return p
+	return null
+
+
+func _corpse_snapshot(corpse: Corpse) -> Array:
+	return [corpse.w1_key, corpse.w1_mag, corpse.w1_reserve,
+		corpse.w2_key, corpse.w2_mag, corpse.w2_reserve, corpse.grenades]
+
+
+func queue_reclaim_revive(pos: Vector3, reviver_peer: int, snapshot: Array) -> void:
+	_pending_reclaim_pos = pos
+	_pending_reclaim_reviver = reviver_peer
+	_pending_reclaim_snapshot = snapshot
+	_has_pending_reclaim = true
 
 
 func _cast_lifebloom(tick: int, is_fresh: bool) -> void:
