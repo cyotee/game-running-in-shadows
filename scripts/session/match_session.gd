@@ -24,6 +24,7 @@ func _ready() -> void:
 	spawner.spawn_function = _spawn_player
 	match_state.setup(self)
 	economy.setup(self, match_state)
+	PingService.setup(match_state)  # team-scoped ping visibility
 	$PlayerHud.bind_match_state(match_state)
 	match_state.round_ended.connect(economy.award_round_wages)
 	NetworkTime.on_tick.connect(func(_delta: float, tick: int) -> void:

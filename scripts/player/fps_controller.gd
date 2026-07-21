@@ -140,6 +140,45 @@ func enemy_under_reticle(max_range: float) -> bool:
 	)
 
 
+func try_ping() -> void:
+	# Aimed ping: raycast from the camera; an enemy hit-zone -> enemy tag,
+	# anything else -> world point. Intel/comms only — this runs outside the
+	# rollback tick and hands off to PingService (host-authoritative).
+	var space_state := get_world_3d().direct_space_state
+	var from := camera.global_position
+	var max_range := MatchConfig.get_value("ping.max_range_m")
+	var to := from + (-camera.global_transform.basis.z) * max_range
+
+	var query := PhysicsRayQueryParameters3D.create(from, to)
+	query.collide_with_areas = true
+	query.collide_with_bodies = true
+	query.collision_mask = 0b11  # world (1) + hit zones (2)
+	var excludes: Array[RID] = [get_rid()]
+	for zone_area: Area3D in $HitZones.get_children():
+		excludes.append(zone_area.get_rid())
+	query.exclude = excludes
+	var result := space_state.intersect_ray(query)
+
+	if result.is_empty():
+		PingService.request_ping(PingService.WORLD, to, 0)
+		return
+	var collider: Object = result.collider
+	if collider is Area3D and collider.has_meta("player"):
+		var enemy: FPSController = collider.get_meta("player")
+		if enemy != self:
+			PingService.request_ping(PingService.ENEMY, Vector3.ZERO,
+				enemy.input.get_multiplayer_authority())
+			return
+	PingService.request_ping(PingService.WORLD, result.position, 0)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not input.is_multiplayer_authority():
+		return
+	if event.is_action_pressed("ping"):
+		try_ping()
+
+
 func _config(key_suffix: String) -> float:
 	return MatchConfig.get_value("archetype.%s.%s" % [archetype, key_suffix])
 
