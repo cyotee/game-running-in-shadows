@@ -446,7 +446,7 @@ Loadouts are **ordered shopping lists, not classes or kits**. They never restric
 **Controller Support v1 (added 2026-07-16, owner decisions)**
 - **Backend:** native Godot InputMap joypad bindings now (works in editor/headless/E2E/non-Steam; Deck plays via Steam's default translation). Steam Input API + action manifest lands in Phase 2; action names follow the Steam-Input-compatible convention from day one (InputMap names = future IGA names).
 - **Aim assist:** mild slowdown-on-target, controller only (reticle friction over enemies; no magnetism). PC mouse gets nothing; Smart Rig remains the only hard tracking for anyone. Assist is local input shaping — no netcode surface.
-- **Default layout (rebindable):** LS move / LS-click sprint · RS look / RS-click reserved (melee quick) · RT fire · LT ADS/block · RB Repulse · LB reserved (ability radial) · **A jump → glide when airborne (contextual, implemented as a simulation rule; keyboard G unchanged)** · X reload · Y weapon swap · B reserved (interact/loot) · D-pad reserved for abilities · Start menu · Select scoreboard.
+- **Default layout (rebindable):** LS move / LS-click sprint · RS look / RS-click reserved (melee quick) · RT fire · LT ADS/block · RB Repulse · LB reserved (ability radial) · **A jump → glide when airborne (contextual, implemented as a simulation rule; keyboard G unchanged)** · X reload · Y weapon swap · B reserved (interact/loot) · **D-pad Up = ping/comms (G7 — first concrete D-pad assignment)**, rest of D-pad reserved for abilities · Start menu · Select scoreboard. **PC ping = middle-mouse / P (rebindable).**
 - **Timing:** implemented immediately after the netfox integration plan so all subsequent mechanics get controller-tested as they land.
 
 **Terminology Notes**

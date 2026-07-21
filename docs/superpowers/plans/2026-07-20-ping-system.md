@@ -634,3 +634,16 @@ git merge --no-ff feat/ping-system -m "$(printf 'Merge feat/ping-system: G7 aime
 - **Spec coverage:** §3.1 PingService → Task 1; §3.2 try_ping + §3.4 input + §4 tuning → Task 2; §3.3 HUD → Task 3; §6 edge cases covered by tests in Tasks 1/3 (team fallback, expiry, wraith/death skip); §7 tests → Tasks 1-4; Familiar `latest_enemy_tag` → Task 1 (built) + Task 4 (E2E-verified). Comms wheel is explicitly out of scope.
 - **Type consistency:** record keys (`id, kind, owner_peer, team, world_pos, target_peer, expire_tick`) and `PingService.WORLD/ENEMY` are identical across all tasks. `request_ping(kind, world_pos, target_peer)` signature matches between `try_ping`, the E2E, and PingService.
 - **Verified at plan time:** `test_fps_controller.gd` extends `NetSuite` and has `_spawn_controller()` + `await_ticks`. `player_hud.gd` has `class_name PlayerHud`, a `_player: FPSController` field, and `bind()` sets it. `MatchState`/`Economy` are created in `scripts/session/match_session.gd:25-26` via `.setup(...)` — wire `PingService.setup(match_state)` there. This wiring is runtime glue and does not affect the unit tests.
+
+---
+
+> **Status: EXECUTED 2026-07-20 (feat/ping-system branch).** All 4 tasks landed
+> TDD. PingService unit suite 6/6; HUD projection test green; `try_ping`
+> behavior test green; three-peer E2E `net_smoke.py` PASS including
+> `enemy-tag ping replicated to host`. Full suite green (the lone red in one
+> heavy-load run was the documented flaky `test_tangle_drags_enemy_toward_center`,
+> which passes in isolation). The `ping.*` MatchConfig keys landed with Task 1
+> (PingService reads them) rather than Task 2. Comms wheel deferred to a G7
+> follow-up. Learned: pings deliberately live OUTSIDE the netfox rollback path —
+> host-authoritative RPC (economy.gd `is_authority()` + `call_remote` pattern),
+> with `NetworkTime.tick` used only as a monotonic expiry clock.

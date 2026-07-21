@@ -145,6 +145,27 @@ def main() -> int:
         wait_for(try_repulse, timeout=20, interval=0.5, desc="repulse spend on host")
         print("ability input replicated to host")
 
+        # Ping replication: the client tags the host's player (peer 1) as an
+        # enemy. Pings are host-authoritative RPC OUTSIDE the rollback path, so
+        # the request lands on the host, which must resolve latest_enemy_tag for
+        # the client to the tagged peer. This is the hook Familiar consumes.
+        def try_ping() -> bool:
+            client.cmd("eval", {"code":
+                "var ps = get_node('/root/PingService'); "
+                "ps.request_ping(ps.ENEMY, Vector3.ZERO, 1); return true"})
+            deadline = time.time() + 2.0
+            while time.time() < deadline:
+                tag = host.cmd("eval", {"code":
+                    "return get_node('/root/PingService').latest_enemy_tag("
+                    f"{int(peer_id)})"}).get("result")
+                if tag == 1:
+                    return True
+                time.sleep(0.2)
+            return False
+
+        wait_for(try_ping, timeout=20, interval=0.5, desc="enemy-tag ping replicated to host")
+        print("enemy-tag ping replicated to host")
+
         # Third peer joins: host must end up with three player bodies
         # (multi-peer spawn smoke for the sessions milestone).
         client2 = Instance(CLIENT2_MCP)

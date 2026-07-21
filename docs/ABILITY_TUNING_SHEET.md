@@ -181,6 +181,11 @@
 - **Tuning:** Minion health, damage, lifetime, AI behavior.
 - **Notes:** Expensive but powerful for area control or info.
 
+### Ping (G7 — aimed ping, comms)
+- **Baselines (in `MatchConfig`):** `ping.duration_s` 4.0, `ping.max_range_m` 120.0, `ping.cooldown_s` 0.5, `ping.per_player_limit` 1.
+- **Effect:** one aimed ping — an enemy hit-zone → enemy tag (tracks the live enemy; consumed by Familiar via `PingService.latest_enemy_tag`), anything else → world point. Team-scoped HUD markers; 1 active ping per player (re-ping replaces).
+- **Notes:** intel/comms, NOT rollback-simulated (host-authoritative RPC). Comms wheel deferred to a G7 follow-up. Tune duration/range against clutter vs. usefulness in playtests.
+
 **Manifestation Buy Cost Philosophy**
 - Most core abilities ~$1600–$2000.
 - Summon is premium.

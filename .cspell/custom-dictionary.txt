@@ -33,6 +33,7 @@ counterspell
 creds
 cybercombat
 Cyberware
+cyotee
 deadzone
 deathmatch
 debuffs
@@ -41,6 +42,7 @@ Dragonfall
 emergently
 expressobits
 FASA
+finditer
 Flashbots
 Freqtrade
 funder
@@ -48,6 +50,7 @@ GDAI
 gdextension
 GodotSteam
 godotsteam
+greybox
 gunhand
 headshot
 headshots
@@ -66,8 +69,10 @@ killcams
 Knockback
 knockback
 Krypto
+lerp
 lerps
 Lifebloom
+loadavg
 loadouts
 lootable
 megacorp

@@ -118,9 +118,10 @@ Framework rules are decided (MECHANICS_REFERENCE §4.A — Resonance-only pacing
 - **Scope:** full body persistence in all modes, per-player corpse limit, corpse inventory (weapons/ammo/grenades as at death), looting, dragging with Pistol/SMG-only restriction (MECHANICS_REFERENCE §11, decided 2026-07-17).
 - Shipped: `Corpse` entity (`scripts/abilities/corpse.gd`) spawned on death via the generalized spawner (`"corpse"` kind); per-owner limit; loot grants a carried weapon; drag follows + restricts weapon use. Ammo-carry on loot deferred (grants fresh weapon).
 
-### G7 — Ping system *(Milestone C; before Familiar)*
+### G7 — Ping system ✅ DONE (2026-07-20 — `2026-07-20-ping-system.md`, spec `specs/2026-07-20-ping-system-design.md`; full suite green, E2E PASS)
 
 - **Scope:** aimed ping (world point + enemy tag), minimal comms wheel; Familiar consumes the enemy-tag ping as its hunt target (MECHANICS_REFERENCE §4.A).
+- **Shipped (pass 1 — aimed ping):** `PingService` autoload (host-authoritative, team-scoped, outside the rollback path); `FPSController.try_ping` raycast classifies enemy-tag vs world-point; HUD markers (world→screen projection + edge arrow + distance); `latest_enemy_tag()` ready for Familiar. Input: P / middle-mouse / D-pad Up. **Deferred:** the minimal comms wheel (a G7 follow-up).
 
 ### G8 — CTF + variable objective item *(Milestone C)*
 
