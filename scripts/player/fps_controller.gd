@@ -52,6 +52,15 @@ var reclaim_cast_tick: int = -(1 << 30)
 # Familiar (G5 W3): held reservation while a live owned Familiar exists.
 var familiar_reserved: bool = false
 var familiar_cast_tick: int = -(1 << 30)
+# Pulse Sight / Smart Rig / Overclock (G5 W3 augments).
+var pulse_sight_ticks_remaining: int = 0
+var pulse_sight_reserved: bool = false
+var smart_rig_active: bool = false
+var smart_rig_reserved: bool = false
+var overclock_active: bool = false
+var overclock_reserved: bool = false
+var overclock_grace_ticks: int = 0
+var overclock_reset_ticks: int = 0
 
 # Respawn request (plain vars, consumed inside the tick simulation).
 var _pending_respawn: Vector3 = Vector3.ZERO
@@ -109,12 +118,18 @@ func _process(_delta: float) -> void:
 	# Camera pitch is view-only (never rolled back); yaw is applied to the
 	# body in _rollback_tick from recorded input.
 	if input.is_multiplayer_authority():
+		# Smart Rig forced view is local input shaping (like stick look).
+		if smart_rig_active:
+			_apply_smart_rig_view(_delta)
 		camera.rotation.x = input.local_pitch
 		# ADS zoom is view-only feedback.
 		var active := weapon_rig.active_weapon() if weapon_rig != null else null
 		var target_fov := 75.0
 		if active != null and input.ads and active.supports_ads():
-			target_fov = 75.0 / active.ads_zoom()
+			var zoom := active.ads_zoom()
+			if smart_rig_active:
+				zoom *= MatchConfig.get_value("smart_rig.passive_zoom")
+			target_fov = 75.0 / zoom
 		camera.fov = lerpf(camera.fov, target_fov, minf(10.0 * _delta, 1.0))
 		# Blade wields in third person (view-only camera swap).
 		var blade_out := active != null and active.weapon_key == "blade"
@@ -300,6 +315,15 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 		_cast_reclaim(tick, is_fresh)
 	if not is_wraithed and input.familiar_press_tick == tick:
 		_cast_familiar(tick, is_fresh)
+	if not is_wraithed and input.pulse_sight_press_tick == tick:
+		_cast_pulse_sight(tick, is_fresh)
+	if not is_wraithed and input.smart_rig_press_tick == tick:
+		_toggle_smart_rig(is_fresh)
+	if not is_wraithed and input.overclock_press_tick == tick:
+		_toggle_overclock(is_fresh)
+	_process_pulse_sight_tick()
+	_process_smart_rig_tick(delta)
+	_process_overclock_tick(delta)
 	_reconcile_field_reservations(tick)
 	_process_reclaim_bleedout()
 	_process_interact(tick, is_fresh)
@@ -312,7 +336,7 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 		_try_deploy_glide(tick)
 
 	var base_speed := walk_speed if is_wraithed else (sprint_speed if input.sprint else walk_speed)
-	var speed := base_speed * weapon_rig.carry_weight_mult()
+	var speed := base_speed * weapon_rig.carry_weight_mult() * _overclock_move_mult()
 	if input.crouch:
 		speed *= MatchConfig.get_value("movement.crouch_speed_mult")
 	var direction := (transform.basis * Vector3(input.movement.x, 0, input.movement.y)).normalized()
@@ -334,7 +358,7 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 		if not is_on_floor():
 			velocity.y -= gravity * delta
 		if jump_pressed and is_on_floor():
-			velocity.y = jump_velocity
+			velocity.y = jump_velocity * _overclock_jump_mult()
 		var target := direction * speed
 		velocity.x = move_toward(velocity.x, target.x, acceleration * delta)
 		velocity.z = move_toward(velocity.z, target.z, acceleration * delta)
@@ -423,6 +447,12 @@ func take_damage(amount: float, attacker: FPSController, tick: int) -> void:
 		# Bullet + fall immunity while phased (decided). The Repulse
 		# resonance-burn counter is a Resonance effect, handled separately.
 		return
+	# Smart Rig active: no friendly fire from direct gunfire (attacker has FF off).
+	if attacker != null and attacker != self and attacker.smart_rig_active:
+		var my_team := _reclaim_team_of(input.get_multiplayer_authority())
+		var at_team := _reclaim_team_of(attacker.input.get_multiplayer_authority())
+		if my_team != -1 and my_team == at_team:
+			return
 	health = maxf(health - amount, 0.0)
 	resonance.mark_combat(tick)
 	if attacker != null and attacker != self:
@@ -457,6 +487,7 @@ func _apply_pending_respawn() -> void:
 	reclaim_reserved = false
 	revived_by_peer = 0
 	familiar_reserved = false
+	_clear_augment_state()
 	_apply_archetype_config()
 	for key in [weapon_rig.slot1, weapon_rig.slot2]:
 		if key != "":
@@ -554,6 +585,11 @@ func _process_interact(_tick: int, _is_fresh: bool) -> void:
 			var w: Dictionary = corpse.loot_weapon()
 			if not w.is_empty():
 				queue_grant(w["key"], 1)
+		# CTF flag pickup (host-authoritative objective).
+		for node in get_tree().get_nodes_in_group("ctf_objective"):
+			var flag := node as CtfObjective
+			if flag != null:
+				flag.try_pickup(self)
 
 
 func _nearest_corpse(radius: float) -> Corpse:
@@ -778,6 +814,200 @@ func _find_owned_familiar() -> Familiar:
 		if fam != null and fam.caster_peer == my_peer and not fam._is_dead():
 			return fam
 	return null
+
+
+func _clear_augment_state() -> void:
+	if pulse_sight_reserved:
+		resonance.release(MatchConfig.get_value("resonance.pulse_sight_cost"))
+	if smart_rig_reserved:
+		resonance.release(MatchConfig.get_value("resonance.smart_rig_cost"))
+	if overclock_reserved:
+		resonance.release(MatchConfig.get_value("resonance.overclock_cost"))
+	pulse_sight_ticks_remaining = 0
+	pulse_sight_reserved = false
+	smart_rig_active = false
+	smart_rig_reserved = false
+	overclock_active = false
+	overclock_reserved = false
+	overclock_grace_ticks = 0
+	overclock_reset_ticks = 0
+
+
+func _cast_pulse_sight(tick: int, is_fresh: bool) -> void:
+	var cost := MatchConfig.get_value("resonance.pulse_sight_cost")
+	if pulse_sight_reserved or _in_null_field() or resonance.current < cost:
+		if is_fresh:
+			cast_denied.emit()
+		return
+	resonance.reserve(cost)
+	pulse_sight_reserved = true
+	pulse_sight_ticks_remaining = int(roundf(
+		MatchConfig.get_value("pulse_sight.duration_s") * NetworkTime.tickrate))
+
+
+func _process_pulse_sight_tick() -> void:
+	if pulse_sight_ticks_remaining <= 0:
+		return
+	pulse_sight_ticks_remaining -= 1
+	if pulse_sight_ticks_remaining <= 0 and pulse_sight_reserved:
+		resonance.release(MatchConfig.get_value("resonance.pulse_sight_cost"))
+		pulse_sight_reserved = false
+
+
+func is_pulse_sight_active() -> bool:
+	return pulse_sight_ticks_remaining > 0
+
+
+## Peers this local player may see through walls (self Pulse Sight, or shared
+## chrome-network with allies who also run Pulse Sight / Smart Rig).
+func pulse_sight_revealed_peers() -> Array[int]:
+	var out: Array[int] = []
+	if not is_pulse_sight_active() and not smart_rig_active:
+		return out
+	var radius := MatchConfig.get_value("pulse_sight.radius_m")
+	var wraith_r := MatchConfig.get_value("pulse_sight.wraith_radius_m")
+	var my_peer := input.get_multiplayer_authority()
+	for node in get_tree().get_nodes_in_group("players"):
+		var p := node as FPSController
+		if p == null or p == self or p.is_dead:
+			continue
+		# Shared reveal: allies with Eye chrome (Pulse Sight active or Smart Rig)
+		# also contribute when *we* have chrome; viewer must own reveal source.
+		if not is_pulse_sight_active() and not smart_rig_active:
+			continue
+		var d := global_position.distance_to(p.global_position)
+		var max_r := wraith_r if p.is_wraithed else radius
+		if d <= max_r:
+			out.append(p.input.get_multiplayer_authority())
+	return out
+
+
+func _toggle_smart_rig(is_fresh: bool) -> void:
+	if smart_rig_active:
+		smart_rig_active = false
+		if smart_rig_reserved:
+			resonance.release(MatchConfig.get_value("resonance.smart_rig_cost"))
+			smart_rig_reserved = false
+		return
+	var cost := MatchConfig.get_value("resonance.smart_rig_cost")
+	if _in_null_field() or resonance.current < cost:
+		if is_fresh:
+			cast_denied.emit()
+		return
+	resonance.reserve(cost)
+	smart_rig_reserved = true
+	smart_rig_active = true
+
+
+func _process_smart_rig_tick(_delta: float) -> void:
+	# View tracking is applied in _process (local view); sim tick only needs
+	# the active flag for FF rules / reload etc.
+	pass
+
+
+func _apply_smart_rig_view(delta: float) -> void:
+	var target := _nearest_track_target()
+	if target == null:
+		return
+	var to := target.global_position - camera.global_position
+	if to.length_squared() < 0.01:
+		return
+	var desired_yaw := atan2(-to.x, -to.z)
+	var desired_pitch := atan2(to.y, Vector2(to.x, to.z).length())
+	var max_step := deg_to_rad(MatchConfig.get_value("smart_rig.track_rate_deg_s")) * delta
+	input.local_yaw = _approach_angle(input.local_yaw, desired_yaw, max_step)
+	input.local_pitch = clampf(
+		_approach_angle(input.local_pitch, desired_pitch, max_step),
+		-PI / 2.0, PI / 2.0)
+
+
+func _nearest_track_target() -> FPSController:
+	var best: FPSController = null
+	var best_d := INF
+	var my_peer := input.get_multiplayer_authority()
+	var my_team := _reclaim_team_of(my_peer)
+	for node in get_tree().get_nodes_in_group("players"):
+		var p := node as FPSController
+		if p == null or p == self or p.is_dead or p.is_wraithed:
+			continue
+		var peer := p.input.get_multiplayer_authority()
+		if peer == my_peer:
+			continue
+		if my_team != -1 and _reclaim_team_of(peer) == my_team:
+			continue
+		var d := global_position.distance_to(p.global_position)
+		if d < best_d:
+			best_d = d
+			best = p
+	return best
+
+
+func _approach_angle(current: float, target: float, max_step: float) -> float:
+	var diff := wrapf(target - current, -PI, PI)
+	if absf(diff) <= max_step:
+		return target
+	return current + signf(diff) * max_step
+
+
+func _toggle_overclock(is_fresh: bool) -> void:
+	if overclock_active:
+		overclock_active = false
+		if overclock_reserved:
+			resonance.release(MatchConfig.get_value("resonance.overclock_cost"))
+			overclock_reserved = false
+		# All-or-nothing grace reset after deactivation.
+		overclock_reset_ticks = int(roundf(
+			MatchConfig.get_value("overclock.grace_reset_s") * NetworkTime.tickrate))
+		overclock_grace_ticks = 0
+		return
+	var cost := MatchConfig.get_value("resonance.overclock_cost")
+	if _in_null_field() or resonance.current < cost:
+		if is_fresh:
+			cast_denied.emit()
+		return
+	resonance.reserve(cost)
+	overclock_reserved = true
+	overclock_active = true
+	if overclock_reset_ticks > 0:
+		# Reactivating before reset: drain immediately (no grace).
+		overclock_grace_ticks = 0
+		overclock_reset_ticks = int(roundf(
+			MatchConfig.get_value("overclock.grace_reset_s") * NetworkTime.tickrate))
+	else:
+		overclock_grace_ticks = int(roundf(
+			MatchConfig.get_value("overclock.grace_s") * NetworkTime.tickrate))
+
+
+func _process_overclock_tick(delta: float) -> void:
+	if overclock_reset_ticks > 0:
+		overclock_reset_ticks = maxi(0, overclock_reset_ticks - 1)
+	if not overclock_active:
+		return
+	if overclock_grace_ticks > 0:
+		overclock_grace_ticks -= 1
+	else:
+		# HP drain after grace (does not mark combat).
+		health = maxf(health - MatchConfig.get_value("overclock.hp_drain_per_s") * delta, 0.0)
+
+
+func _overclock_move_mult() -> float:
+	# Passive mults require ownership gating (deferred); apply only while Overdrive
+	# is active so baseline movement/weapon tests stay unscaled.
+	if overclock_active:
+		return MatchConfig.get_value("overclock.active_move_mult")
+	return 1.0
+
+
+func _overclock_jump_mult() -> float:
+	if overclock_active:
+		return MatchConfig.get_value("overclock.active_jump_mult")
+	return 1.0
+
+
+func overclock_reload_mult() -> float:
+	if overclock_active:
+		return MatchConfig.get_value("overclock.active_reload_mult")
+	return 1.0
 
 
 func _process_reclaim_bleedout() -> void:

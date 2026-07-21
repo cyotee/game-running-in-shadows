@@ -97,6 +97,41 @@ func get_steam_id() -> int:
 func get_persona_name() -> String:
 	return persona_name if is_initialized else "Local Player"
 
+# --- G12 Steam polish hooks (no-ops when Steam is unavailable) ---
+
+## G12 polish helpers — call Steam only when ready; names avoid GDExtension clashes.
+func g12_set_presence(key: String, value: String) -> void:
+	if not is_initialized:
+		return
+	if Steam.has_method("setRichPresence"):
+		Steam.call("setRichPresence", key, value)
+
+
+func g12_clear_presence() -> void:
+	if not is_initialized:
+		return
+	if Steam.has_method("clearRichPresence"):
+		Steam.call("clearRichPresence")
+
+
+func g12_unlock_achievement(api_name: String) -> void:
+	if not is_initialized:
+		return
+	if Steam.has_method("setAchievement"):
+		Steam.call("setAchievement", api_name)
+	if Steam.has_method("storeStats"):
+		Steam.call("storeStats")
+
+
+func g12_set_stat(api_name: String, value: int) -> void:
+	if not is_initialized:
+		return
+	if Steam.has_method("setStatInt"):
+		Steam.call("setStatInt", api_name, value)
+	if Steam.has_method("storeStats"):
+		Steam.call("storeStats")
+
+
 # --- Convenience helpers (expand these as you build features) ---
 
 func set_rich_presence(key: String, value: String) -> void:
