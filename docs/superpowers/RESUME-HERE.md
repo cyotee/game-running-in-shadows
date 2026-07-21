@@ -1,6 +1,6 @@
 # Resume Here — CounterSpell Implementation Progress
 
-**Last updated:** 2026-07-20 (G6 + G7 merged to main; queue advanced to G5 Wave 3)
+**Last updated:** 2026-07-20 (G6, G7, and G5 W3 Reclaim merged; next up Familiar)
 **Goal being executed:** Implement the entire master plan
 (`docs/superpowers/plans/2026-07-17-master-implementation-plan.md`) — every
 subsystem plan, all tests passing. Milestones advance on quality gates.
@@ -9,10 +9,10 @@ subsystem plan, all tests passing. Milestones advance on quality gates.
 
 ## TL;DR for the next agent
 
-1. **You are on `main`.** Both **G6 (corpse system)** and **G7 (ping system)**
-   are **merged** (`main` head is the `Merge feat/ping-system` commit + a
-   follow-up fix `8c881d9`). Git tree is clean. **Full suite 125/125, exit 0;
-   three-peer E2E `net_smoke` PASS (incl. enemy-tag ping replication).**
+1. **You are on `main`.** **G6 (corpse system)**, **G7 (ping system)**, and
+   **G5 Wave 3 → Reclaim** are all **merged**. Git tree is clean. **Full suite
+   133/133, exit 0; three-peer E2E `net_smoke` PASS (incl. enemy-tag ping
+   replication).**
 2. **G7 shipped (pass 1 — aimed ping):** `PingService` autoload
    (`scripts/abilities/ping_service.gd`) — host-authoritative, team-scoped ping
    store **outside** the netfox rollback path (economy.gd `is_authority()` +
@@ -22,22 +22,37 @@ subsystem plan, all tests passing. Milestones advance on quality gates.
    (`player_hud._render_pings`). **`PingService.latest_enemy_tag(peer)` is the
    hook Familiar (G5 W3) consumes.** Input: P / middle-mouse / D-pad Up.
    **Comms wheel is a deferred G7 follow-up** (not built).
-3. **Watch the commit hygiene lesson from this session:** a `git add a b c
-   missing.uid 2>/dev/null` aborted and staged nothing, so a HUD impl commit
-   captured only its test file — `main` briefly lacked the implementation until
-   fix `8c881d9`. Verify `git show --stat <commit>` after committing.
-4. **Machine-load caveat still applies:** timing-sensitive tests can flake and
+3. **Reclaim shipped (G5 W3, ability 1):** corpse-gated radius revive
+   (`scripts/player/fps_controller.gd` `_cast_reclaim`) — revives dead allies
+   whose corpse is in 6m (team-scoped, any-dead fallback) at 50% HP with the
+   corpse's *unlooted* gear, consumes the corpse, holds 4 Resonance while any
+   revived ally lives, and bleeds revived allies out on the caster's death.
+   Input: H / D-pad Left. **Deferred:** VFX, the losing-economy reservation
+   tie-in.
+4. **CRITICAL test-harness lesson (offline netfox):** only the **local-authority
+   (peer-1) `runner.scene()` node is simulated** in headless — a controller at a
+   distinct authority never gets `is_fresh` ticks (won't die/revive/cast). And
+   **mid-test writes to a non-simulated prop's rollback state are reverted** to
+   its pre-first-tick baseline. So: make the entity-under-test the runner scene
+   (authority 1), and any other controller a STATIC prop configured **before the
+   first tick**. See `tests/abilities/test_reclaim.gd` for the pattern (it's the
+   template for Familiar/Smart-Rig ability tests). Also: verify
+   `git show --stat <commit>` after committing — a `git add … missing.uid
+   2>/dev/null` aborted once this session and staged only a test file.
+5. **Machine-load caveat still applies:** timing-sensitive tests can flake and
    the full suite can abort mid-run under extreme sustained CPU load. Check
    `sysctl -n vm.loadavg` before trusting a red result and rerun when low.
    (`test_tangle_drags_enemy_toward_center` flaked in one heavy-load full run
-   this session; passed in isolation and in the clean 125/125 run.)
-5. **First action on resume: start G5 Wave 3.** Per the master plan: **Reclaim**
-   (needs G6 corpses ✅), **Familiar** (needs G7 ping ✅ — consume
-   `PingService.latest_enemy_tag`), **Pulse Sight**, **Smart Rig** (forced view
-   tracking), **Overclock Rig** (grace-period HP drain). Framework rules in
-   MECHANICS_REFERENCE §4.A. Brainstorm → plan → branch `feat/abilities-wave3`
-   (or split per ability) → TDD. Then G8 (CTF), G9 (maps), G10 (host-migration
-   SPIKE), G11 (anti-cheat audit).
+   this session; passed in isolation and in the clean 133/133 run.)
+6. **First action on resume: G5 Wave 3 → Familiar** (next ability). It consumes
+   `PingService.latest_enemy_tag(caster_peer)` (built in G7) as its hunt target
+   — a ping'd enemy sends the summon after them; otherwise it follows the caster.
+   Destroyed by Null charges and Dwarves; minions fight each other
+   (MECHANICS_REFERENCE §4.A / line 188). Brainstorm → spec → plan → branch
+   `feat/familiar` → TDD (use the static-prop test pattern above). Then Pulse
+   Sight, Smart Rig (forced view tracking), Overclock Rig (grace-period HP
+   drain); then G8 (CTF), G9 (maps), G10 (host-migration SPIKE), G11 (anti-cheat
+   audit).
 
 ---
 
@@ -91,8 +106,8 @@ worrying.
 
 ## What is DONE and merged to `main`
 
-`main` head: the `Merge feat/ping-system` commit (+ fix `8c881d9`). Full suite
-**125/125** green on main. Completed & merged, in order:
+`main` head: the `Merge feat/reclaim` commit (+ uid follow-up `f3aa9f3`). Full
+suite **133/133** green on main. Completed & merged, in order:
 
 - **Milestone A** (predicted core): netfox integration, native controller
   support, Resonance system, weapon system (5 guns), Combat Blade / melee.
@@ -105,22 +120,23 @@ worrying.
   (Lifebloom, Tangle, Null Charge), **G6 Corpse system** (persistence, per-owner
   limit, inventory/looting, dragging), **G7 Ping system** (aimed ping: world
   point + enemy tag; team-scoped HUD markers; `latest_enemy_tag` for Familiar —
-  comms wheel deferred).
+  comms wheel deferred), **G5 W3 Reclaim** (corpse-gated radius revive at 50% HP
+  with restored unlooted gear; held reservation; caster-death bleed-out).
 
 Each plan lives in `docs/superpowers/plans/` with a `Status: EXECUTED` footer.
 The master plan's queue tables and Gap Backlog are marked ✅ per item.
 
 ## What is code-complete but NOT merged
 
-- *(nothing — G7 merged 2026-07-20. Next work starts fresh on `feat/abilities-wave3`.)*
+- *(nothing — Reclaim merged 2026-07-20. Next work starts fresh on `feat/familiar`.)*
 
 ## What remains in the queue (Milestone C, then D)
 
 Order per the master plan §Milestone C / Gap Backlog:
-1. **G5 Wave 3** — Reclaim (needs G6 corpses ✅), Familiar (needs G7 ping ✅ —
-   consume `PingService.latest_enemy_tag`), Pulse Sight, Smart Rig (forced view
-   tracking), Overclock Rig (grace-period HP drain). Write one plan per wave-ish;
-   framework rules in MECHANICS_REFERENCE §4.A. *Next up.*
+1. **G5 Wave 3 (continued)** — Reclaim ✅ DONE. Remaining: **Familiar** (needs
+   G7 ping ✅ — consume `PingService.latest_enemy_tag`) *(next up)*, Pulse Sight,
+   Smart Rig (forced view tracking), Overclock Rig (grace-period HP drain). One
+   plan per ability; framework rules in MECHANICS_REFERENCE §4.A.
 2. **G8 — CTF + variable objective item** (on the G2 match framework).
 3. **G9 — two polished maps** (greybox then art; placeholder Quaternius CC0).
 4. **G10 — True host migration** — SPIKE FIRST (`docs/superpowers/plans/SPIKE-host-migration.md`).
