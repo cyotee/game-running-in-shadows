@@ -135,6 +135,12 @@ const DEFAULTS: Dictionary = {
 	"ping.max_range_m": 120.0,
 	"ping.cooldown_s": 0.5,
 	"ping.per_player_limit": 1.0,
+	# --- Reclaim (G5 Wave 3 — corpse-gated radius revive) ---
+	"resonance.reclaim_cost": 4.0,
+	"reclaim.radius_m": 6.0,
+	"reclaim.revive_health_frac": 0.5,
+	"reclaim.bleedout_hp_per_s": 8.0,
+	"reclaim.bleedout_duration_s": 10.0,
 	# --- Economy ---
 	"economy.start_money": 800.0,
 	"economy.wage_base": 1000.0,

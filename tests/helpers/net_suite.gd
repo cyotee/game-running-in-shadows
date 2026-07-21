@@ -46,6 +46,8 @@ func press(input: PlayerInput, action: StringName) -> void:
 			input._pending_null = true
 		&"interact":
 			input._pending_interact = true
+		&"reclaim":
+			input._pending_reclaim = true
 		_:
 			assert(false, "unknown edge action %s" % action)
 

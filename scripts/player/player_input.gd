@@ -37,6 +37,7 @@ var lifebloom_press_tick: int = -1
 var tangle_press_tick: int = -1
 var null_press_tick: int = -1
 var interact_press_tick: int = -1
+var reclaim_press_tick: int = -1
 var grenade_held: bool = false
 var interact_held: bool = false
 var slot_select: int = 0
@@ -61,6 +62,7 @@ var _pending_lifebloom: bool = false
 var _pending_tangle: bool = false
 var _pending_null: bool = false
 var _pending_interact: bool = false
+var _pending_reclaim: bool = false
 var _pending_slot: int = 0
 
 var _held_jump: bool = false
@@ -76,6 +78,7 @@ var _held_lifebloom: bool = false
 var _held_tangle: bool = false
 var _held_null: bool = false
 var _held_interact: bool = false
+var _held_reclaim: bool = false
 var _held_slot_1: bool = false
 var _held_slot_2: bool = false
 
@@ -109,6 +112,7 @@ func _process(delta: float) -> void:
 	var tangle_now := Input.is_action_pressed("tangle")
 	var null_now := Input.is_action_pressed("null_charge")
 	var interact_now := Input.is_action_pressed("interact")
+	var reclaim_now := Input.is_action_pressed("reclaim")
 	var slot_1_now := Input.is_action_pressed("weapon_slot_1")
 	var slot_2_now := Input.is_action_pressed("weapon_slot_2")
 	_pending_jump = _pending_jump or (jump_now and not _held_jump)
@@ -125,6 +129,7 @@ func _process(delta: float) -> void:
 	_pending_tangle = _pending_tangle or (tangle_now and not _held_tangle)
 	_pending_null = _pending_null or (null_now and not _held_null)
 	_pending_interact = _pending_interact or (interact_now and not _held_interact)
+	_pending_reclaim = _pending_reclaim or (reclaim_now and not _held_reclaim)
 	if slot_1_now and not _held_slot_1:
 		_pending_slot = 1
 	elif slot_2_now and not _held_slot_2:
@@ -142,6 +147,7 @@ func _process(delta: float) -> void:
 	_held_tangle = tangle_now
 	_held_null = null_now
 	_held_interact = interact_now
+	_held_reclaim = reclaim_now
 	_held_slot_1 = slot_1_now
 	_held_slot_2 = slot_2_now
 
@@ -201,6 +207,8 @@ func _gather() -> void:
 		null_press_tick = NetworkTime.tick
 	if _pending_interact:
 		interact_press_tick = NetworkTime.tick
+	if _pending_reclaim:
+		reclaim_press_tick = NetworkTime.tick
 	slot_select = _pending_slot
 	_pending_jump = false
 	_pending_repulse = false
@@ -215,4 +223,5 @@ func _gather() -> void:
 	_pending_tangle = false
 	_pending_null = false
 	_pending_interact = false
+	_pending_reclaim = false
 	_pending_slot = 0

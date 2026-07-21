@@ -44,10 +44,22 @@ var tangle_reserved: bool = false
 var lifebloom_cast_tick: int = -(1 << 30)
 var tangle_cast_tick: int = -(1 << 30)
 var last_attacker_peer: int = 0
+# Reclaim (G5 W3): held reservation while any revived ally lives; revived_by_peer
+# links a revived ally back to its reviver for the caster-death bleed-out pull.
+var reclaim_reserved: bool = false
+var revived_by_peer: int = 0
+var reclaim_cast_tick: int = -(1 << 30)
 
 # Respawn request (plain vars, consumed inside the tick simulation).
 var _pending_respawn: Vector3 = Vector3.ZERO
 var _has_pending_respawn: bool = false
+
+# Reclaim revive request (plain vars — cross-node writes must NOT touch rollback
+# state directly; the owner applies this in its own tick). See corpse-drag lesson.
+var _has_pending_reclaim: bool = false
+var _pending_reclaim_pos: Vector3 = Vector3.ZERO
+var _pending_reclaim_reviver: int = 0
+var _pending_reclaim_snapshot: Array = []
 
 # Weapon grant queue (rig slots are rollback state; grants must apply
 # inside the tick, same pattern as respawn).
