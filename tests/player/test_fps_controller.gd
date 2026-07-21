@@ -578,3 +578,20 @@ func test_combo_expires_after_window() -> void:
 
 	assert_bool(controller.is_gliding).is_true()
 	assert_float(controller.velocity.y).is_less(controller.combo_launch_velocity * 0.5)
+
+
+func test_ping_aimed_at_open_space_makes_world_ping() -> void:
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+	PingService.setup(null)
+	PingService.reset()
+	# Aim level with no enemy in front -> world ping (wall or max-range point).
+	controller.input.local_pitch = PITCH_LEVEL
+	await await_ticks(2)
+
+	controller.try_ping()
+
+	var owner := controller.input.get_multiplayer_authority()
+	assert_int(PingService.active_count()).is_equal(1)
+	assert_int(PingService.visible_pings(owner)[0]["kind"]).is_equal(PingService.WORLD)
+	PingService.reset()

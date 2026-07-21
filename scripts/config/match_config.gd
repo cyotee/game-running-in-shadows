@@ -130,6 +130,11 @@ const DEFAULTS: Dictionary = {
 	"corpse.loot_range_m": 2.5,
 	"corpse.drag_range_m": 2.0,
 	"corpse.drag_speed": 6.0,
+	# --- Ping (G7 aimed ping) ---
+	"ping.duration_s": 4.0,
+	"ping.max_range_m": 120.0,
+	"ping.cooldown_s": 0.5,
+	"ping.per_player_limit": 1.0,
 	# --- Economy ---
 	"economy.start_money": 800.0,
 	"economy.wage_base": 1000.0,

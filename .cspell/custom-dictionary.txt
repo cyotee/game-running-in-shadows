@@ -3,6 +3,7 @@ agentic
 aimbot
 aimbots
 asyncio
+autobind
 autoloads
 Aztechnology
 Azuro
@@ -32,6 +33,7 @@ counterspell
 creds
 cybercombat
 Cyberware
+cyotee
 deadzone
 deathmatch
 debuffs
@@ -40,6 +42,7 @@ Dragonfall
 emergently
 expressobits
 FASA
+finditer
 Flashbots
 Freqtrade
 funder
@@ -47,6 +50,7 @@ GDAI
 gdextension
 GodotSteam
 godotsteam
+greybox
 gunhand
 headshot
 headshots
@@ -60,13 +64,15 @@ joypad
 Kalshi
 Katana
 killcam
-killcams
 Killcams
+killcams
 Knockback
 knockback
 Krypto
+lerp
 lerps
 Lifebloom
+loadavg
 loadouts
 lootable
 megacorp
@@ -100,8 +106,8 @@ Polymarket
 poseable
 puppeted
 puppeteer
-puppeting
 Puppeting
+puppeting
 Pushable
 Quaternius
 Quoterv
@@ -114,6 +120,7 @@ regen
 Remappable
 Rematerialization
 rematerialize
+renderable
 replayable
 respawn
 respawns
@@ -143,6 +150,8 @@ unblockable
 uncollateralized
 unlooted
 unpausable
+unproject
+unrenderable
 unshovable
 untargetable
 Unzoom
