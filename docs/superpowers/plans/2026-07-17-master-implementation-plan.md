@@ -111,7 +111,7 @@ Framework rules are decided (MECHANICS_REFERENCE §4.A — Resonance-only pacing
 
 1. **Wave 1 — instant/self abilities:** Slip (velocity blink, safe-fail refund), Wraith (toggle + drain, weapons locked, instant rematerialize), Grenades (cookable fuse, Repulse-able). ✅ DONE (2026-07-20 — `2026-07-20-abilities-wave1.md`)
 2. **Wave 2 — placed/persistent world objects:** Lifebloom, Tangle (pull applied inside each victim's own rollback tick — decided), Null Charge. These are the "persistent networked objects" the PRD flags in §7 — netcode approach per MECHANICS_REFERENCE §10. ✅ DONE (2026-07-20 — `2026-07-20-abilities-wave2.md`; shared `PlacedField` base)
-3. **Wave 3 — dependent abilities:** Reclaim (needs G6 corpses), Familiar (needs G7 ping), Pulse Sight, Smart Rig (forced view tracking), Overclock Rig (grace-period HP drain).
+3. **Wave 3 — dependent abilities:** **Reclaim ✅ DONE** (2026-07-20 — `2026-07-20-reclaim.md`; corpse-gated radius revive at 50% HP with restored unlooted gear, 4 Resonance held while revived allies live, caster-death bleed-out; H / D-pad Left). Remaining: Familiar (needs G7 ping ✅ — consume `PingService.latest_enemy_tag`), Pulse Sight, Smart Rig (forced view tracking), Overclock Rig (grace-period HP drain).
 
 ### G6 — Corpse system ✅ DONE (2026-07-20 — `2026-07-20-corpse-system.md`, branch `feat/corpse-system` merged to main; full suite 117/117, E2E PASS)
 

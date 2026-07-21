@@ -113,6 +113,8 @@
   - [ ] Visual/audio feedback when being drained by Dwarf.
 
 ### Reclaim
+- **Baselines (in `MatchConfig`, G5 W3 pass 1):** `resonance.reclaim_cost` 4 (held), `reclaim.radius_m` 6, `reclaim.revive_health_frac` 0.5, `reclaim.bleedout_hp_per_s` 8, `reclaim.bleedout_duration_s` 10.
+- **Shipped behavior:** corpse-gated radius revive — revives dead allies whose corpse is in range (team-scoped; any-dead in team-less modes), at 50% health with the corpse's *unlooted* weapons/ammo/grenades; consumes the corpse (body denial). 4 Resonance held while any revived ally lives; the caster's death bleeds revived allies out. Key: H / D-pad Left. **Deferred:** VFX, the "reservation scales down when losing" economy tie-in.
 - **Buy Cost:** $1800
 - **Resonance Cost:** 4 held (scales down when team is losing; min 1)
 - **Effect:** Revive allies in radius. If caster dies, revived start bleeding.
