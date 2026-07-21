@@ -20,6 +20,9 @@ var removed: bool = false
 var owner_peer: int = 0
 var spawn_tick: int = 0
 var _freed: bool = false
+# Reclaim consumes the corpse: the caster requests via this plain var; the
+# corpse applies removal in its OWN tick (cross-node rollback-write lesson).
+var _pending_reclaim_destroy: bool = false
 
 @onready var rollback_synchronizer: RollbackSynchronizer = $RollbackSynchronizer
 
@@ -51,6 +54,9 @@ func _process(_delta: float) -> void:
 
 func _rollback_tick(delta: float, _tick: int, _is_fresh: bool) -> void:
 	if removed:
+		return
+	if _pending_reclaim_destroy:
+		removed = true
 		return
 	if dragged_by != 0:
 		var dragger := _find_player(dragged_by)
@@ -87,6 +93,12 @@ func set_dragged_by(peer: int) -> void:
 func destroy() -> void:
 	removed = true
 	NetworkRollback.mutate(self)
+
+
+func queue_reclaim_destroy() -> void:
+	# Consumed by the corpse's own _rollback_tick (plain var — out-of-band writes
+	# to plain vars persist; the in-tick removal mutates rollback state safely).
+	_pending_reclaim_destroy = true
 
 
 func _find_player(peer: int) -> FPSController:

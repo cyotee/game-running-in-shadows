@@ -44,10 +44,22 @@ var tangle_reserved: bool = false
 var lifebloom_cast_tick: int = -(1 << 30)
 var tangle_cast_tick: int = -(1 << 30)
 var last_attacker_peer: int = 0
+# Reclaim (G5 W3): held reservation while any revived ally lives; revived_by_peer
+# links a revived ally back to its reviver for the caster-death bleed-out pull.
+var reclaim_reserved: bool = false
+var revived_by_peer: int = 0
+var reclaim_cast_tick: int = -(1 << 30)
 
 # Respawn request (plain vars, consumed inside the tick simulation).
 var _pending_respawn: Vector3 = Vector3.ZERO
 var _has_pending_respawn: bool = false
+
+# Reclaim revive request (plain vars — cross-node writes must NOT touch rollback
+# state directly; the owner applies this in its own tick). See corpse-drag lesson.
+var _has_pending_reclaim: bool = false
+var _pending_reclaim_pos: Vector3 = Vector3.ZERO
+var _pending_reclaim_reviver: int = 0
+var _pending_reclaim_snapshot: Array = []
 
 # Weapon grant queue (rig slots are rollback state; grants must apply
 # inside the tick, same pattern as respawn).
@@ -203,6 +215,8 @@ func _apply_archetype_config() -> void:
 func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 	if _has_pending_respawn and is_fresh:
 		_apply_pending_respawn()
+	if _has_pending_reclaim and is_fresh:
+		_apply_pending_reclaim()
 	if not _pending_grants.is_empty() and is_fresh:
 		for grant in _pending_grants:
 			weapon_rig.grant(grant[0], grant[1])
@@ -217,6 +231,7 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 		_pending_damage = 0.0
 	if health <= 0.0:
 		is_dead = true
+		revived_by_peer = 0  # a dead ally no longer carries the reviver link
 		if is_fresh:
 			_spawn_corpse(tick)
 			died.emit(input.get_multiplayer_authority(), last_attacker_peer)
@@ -278,7 +293,10 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 		null_stock -= 1
 		if is_fresh:
 			_place_field("null_charge")
+	if not is_wraithed and input.reclaim_press_tick == tick:
+		_cast_reclaim(tick, is_fresh)
 	_reconcile_field_reservations(tick)
+	_process_reclaim_bleedout()
 	_process_interact(tick, is_fresh)
 	# Contextual jump (controller A): airborne and not gliding -> deploy glide.
 	var wants_glide := not is_wraithed and (
@@ -431,10 +449,44 @@ func _apply_pending_respawn() -> void:
 	is_gliding = false
 	velocity = Vector3.ZERO
 	global_position = _pending_respawn
+	reclaim_reserved = false
+	revived_by_peer = 0
 	_apply_archetype_config()
 	for key in [weapon_rig.slot1, weapon_rig.slot2]:
 		if key != "":
 			weapon_rig.weapon_by_key(key).initialize_ammo()
+
+
+func _apply_pending_reclaim() -> void:
+	# Runs in the revived player's OWN tick (dispatched before the is_dead
+	# return), so these rollback-state writes stick. Revives at a fraction of
+	# max health with the corpse's unlooted gear restored.
+	_has_pending_reclaim = false
+	is_dead = false
+	last_attacker_peer = 0
+	bleed_ticks_remaining = 0
+	bleed_hp_per_s = 0.0
+	is_gliding = false
+	velocity = Vector3.ZERO
+	global_position = _pending_reclaim_pos
+	_apply_archetype_config()
+	var snap := _pending_reclaim_snapshot
+	if snap.size() >= 7:
+		_restore_reclaim_weapon(snap[0], 1 if snap[0] != "pistol" else 2, snap[1], snap[2])
+		_restore_reclaim_weapon(snap[3], 1 if snap[3] != "pistol" else 2, snap[4], snap[5])
+		grenade_stock = int(snap[6])
+	health = _config("max_health") * MatchConfig.get_value("reclaim.revive_health_frac")
+	revived_by_peer = _pending_reclaim_reviver
+
+
+func _restore_reclaim_weapon(key: String, slot: int, mag: float, reserve: float) -> void:
+	if key == "":
+		return
+	weapon_rig.grant(key, slot)
+	var w := weapon_rig.weapon_by_key(key)
+	if w != null:
+		w.mag = mag
+		w.reserve = reserve
 
 
 func queue_damage(amount: float) -> void:
@@ -512,6 +564,72 @@ func _nearest_corpse(radius: float) -> Corpse:
 	return best
 
 
+func _cast_reclaim(tick: int, is_fresh: bool) -> void:
+	# Corpse-gated radius revive. Cross-node effects go through plain-pending +
+	# own-tick apply (the corpse-drag lesson) — never a direct rollback write.
+	var cost := MatchConfig.get_value("resonance.reclaim_cost")
+	var targets := _reclaim_targets(MatchConfig.get_value("reclaim.radius_m"))
+	if reclaim_reserved or _in_null_field() or resonance.current < cost or targets.is_empty():
+		if is_fresh:
+			cast_denied.emit()
+		return
+	for corpse in targets:
+		var revive_owner := _find_player_by_peer(corpse.owner_peer)
+		if revive_owner == null or not revive_owner.is_dead:
+			continue
+		revive_owner.queue_reclaim_revive(corpse.global_position,
+			input.get_multiplayer_authority(), _corpse_snapshot(corpse))
+		corpse.queue_reclaim_destroy()
+	resonance.reserve(cost)
+	reclaim_reserved = true
+	reclaim_cast_tick = tick
+
+
+func _reclaim_targets(radius: float) -> Array:
+	# Dead allies' corpses in range: same team (fallback to any-dead when the
+	# caster has no team, e.g. Arena/headless).
+	var my_team := _reclaim_team_of(input.get_multiplayer_authority())
+	var out: Array = []
+	for node in get_tree().get_nodes_in_group("corpses"):
+		var corpse := node as Corpse
+		if corpse == null or corpse.removed:
+			continue
+		if corpse.global_position.distance_to(global_position) > radius:
+			continue
+		var revive_owner := _find_player_by_peer(corpse.owner_peer)
+		if revive_owner == null or not revive_owner.is_dead:
+			continue
+		if my_team != -1 and _reclaim_team_of(corpse.owner_peer) != my_team:
+			continue
+		out.append(corpse)
+	return out
+
+
+func _reclaim_team_of(peer: int) -> int:
+	var ms := get_tree().get_first_node_in_group("match_state") as MatchState
+	return ms.team_of(peer) if ms != null else -1
+
+
+func _find_player_by_peer(peer: int) -> FPSController:
+	for node in get_tree().get_nodes_in_group("players"):
+		var p := node as FPSController
+		if p != null and p.input.get_multiplayer_authority() == peer:
+			return p
+	return null
+
+
+func _corpse_snapshot(corpse: Corpse) -> Array:
+	return [corpse.w1_key, corpse.w1_mag, corpse.w1_reserve,
+		corpse.w2_key, corpse.w2_mag, corpse.w2_reserve, corpse.grenades]
+
+
+func queue_reclaim_revive(pos: Vector3, reviver_peer: int, snapshot: Array) -> void:
+	_pending_reclaim_pos = pos
+	_pending_reclaim_reviver = reviver_peer
+	_pending_reclaim_snapshot = snapshot
+	_has_pending_reclaim = true
+
+
 func _cast_lifebloom(tick: int, is_fresh: bool) -> void:
 	var cost := MatchConfig.get_value("resonance.lifebloom_cost")
 	if lifebloom_reserved or _in_null_field() or resonance.current < cost:
@@ -577,6 +695,32 @@ func _reconcile_field_reservations(tick: int) -> void:
 			and not _has_owned_field("tangle_fields"):
 		resonance.release(MatchConfig.get_value("resonance.tangle_cost"))
 		tangle_reserved = false
+	# Reclaim: held while any revived ally lives; release once none remain
+	# (grace window covers the revive apply landing a tick after the cast).
+	if reclaim_reserved and tick > reclaim_cast_tick + 30 \
+			and not _any_revived_alive(input.get_multiplayer_authority()):
+		resonance.release(MatchConfig.get_value("resonance.reclaim_cost"))
+		reclaim_reserved = false
+
+
+func _process_reclaim_bleedout() -> void:
+	# Victim-side pull (Tangle pattern): a revived ally bleeds out once its
+	# reviver is dead or gone. One-shot — clears the link after applying.
+	if revived_by_peer == 0:
+		return
+	var reviver := _find_player_by_peer(revived_by_peer)
+	if reviver == null or reviver.is_dead:
+		apply_bleed(MatchConfig.get_value("reclaim.bleedout_hp_per_s"),
+			MatchConfig.get_value("reclaim.bleedout_duration_s"))
+		revived_by_peer = 0
+
+
+func _any_revived_alive(reviver_peer: int) -> bool:
+	for node in get_tree().get_nodes_in_group("players"):
+		var p := node as FPSController
+		if p != null and not p.is_dead and p.revived_by_peer == reviver_peer:
+			return true
+	return false
 
 
 func _place_field(kind: String) -> void:
