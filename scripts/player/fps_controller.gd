@@ -693,6 +693,20 @@ func _reconcile_field_reservations(tick: int) -> void:
 			and not _has_owned_field("tangle_fields"):
 		resonance.release(MatchConfig.get_value("resonance.tangle_cost"))
 		tangle_reserved = false
+	# Reclaim: held while any revived ally lives; release once none remain
+	# (grace window covers the revive apply landing a tick after the cast).
+	if reclaim_reserved and tick > reclaim_cast_tick + 30 \
+			and not _any_revived_alive(input.get_multiplayer_authority()):
+		resonance.release(MatchConfig.get_value("resonance.reclaim_cost"))
+		reclaim_reserved = false
+
+
+func _any_revived_alive(reviver_peer: int) -> bool:
+	for node in get_tree().get_nodes_in_group("players"):
+		var p := node as FPSController
+		if p != null and not p.is_dead and p.revived_by_peer == reviver_peer:
+			return true
+	return false
 
 
 func _place_field(kind: String) -> void:

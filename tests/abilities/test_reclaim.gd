@@ -83,3 +83,77 @@ func test_corpse_consumed_by_reclaim_destroy() -> void:
 	await await_ticks(4)
 
 	assert_bool(corpse.removed).is_true()
+
+
+# --- Caster side (reservation) ---
+
+func test_reclaim_cast_reserves_and_consumes_corpse() -> void:
+	var runner := scene_runner(CONTROLLER_SCENE)
+	var caster: FPSController = runner.scene()
+	var _ally := _static_dead_ally(caster, Vector3(1.5, 0, 0), 2)
+	var corpse := _corpse_at(caster, Vector3(1.5, 0, 0), 2)
+	await await_ticks(2)
+	var before := caster.resonance.reserved
+
+	press(caster.input, &"reclaim")
+	await await_ticks(6)
+
+	assert_bool(caster.reclaim_reserved).is_true()
+	assert_float(caster.resonance.reserved).is_greater(before)
+	assert_bool(corpse.removed).is_true()
+
+
+func test_out_of_range_corpse_not_reserved() -> void:
+	var runner := scene_runner(CONTROLLER_SCENE)
+	var caster: FPSController = runner.scene()
+	var _ally := _static_dead_ally(caster, Vector3(50, 0, 0), 2)
+	var corpse := _corpse_at(caster, Vector3(50, 0, 0), 2)
+	await await_ticks(2)
+
+	press(caster.input, &"reclaim")
+	await await_ticks(6)
+
+	assert_bool(caster.reclaim_reserved).is_false()
+	assert_bool(corpse.removed).is_false()
+
+
+# A static, non-simulated prop that is alive and marked as revived by `reviver`
+# from spawn (pre-tick rollback-state writes persist; mid-test writes do not).
+func _static_revived_ally(host: FPSController, peer: int, reviver: int) -> FPSController:
+	var ally: FPSController = auto_free((load(CONTROLLER_SCENE) as PackedScene).instantiate())
+	host.get_parent().add_child(ally)
+	ally.input.set_multiplayer_authority(peer)
+	ally.revived_by_peer = reviver
+	return ally
+
+
+func test_reclaim_reservation_held_while_revived_ally_alive() -> void:
+	var runner := scene_runner(CONTROLLER_SCENE)
+	var caster: FPSController = runner.scene()
+	var caster_peer := caster.input.get_multiplayer_authority()
+	var _dead := _static_dead_ally(caster, Vector3(1.5, 0, 0), 2)
+	var _corpse := _corpse_at(caster, Vector3(1.5, 0, 0), 2)
+	var _revived := _static_revived_ally(caster, 3, caster_peer)  # alive, revived by caster
+	await await_ticks(2)
+
+	press(caster.input, &"reclaim")
+	await await_ticks(50)  # past the 30-tick grace window
+
+	# Held: a live ally revived by the caster still exists.
+	assert_bool(caster.reclaim_reserved).is_true()
+
+
+func test_reclaim_reservation_released_when_no_revived_ally() -> void:
+	var runner := scene_runner(CONTROLLER_SCENE)
+	var caster: FPSController = runner.scene()
+	var _dead := _static_dead_ally(caster, Vector3(1.5, 0, 0), 2)
+	var _corpse := _corpse_at(caster, Vector3(1.5, 0, 0), 2)
+	await await_ticks(2)
+
+	press(caster.input, &"reclaim")
+	await await_ticks(4)
+	assert_bool(caster.reclaim_reserved).is_true()
+
+	# No live revived ally -> released after the grace window.
+	await await_ticks(50)
+	assert_bool(caster.reclaim_reserved).is_false()
