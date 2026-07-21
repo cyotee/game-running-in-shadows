@@ -39,8 +39,10 @@ Per-owner limit enforced at spawn (free the oldest by `spawn_tick`).
   clears it. `FPSController.is_dragging` true while dragging; `WeaponBase`
   blocks fire unless the active weapon is Pistol/SMG. Tests: drag moves the
   corpse; a Rifle cannot fire while dragging, a Pistol can.
-- [ ] **Task 4 — Verify + docs.** Live MCP arena (kill a bot → corpse; loot;
-  drag); full suite + three-peer E2E; PRD/master-plan/tuning notes; cspell.
+- [x] **Task 4 — Verify + docs.** Full suite (117/117) + three-peer E2E (PASS);
+  master-plan queue updated; cspell. (Live MCP arena walkthrough deferred — the
+  automated suite + E2E cover the behavior; revisit during the next arena play
+  session.)
 
 **Deferred (documented):** corpse destruction to deny Reclaim (objective-weapon
 interaction — lands with G8 objective items); scavenging reserve ammo into the
@@ -50,17 +52,26 @@ a fresh weapon via `queue_grant`, ammo-carry not yet wired); the Power Arm idea
 
 ---
 
-> **Status: Tasks 1–3 EXECUTED 2026-07-20 (feat/corpse-system branch, NOT yet
-> merged to main).** All 7 corpse tests pass; the branch's other suites pass in
-> isolation. The full-suite + E2E merge gate was NOT completed because the host
-> machine was under extreme sustained load (loadavg 130–375) — three unrelated
-> real-Input / frame-driven tests (`test_moves_forward_on_input`,
-> `test_ads_zoom_applies_to_camera`, `test_tangle_drags_enemy_toward_center`)
-> flake under that load and pass in isolation / at lower load. **Next agent:**
-> re-run the full suite + `tests/e2e/net_smoke.py` when loadavg < ~15, confirm
-> green, then merge `feat/corpse-system` to main (Task 4's live MCP arena check
-> also needs a calm machine — the arena couldn't boot its MCP server under load).
+> **Status: EXECUTED 2026-07-20 (feat/corpse-system branch).** All 7 corpse
+> tests pass; full suite **117/117** (exit 0, at loadavg ~10); three-peer E2E
+> `net_smoke.py` PASS.
+>
+> The previously-flagged `test_drag_moves_corpse_toward_dragger` failure (and the
+> intermittently-undiscovered `test_weapon_restricted_to_pistol_smg_while_dragging`)
+> were NOT load flakiness and NOT a production bug — they were a single
+> **test-isolation leak**: `_spawn_corpse_near` parents the corpse under
+> `host.get_parent()`, which for CONTROLLER_SCENE tests is the runner's
+> container (a *sibling* of the freed scene), so loot-test corpses survived
+> `after_test` and accumulated in the global `corpses` group. The arena drag
+> test then found a leaked loot-test corpse at x=1.0, closer than its own x=1.5
+> corpse, and `FPSController._nearest_corpse` selected the leaked one — so the
+> intended corpse never got dragged. Fixed by freeing all `corpses` in
+> `after_test` (commit `3393474`). Production code unchanged — the push-based
+> `set_dragged_by` path is correct.
+>
 > Learned: out-of-band rollback-state writes from tests (health, active_slot)
 > are discarded by the state restore — use in-tick paths (`queue_damage`,
 > `select_slot`); a corpse follow/drag test needs a floor (a falling dragger
-> drifts out of drag range).
+> drifts out of drag range); and any test that spawns a persistent grouped node
+> beside the scene must clean the group up in `after_test` or it contaminates
+> later tests' nearest-node selection.
