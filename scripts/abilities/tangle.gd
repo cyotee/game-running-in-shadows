@@ -19,3 +19,11 @@ func _ready() -> void:
 
 func _field_groups() -> Array[String]:
 	return ["tangle_fields"]
+
+
+func _range_config_key() -> String:
+	return "ability.tangle_radius_m"
+
+
+func _range_viz_color() -> Color:
+	return Color(0.65, 0.25, 0.95, 0.22)

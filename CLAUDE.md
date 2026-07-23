@@ -32,7 +32,7 @@ Spell checking uses cspell (`cspell.config.yaml`); add project-specific terms to
 
 ## Scratch Space
 
-Use `.scratch/` (repo-local, gitignored) for all temporary files — downloads, extracted archives, experiment output. Do not use `/tmp` or session scratchpad directories outside the repo; they trigger permission prompts for the user.
+Use `.scratch/` (repo-local, gitignored) for all temporary files — downloads, extracted archives, experiment output. Do not use `/tmp` or session scratchpad directories outside the repo; they trigger permission prompts for the user. Keep `.scratch/.gdignore` present so Godot does not import/scan vendored addon copies there (duplicate `class_name`s flood the LSP with "hides a global script class").
 
 ## Testing
 

@@ -28,6 +28,11 @@ var _pending_guard_pos: Vector3 = Vector3.ZERO
 func _ready() -> void:
 	add_to_group("familiars")
 	rollback_synchronizer.process_settings()
+	# Aggro + melee rings (MatchConfig meters).
+	var aggro := MatchConfig.get_value("familiar.aggro_radius_m")
+	var melee := MatchConfig.get_value("familiar.melee_range_m")
+	PlaytestViz.attach_disc(self, aggro, Color(1.0, 0.4, 0.2, 0.12))
+	PlaytestViz.attach_sphere(self, melee, Color(1.0, 0.2, 0.15, 0.25))
 
 
 func setup(spawn_position: Vector3, caster: int, start_mode: int, guard: Vector3) -> void:

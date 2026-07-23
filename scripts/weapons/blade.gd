@@ -17,22 +17,30 @@ func _can_fire(tick: int) -> bool:
 		and NetworkTime.seconds_between(last_fire_tick, tick) >= config("swing_interval_s")
 
 
-func _fire(tick: int) -> void:
+func _fire(tick: int, is_fresh: bool = false) -> void:
 	last_fire_tick = tick
 	var me := _controller()
 	var origin := me.global_position + Vector3(0, 1.2, 0)
 	var forward := _aim_basis() * Vector3.FORWARD
 	var arc := deg_to_rad(config("arc_deg")) * 0.5
+	var range_m := config("range_m")
+	var any_hit := false
 	for node in me.get_tree().get_nodes_in_group("players"):
 		var victim := node as FPSController
 		if victim == null or victim == me:
 			continue
 		var to_victim := victim.global_position + Vector3(0, 1.2, 0) - origin
-		if to_victim.length() > config("range_m"):
+		if to_victim.length() > range_m:
 			continue
 		if forward.angle_to(to_victim.normalized()) > arc:
 			continue
 		_strike(victim, me, tick)
+		any_hit = true
+	if is_fresh:
+		# Arc range disc edge marker: short line along aim at blade reach.
+		var tip := origin + forward * range_m
+		var col := Color(1.0, 0.35, 0.35, 0.9) if any_hit else Color(0.8, 0.5, 0.5, 0.55)
+		PlaytestViz.flash_line(me.get_tree(), origin, tip, col)
 
 
 func _strike(victim: FPSController, me: FPSController, tick: int) -> void:

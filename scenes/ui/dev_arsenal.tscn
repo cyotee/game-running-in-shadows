@@ -1,0 +1,153 @@
+[gd_scene load_steps=2 format=3 uid="uid://devarsenal1"]
+
+[ext_resource type="Script" path="res://scripts/ui/dev_arsenal.gd" id="1_dev"]
+
+[node name="DevArsenal" type="CanvasLayer"]
+layer = 32
+script = ExtResource("1_dev")
+
+[node name="Panel" type="PanelContainer" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -520.0
+offset_top = 24.0
+offset_right = -16.0
+offset_bottom = 640.0
+grow_horizontal = 0
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="VBox" type="VBoxContainer" parent="Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Title" type="Label" parent="Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Dev Arsenal (F10)"
+
+[node name="DisplayLabel" type="Label" parent="Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Display (persists to user://)"
+
+[node name="DisplayRow" type="HBoxContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="ResOption" type="OptionButton" parent="Panel/Margin/VBox/DisplayRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ScaleOption" type="OptionButton" parent="Panel/Margin/VBox/DisplayRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DisplayRow2" type="HBoxContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Fullscreen" type="CheckButton" parent="Panel/Margin/VBox/DisplayRow2"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Fullscreen"
+
+[node name="DisplayInfo" type="Label" parent="Panel/Margin/VBox/DisplayRow2"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 12
+text = "—"
+horizontal_alignment = 2
+
+[node name="HSep" type="HSeparator" parent="Panel/Margin/VBox"]
+layout_mode = 2
+
+[node name="MoneyLabel" type="Label" parent="Panel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Money: $0"
+
+[node name="MoneyRow" type="HBoxContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+
+[node name="Give1000" type="Button" parent="Panel/Margin/VBox/MoneyRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "+$1000"
+
+[node name="Give5000" type="Button" parent="Panel/Margin/VBox/MoneyRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "+$5000"
+
+[node name="CatalogLabel" type="Label" parent="Panel/Margin/VBox"]
+layout_mode = 2
+text = "Catalog (select then Buy)"
+
+[node name="ItemList" type="ItemList" parent="Panel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 200)
+size_flags_vertical = 3
+
+[node name="BuyRow" type="HBoxContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+
+[node name="Buy" type="Button" parent="Panel/Margin/VBox/BuyRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Buy"
+
+[node name="ClearWeapons" type="Button" parent="Panel/Margin/VBox/BuyRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Clear weapons"
+
+[node name="OwnedLabel" type="Label" parent="Panel/Margin/VBox"]
+layout_mode = 2
+text = "Owned (select then Refund)"
+
+[node name="OwnedList" type="ItemList" parent="Panel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 110)
+
+[node name="RefundRow" type="HBoxContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+
+[node name="Refund" type="Button" parent="Panel/Margin/VBox/RefundRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Refund $"
+
+[node name="Remove" type="Button" parent="Panel/Margin/VBox/RefundRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Remove (no $)"
+
+[node name="StatusLabel" type="Label" parent="Panel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+text = "F10 toggles this panel"
+
+[connection signal="item_selected" from="Panel/Margin/VBox/DisplayRow/ResOption" to="." method="_on_res_selected"]
+[connection signal="item_selected" from="Panel/Margin/VBox/DisplayRow/ScaleOption" to="." method="_on_scale_selected"]
+[connection signal="toggled" from="Panel/Margin/VBox/DisplayRow2/Fullscreen" to="." method="_on_fullscreen_toggled"]
+[connection signal="pressed" from="Panel/Margin/VBox/MoneyRow/Give1000" to="." method="_on_give_1000"]
+[connection signal="pressed" from="Panel/Margin/VBox/MoneyRow/Give5000" to="." method="_on_give_5000"]
+[connection signal="pressed" from="Panel/Margin/VBox/BuyRow/Buy" to="." method="_on_buy"]
+[connection signal="pressed" from="Panel/Margin/VBox/BuyRow/ClearWeapons" to="." method="_on_clear_weapons"]
+[connection signal="pressed" from="Panel/Margin/VBox/RefundRow/Refund" to="." method="_on_refund"]
+[connection signal="pressed" from="Panel/Margin/VBox/RefundRow/Remove" to="." method="_on_refund_no_cash"]

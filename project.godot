@@ -18,7 +18,7 @@ config/name="CounterSpell"
 config/description="A spiritual successor FPS inspired by the Shadowrun universe. Cyberpunk meets urban fantasy in fast-paced first-person combat."
 config/version="0.1.0-dev"
 config/tags=PackedStringArray("fps", "multiplayer", "steam", "cyberpunk", "fantasy")
-run/main_scene="res://scenes/ui/main_menu.tscn"
+run/main_scene="uid://dw6cwjpm00cs8"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
 
@@ -37,6 +37,13 @@ NetworkPerformance="*uid://cqgf7aqmjfoa3"
 WindowTiler="*uid://cmqjajhjgffm1"
 NetworkSimulator="*uid://1y2ey1e6qjwr"
 PingService="*res://scripts/abilities/ping_service.gd"
+DisplayConfig="*res://scripts/config/display_settings.gd"
+PlaytestViz="*res://scripts/dev/playtest_viz.gd"
+ShaderPrewarm="*res://scripts/dev/shader_prewarm.gd"
+
+[counterspell]
+
+release_build=false
 
 [debug]
 
@@ -44,8 +51,8 @@ file_logging/enable_file_logging=true
 
 [display]
 
-window/size/viewport_width=2560
-window/size/viewport_height=1440
+window/size/viewport_width=2880
+window/size/viewport_height=1620
 window/size/initial_position_type=2
 
 [editor_plugins]
@@ -254,7 +261,3 @@ renderer/rendering_method.mobile="gl_compatibility"
 initialization/auto_init=false
 initialization/app_data/app_id=480
 initialization/processes/embed_callbacks=true
-
-[counterspell]
-
-release_build=false

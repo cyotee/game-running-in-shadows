@@ -45,3 +45,15 @@ func test_carry_weight_slows_elf() -> void:
 	controller.weapon_rig.grant("sniper", 1)  # heavy
 
 	assert_float(controller.weapon_rig.carry_weight_mult()).is_equal(0.65)
+
+
+func test_clear_key_frees_slot_for_replacement() -> void:
+	var runner := scene_runner(CONTROLLER_SCENE)
+	var controller: FPSController = runner.scene()
+	var rig: WeaponRig = controller.weapon_rig
+	assert_str(rig.slot1).is_equal("rifle")
+	rig.clear_key("rifle")
+	assert_str(rig.slot1).is_equal("")
+	assert_int(rig.active_slot).is_equal(2)  # fell back to pistol
+	rig.grant("smg", 1)
+	assert_str(rig.slot1).is_equal("smg")

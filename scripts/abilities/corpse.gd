@@ -30,6 +30,8 @@ var _pending_reclaim_destroy: bool = false
 func _ready() -> void:
 	add_to_group("corpses")
 	rollback_synchronizer.process_settings()
+	PlaytestViz.attach_disc(self, MatchConfig.get_value("corpse.loot_range_m"),
+		Color(0.7, 0.7, 0.5, 0.15))
 
 
 func init(spawn_position: Vector3, owner_id: int, tick: int, snapshot: Array) -> void:

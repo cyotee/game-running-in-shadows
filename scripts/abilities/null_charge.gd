@@ -10,6 +10,14 @@ func _field_groups() -> Array[String]:
 	return ["null_fields"]
 
 
+func _range_config_key() -> String:
+	return "ability.null_radius_m"
+
+
+func _range_viz_color() -> Color:
+	return Color(0.15, 0.1, 0.25, 0.3)
+
+
 func _field_tick(delta: float, _tick: int, is_fresh: bool) -> void:
 	var radius := MatchConfig.get_value("ability.null_radius_m")
 	var drain := MatchConfig.get_value("ability.null_drain_per_s") * delta

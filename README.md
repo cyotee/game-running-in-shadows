@@ -117,6 +117,49 @@ Controller (joypad) events are also bound for many actions — see Input Map for
 
 1. Fire (**LMB**), ADS (**RMB**), reload (**R**), swap (**Q** / **1** / **2**).
 2. If a blade is equipped: switching to it should go third-person; swing with fire / ADS as bound.
+3. **Dev Arsenal (F10)** in `test_arena` — give money, buy catalog gear, **refund/remove** so you can buy a replacement (see below).
+
+### Playtest visualization (ranges / tracers)
+
+Mechanics ship before art. For tuning, translucent **MatchConfig-accurate** volumes are on by default (`debug.playtest_viz` = 1 in MatchConfig):
+
+| What | Visual |
+|------|--------|
+| Lifebloom / Tangle / Null | Disc + sphere = heal/pull/suppress **radius in meters** |
+| Grenade detonation | Outer blast + inner falloff shells |
+| Repulse | Sphere at push volume (`repulse_range`) |
+| Hitscan | Short tracer (yellow = body hit, grey = world/miss) |
+| Familiar | Aggro disc + melee sphere |
+| Corpse | Loot range disc |
+| Players | Capsule silhouette for remotes; simple viewmodel for local FP |
+
+Turn off: set `debug.playtest_viz` to `0` in MatchConfig / `user://match_config.json`. Full art is Milestone D; placeholders stay in `models/placeholders/` for later.
+
+### Dev Arsenal (F10) — kit testing in the arena
+
+In **test_arena**, press **F10** to open the Dev Arsenal panel (cursor unlocks while open).
+
+| Control | What it does |
+|---------|----------------|
+| **Resolution dropdown** | Live window resize (720p → 1440p, or native). **Does not work if the Game is embedded in the editor** — disable *Game → Embed Game on Next Play*, then F5 again |
+| **UI scale dropdown** | Scales UI/HUD (works even when embedded). Prefer **x1.5 / x2** if text is hard to read |
+| **Fullscreen** | Fullscreen / windowed |
+| **+$1000** / **+$5000** | Grant cash (no wage event) |
+| **Catalog + Buy** | Purchase any priced item (weapons, abilities, augments). Skips buy-phase gate. |
+| **Owned + Refund $** | Remove ownership, refund list price, free cyber slots, clear weapon from slots |
+| **Remove (no $)** | Same undeliver, no cash back |
+| **Clear weapons** | Refund/clear non-pistol weapons so you can re-buy a different loadout |
+
+Display choices **persist** in `user://display_settings.json` (cleared if you delete that file). Defaults: **2880×1620** (1080p + 50%), UI scale ×1.25.
+
+**CLI overrides** (Godot user args after `--`):
+
+```bash
+/Applications/Godot.app/Contents/MacOS/Godot --path . -- --window-size=1920x1080 --ui-scale=1.5
+/Applications/Godot.app/Contents/MacOS/Godot --path . -- --window-size=native --fullscreen
+```
+
+Use **Refund** when you want to swap SMG→Rifle or free an eye slot (Pulse Sight / Smart Rig) and buy the other. Pistol is permanent free sidearm and cannot be refunded.
 
 ### 3. Resonance
 

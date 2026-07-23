@@ -21,6 +21,7 @@ func _ready() -> void:
 	for g in _field_groups():
 		add_to_group(g)
 	rollback_synchronizer.process_settings()
+	_attach_playtest_range()
 
 
 func setup(field_position: Vector3, caster: int, hp_value: float, lifetime_ticks: int) -> void:
@@ -84,3 +85,23 @@ func _field_groups() -> Array[String]:
 
 func _field_tick(_delta: float, _tick: int, _is_fresh: bool) -> void:
 	pass
+
+
+## MatchConfig key for effect radius (empty = no playtest range mesh).
+func _range_config_key() -> String:
+	return ""
+
+
+func _range_viz_color() -> Color:
+	return Color(1.0, 1.0, 1.0, 0.18)
+
+
+func _attach_playtest_range() -> void:
+	var key := _range_config_key()
+	if key == "":
+		return
+	var radius := MatchConfig.get_value(key)
+	var color := _range_viz_color()
+	# Disc = ground footprint; sphere = full 3D radius (both MatchConfig-accurate).
+	PlaytestViz.attach_disc(self, radius, color)
+	PlaytestViz.attach_sphere(self, radius, Color(color.r, color.g, color.b, color.a * 0.55))

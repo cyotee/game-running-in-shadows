@@ -9,13 +9,22 @@ extends Node
 signal money_changed(peer_id: int, amount: int)
 
 # Body-slot map for cybernetic Augments (MECHANICS_REFERENCE §4: shared slots
-# are mutually exclusive; cybernetics are PERMANENT once bought for the
-# match). Weapons occupy no body slot. The G5 ability waves fill this in:
-# e.g. "pulse_sight": ["eye"], "smart_rig": ["eye", "full_body"],
-# "overclock_rig": ["full_body"].
-const CYBER_SLOTS: Dictionary = {}
+# are mutually exclusive; cybernetics are permanent in real matches).
+# Dev arsenal can refund to free slots for kit swapping in the test arena.
+const CYBER_SLOTS: Dictionary = {
+	"pulse_sight": ["eye"],
+	"smart_rig": ["eye", "full_body"],
+	"overclock": ["full_body"],
+}
 
 const DEFAULT_LOADOUT: Array[String] = ["rifle", "smg"]
+
+# Catalog keys the buy menu / tests know about (weapons + priced abilities).
+const CATALOG: Array[String] = [
+	"pistol", "smg", "shotgun", "rifle", "sniper", "blade",
+	"slip", "wraith", "grenades", "lifebloom", "tangle", "null_charge",
+	"reclaim", "familiar", "pulse_sight", "smart_rig", "overclock",
+]
 
 var money: Dictionary = {}
 var owned: Dictionary = {}  # peer_id -> {item: true}
@@ -81,17 +90,22 @@ func _cyber_slots_of(item: String) -> Array:
 	return CYBER_SLOTS.get(item, [])
 
 
-func try_buy(peer_id: int, item: String) -> bool:
+func try_buy(peer_id: int, item: String, ignore_phase: bool = false) -> bool:
 	if not is_authority():
 		return false
-	if _match_state != null and _match_state.phase != MatchState.BUY_PHASE:
+	if not ignore_phase and _match_state != null \
+			and _match_state.phase != MatchState.BUY_PHASE:
 		return false
 	if not money.has(peer_id) or owns(peer_id, item):
 		return false
-	var price := int(MatchConfig.get_value("price.%s" % item))
+	# Unknown catalog keys are not for sale (avoids free buy on typos).
+	var price_key := "price.%s" % item
+	if not MatchConfig.DEFAULTS.has(price_key):
+		return false
+	var price := int(MatchConfig.get_value(price_key))
 	if money[peer_id] < price:
 		return false
-	# Cybernetic slot exclusivity + permanence.
+	# Cybernetic slot exclusivity + permanence (dev refund can free slots).
 	var slots: Array = _cyber_slots_of(item)
 	for slot in slots:
 		if cyber_slots_used[peer_id].has(slot):
@@ -105,6 +119,39 @@ func try_buy(peer_id: int, item: String) -> bool:
 	return true
 
 
+## Dev / test: grant funds without a wage event.
+func give_money(peer_id: int, amount: int) -> void:
+	if not is_authority() or amount == 0:
+		return
+	if not money.has(peer_id):
+		register_player(peer_id)
+	money[peer_id] = maxi(0, money[peer_id] + amount)
+	_sync_money(peer_id)
+
+
+## Dev / test: refund a purchase so a replacement can be bought.
+## Refunds list price, frees cyber slots, and clears weapon slots that hold the item.
+func refund(peer_id: int, item: String, refund_cash: bool = true) -> bool:
+	if not is_authority() or not owns(peer_id, item):
+		return false
+	if item == "pistol":
+		return false  # free sidearm is always owned in MVP
+	if refund_cash and MatchConfig.DEFAULTS.has("price.%s" % item):
+		money[peer_id] = money.get(peer_id, 0) + int(MatchConfig.get_value("price.%s" % item))
+	owned[peer_id].erase(item)
+	if cyber_slots_used.has(peer_id):
+		var used: Dictionary = cyber_slots_used[peer_id]
+		var to_erase: Array = []
+		for slot in used.keys():
+			if used[slot] == item:
+				to_erase.append(slot)
+		for slot in to_erase:
+			used.erase(slot)
+	_undeliver(peer_id, item)
+	_sync_money(peer_id)
+	return true
+
+
 func apply_loadout(peer_id: int, items: Array) -> void:
 	# Shopping list (decided 2026-07-15): walk in priority order; skip owned;
 	# skip unaffordable and CONTINUE down the list.
@@ -114,16 +161,44 @@ func apply_loadout(peer_id: int, items: Array) -> void:
 		try_buy(peer_id, item)
 
 
+func _player_for(peer_id: int) -> FPSController:
+	if _session != null:
+		var from_session: FPSController = _session.get_node_or_null(
+			"Players/%d" % peer_id) as FPSController
+		if from_session != null:
+			return from_session
+	# Arena / offline: first matching authority player.
+	for node in get_tree().get_nodes_in_group("players"):
+		var p := node as FPSController
+		if p != null and p.input.get_multiplayer_authority() == peer_id:
+			return p
+	return null
+
+
 func _deliver(peer_id: int, item: String) -> void:
-	if _session == null:
-		return
-	var player: FPSController = _session.get_node_or_null("Players/%d" % peer_id)
+	var player := _player_for(peer_id)
 	if player == null:
 		return
-	# Weapons: pistol -> slot 2, everything else -> slot 1. Non-weapon items
-	# (cyber, abilities) deliver through their own systems in G5.
+	# Weapons: pistol -> slot 2, everything else -> slot 1. Abilities/augments
+	# are currently always-castable; ownership is tracked for buy/refund UX.
 	if MatchConfig.DEFAULTS.has("weapon.%s.damage" % item):
 		player.queue_grant(item, 2 if item == "pistol" else 1)
+	elif item == "grenades":
+		player.queue_set_grenade_stock(int(MatchConfig.get_value("ability.grenade_stock")))
+	elif item == "null_charge":
+		player.queue_set_null_stock(int(MatchConfig.get_value("ability.null_stock")))
+
+
+func _undeliver(peer_id: int, item: String) -> void:
+	var player := _player_for(peer_id)
+	if player == null:
+		return
+	if MatchConfig.DEFAULTS.has("weapon.%s.damage" % item):
+		player.queue_clear_weapon(item)
+	elif item == "grenades":
+		player.queue_set_grenade_stock(0)
+	elif item == "null_charge":
+		player.queue_set_null_stock(0)
 
 
 @rpc("any_peer", "call_remote", "reliable")

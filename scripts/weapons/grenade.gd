@@ -72,6 +72,11 @@ func _apply_aoe(tick: int) -> void:
 	var inner := MatchConfig.get_value("ability.grenade_inner_radius_m")
 	var dmg := MatchConfig.get_value("ability.grenade_damage")
 	var attacker := _find_thrower()
+	# View-only blast shell (outer radius) + tighter inner ring.
+	PlaytestViz.flash_sphere(get_tree(), global_position, radius,
+		Color(1.0, 0.45, 0.1, 0.35), 0.4)
+	PlaytestViz.flash_sphere(get_tree(), global_position, inner,
+		Color(1.0, 0.85, 0.2, 0.45), 0.25)
 	for node in get_tree().get_nodes_in_group("players"):
 		var player := node as FPSController
 		if player == null:

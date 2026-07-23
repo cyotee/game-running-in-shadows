@@ -181,6 +181,11 @@ const DEFAULTS: Dictionary = {
 	"economy.kill_bonus": 200.0,
 	"price.pistol": 0.0, "price.smg": 600.0, "price.shotgun": 1200.0,
 	"price.rifle": 1600.0, "price.sniper": 2800.0, "price.blade": 1200.0,
+	"price.reclaim": 1800.0,
+	"price.familiar": 2500.0,
+	"price.pulse_sight": 1700.0,
+	"price.smart_rig": 1700.0,
+	"price.overclock": 1800.0,
 	# --- Match flow ---
 	"match.buy_phase_s": 15.0,
 	"match.round_time_s": 180.0,
@@ -195,6 +200,8 @@ const DEFAULTS: Dictionary = {
 	"input.look_max_pitch_deg_s": 180.0,
 	"input.slowdown_mult": 0.6,
 	"input.slowdown_range_m": 40.0,
+	# --- Playtest viz (translucent radii / tracers; 0 = off) ---
+	"debug.playtest_viz": 1.0,
 }
 
 var _values: Dictionary = {}

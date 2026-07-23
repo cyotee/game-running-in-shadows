@@ -31,6 +31,18 @@ func grant(key: String, slot: int) -> void:
 		slot2 = key
 
 
+## Clear any slot holding this key (dev refund / kit swap).
+func clear_key(key: String) -> void:
+	if slot1 == key:
+		slot1 = ""
+		if active_slot == 1 and slot2 != "":
+			active_slot = 2
+	if slot2 == key:
+		slot2 = ""
+		if active_slot == 2 and slot1 != "":
+			active_slot = 1
+
+
 func weapon_by_key(key: String) -> WeaponBase:
 	for child in get_children():
 		if child is WeaponBase and child.weapon_key == key:

@@ -82,6 +82,9 @@ var _pending_reclaim_snapshot: Array = []
 # Weapon grant queue (rig slots are rollback state; grants must apply
 # inside the tick, same pattern as respawn).
 var _pending_grants: Array[Array] = []
+var _pending_clear_keys: Array[String] = []
+var _pending_grenade_stock: int = -1
+var _pending_null_stock: int = -1
 
 # Damage queued to apply inside the tick. Out-of-band health writes are
 # discarded by the rollback state restore, so external/test-initiated damage
@@ -118,6 +121,7 @@ func _ready() -> void:
 	camera.current = is_local
 	if is_local and DisplayServer.get_name() != "headless":
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	_setup_playtest_body_mesh(is_local)
 
 
 func _process(_delta: float) -> void:
@@ -245,6 +249,16 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 		for grant in _pending_grants:
 			weapon_rig.grant(grant[0], grant[1])
 		_pending_grants.clear()
+	if not _pending_clear_keys.is_empty() and is_fresh:
+		for key in _pending_clear_keys:
+			weapon_rig.clear_key(key)
+		_pending_clear_keys.clear()
+	if _pending_grenade_stock >= 0 and is_fresh:
+		grenade_stock = _pending_grenade_stock
+		_pending_grenade_stock = -1
+	if _pending_null_stock >= 0 and is_fresh:
+		null_stock = _pending_null_stock
+		_pending_null_stock = -1
 
 	# Death is simulation state: a dead body freezes where it fell (full
 	# body persistence is a pillar; the corpse system extends this later).
@@ -486,6 +500,18 @@ func take_damage(amount: float, attacker: FPSController, tick: int) -> void:
 
 func queue_grant(key: String, slot: int) -> void:
 	_pending_grants.append([key, slot])
+
+
+func queue_clear_weapon(key: String) -> void:
+	_pending_clear_keys.append(key)
+
+
+func queue_set_grenade_stock(amount: int) -> void:
+	_pending_grenade_stock = amount
+
+
+func queue_set_null_stock(amount: int) -> void:
+	_pending_null_stock = amount
 
 
 func reset_for_round(spawn_position: Vector3) -> void:
@@ -1179,6 +1205,10 @@ func _cast_repulse(tick: int, is_fresh: bool) -> void:
 	# during rollback re-simulation.
 	if is_fresh:
 		_push_nearby_bodies(cast_dir)
+		# Match sim query: sphere of repulse_range centered ahead of cast dir.
+		var viz_pos := global_position + cast_dir * 4.0
+		PlaytestViz.flash_sphere(get_tree(), viz_pos, repulse_range,
+			Color(0.35, 0.75, 1.0, 0.28), 0.3)
 		print("Repulse cast (downward=%s, tick=%d)" % [looking_down, tick])
 
 
@@ -1229,3 +1259,35 @@ func _try_deploy_glide(tick: int) -> void:
 		if velocity.y < 0.0:
 			velocity.y *= 0.3
 		print("Glide deployed (tick=%d)" % tick)
+
+
+## Capsule body + simple viewmodel so targets and third-person have a silhouette.
+## Local FP hides the body mesh (camera is inside it); remotes stay visible.
+func _setup_playtest_body_mesh(is_local: bool) -> void:
+	if not PlaytestViz.enabled():
+		return
+	if get_node_or_null("PlaytestBody") != null:
+		return
+	var body := MeshInstance3D.new()
+	body.name = "PlaytestBody"
+	var cap := CapsuleMesh.new()
+	cap.radius = 0.4
+	cap.height = 1.8
+	body.mesh = cap
+	body.position = Vector3(0.0, 0.9, 0.0)
+	body.material_override = PlaytestViz.unshaded_mat(Color(0.35, 0.55, 0.85, 0.85))
+	body.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	# First-person: hide capsule so it doesn't fill the camera.
+	body.visible = not is_local
+	add_child(body)
+	# Simple viewmodel box so fire feels aimed (local only).
+	if is_local and weapon_rig != null:
+		var stub := MeshInstance3D.new()
+		stub.name = "PlaytestViewmodel"
+		var box := BoxMesh.new()
+		box.size = Vector3(0.08, 0.08, 0.45)
+		stub.mesh = box
+		stub.position = Vector3(0.0, 0.0, -0.2)
+		stub.material_override = PlaytestViz.unshaded_mat(Color(0.2, 0.2, 0.22, 1.0))
+		stub.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		weapon_rig.add_child(stub)

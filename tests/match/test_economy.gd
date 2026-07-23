@@ -86,5 +86,45 @@ func test_cyber_slot_exclusivity_and_permanence() -> void:
 	assert_bool(slotted.try_buy(10, "smg")).is_true()   # takes the eye slot
 	assert_bool(slotted.try_buy(10, "rifle")).is_false()  # eye slot occupied
 	assert_str(slotted.cyber_slots_used[10]["eye"]).is_equal("smg")
-	# Permanence: owned items can never be re-bought (or removed).
+	# Permanence in live matches: owned items cannot be re-bought without refund.
 	assert_bool(slotted.try_buy(10, "smg")).is_false()
+
+
+func test_give_money_and_ignore_phase_for_dev() -> void:
+	match_state.phase = MatchState.ROUND_LIVE
+	assert_bool(economy.try_buy(10, "smg")).is_false()
+	assert_bool(economy.try_buy(10, "smg", true)).is_true()  # ignore_phase (dev arsenal)
+	assert_int(economy.money_of(10)).is_equal(200)
+	economy.give_money(10, 1000)
+	assert_int(economy.money_of(10)).is_equal(1200)
+	# Unknown item is never free-bought.
+	assert_bool(economy.try_buy(10, "not_a_real_item", true)).is_false()
+
+
+func test_refund_returns_cash_and_allows_replacement() -> void:
+	assert_bool(economy.try_buy(10, "smg")).is_true()
+	assert_int(economy.money_of(10)).is_equal(200)
+	assert_bool(economy.owns(10, "smg")).is_true()
+	assert_bool(economy.refund(10, "smg", true)).is_true()
+	assert_bool(economy.owns(10, "smg")).is_false()
+	assert_int(economy.money_of(10)).is_equal(800)
+	assert_bool(economy.try_buy(10, "smg")).is_true()
+	# Remove without cash refund.
+	assert_bool(economy.refund(10, "smg", false)).is_true()
+	assert_int(economy.money_of(10)).is_equal(200)
+	# Free sidearm cannot be refunded.
+	assert_bool(economy.refund(10, "pistol", true)).is_false()
+	assert_bool(economy.owns(10, "pistol")).is_true()
+
+
+func test_refund_frees_cyber_slots() -> void:
+	var slotted: Economy = auto_free(SlottedEconomy.new())
+	add_child(slotted)
+	slotted.setup(null, match_state)
+	slotted.register_player(10)
+	slotted.money[10] = 10000
+	assert_bool(slotted.try_buy(10, "smg")).is_true()
+	assert_bool(slotted.try_buy(10, "rifle")).is_false()
+	assert_bool(slotted.refund(10, "smg", true)).is_true()
+	assert_bool(slotted.cyber_slots_used[10].has("eye")).is_false()
+	assert_bool(slotted.try_buy(10, "rifle")).is_true()

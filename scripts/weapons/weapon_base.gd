@@ -85,7 +85,7 @@ func _can_fire(tick: int) -> bool:
 		and NetworkTime.seconds_between(last_fire_tick, tick) >= config("fire_interval_s")
 
 
-func _rollback_tick(delta: float, tick: int, _is_fresh: bool) -> void:
+func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 	if _controller().rollback_synchronizer.is_predicting():
 		return
 	_weapon_tick(delta, tick)
@@ -95,7 +95,7 @@ func _rollback_tick(delta: float, tick: int, _is_fresh: bool) -> void:
 	fire_action.set_active(_wants_fire(tick) and _can_fire(tick))
 	match fire_action.get_status():
 		RewindableAction.CONFIRMING, RewindableAction.ACTIVE:
-			_fire(tick)
+			_fire(tick, is_fresh)
 		RewindableAction.CANCELLING:
 			fire_action.erase_context()
 
@@ -104,11 +104,11 @@ func _weapon_tick(_delta: float, _tick: int) -> void:
 	pass
 
 
-func _fire(tick: int) -> void:
+func _fire(tick: int, is_fresh: bool = false) -> void:
 	last_fire_tick = tick
 	mag -= 1.0
 	for dir in _shot_directions(tick):
-		_hitscan(dir, tick)
+		_hitscan(dir, tick, is_fresh)
 	_on_fire_tick(tick)
 
 
@@ -135,10 +135,11 @@ func _falloff(distance: float) -> float:
 	return lerpf(1.0, config("falloff_min_mult"), (distance - start) / (end - start))
 
 
-func _hitscan(direction: Vector3, tick: int) -> void:
+func _hitscan(direction: Vector3, tick: int, is_fresh: bool = false) -> void:
 	var me := _controller()
 	var from := me.camera.global_position
-	var query := PhysicsRayQueryParameters3D.create(from, from + direction * 200.0)
+	var end := from + direction * 200.0
+	var query := PhysicsRayQueryParameters3D.create(from, end)
 	query.collide_with_areas = true
 	query.collide_with_bodies = true
 	query.collision_mask = 0b10011  # world (1) + hit zones (2) + Tangle block (5)
@@ -147,23 +148,27 @@ func _hitscan(direction: Vector3, tick: int) -> void:
 		excludes.append(zone_area.get_rid())
 	query.exclude = excludes
 	var result := me.get_world_3d().direct_space_state.intersect_ray(query)
-	if result.is_empty():
-		return
-	var collider: Object = result.collider
-	# Tangle blocks direct fire: the ray stops at the vortex, no damage past.
-	if collider is StaticBody3D and collider.is_in_group("tangle_block"):
-		return
-	# Familiar minion body (layer 5 / familiar_hit group).
-	if collider is StaticBody3D and collider.is_in_group("familiar_hit"):
-		var fam := collider.get_parent() as Familiar
-		if fam != null and not fam._is_dead():
-			var fam_dmg := config("damage") * _falloff(from.distance_to(result.position))
-			fam.take_familiar_damage(fam_dmg)
-		return
-	if collider is Area3D and collider.has_meta("player"):
-		var victim: FPSController = collider.get_meta("player")
-		if victim == me:
-			return
-		var dmg := config("damage") * _falloff(from.distance_to(result.position))
-		victim.take_zone_damage(dmg, weapon_key, str(collider.get_meta("zone")), me, tick)
-		NetworkRollback.mutate(victim)
+	var hit_pos: Vector3 = end if result.is_empty() else result.position
+	var hit_player := false
+	if not result.is_empty():
+		var collider: Object = result.collider
+		# Tangle blocks direct fire: the ray stops at the vortex, no damage past.
+		if collider is StaticBody3D and collider.is_in_group("tangle_block"):
+			pass
+		# Familiar minion body (layer 5 / familiar_hit group).
+		elif collider is StaticBody3D and collider.is_in_group("familiar_hit"):
+			var fam := collider.get_parent() as Familiar
+			if fam != null and not fam._is_dead():
+				var fam_dmg := config("damage") * _falloff(from.distance_to(result.position))
+				fam.take_familiar_damage(fam_dmg)
+				hit_player = true
+		elif collider is Area3D and collider.has_meta("player"):
+			var victim: FPSController = collider.get_meta("player")
+			if victim != me:
+				var dmg := config("damage") * _falloff(from.distance_to(result.position))
+				victim.take_zone_damage(dmg, weapon_key, str(collider.get_meta("zone")), me, tick)
+				NetworkRollback.mutate(victim)
+				hit_player = true
+	if is_fresh:
+		var col := Color(1.0, 0.9, 0.2, 0.9) if hit_player else Color(0.7, 0.75, 0.85, 0.55)
+		PlaytestViz.flash_line(me.get_tree(), from, hit_pos, col)
