@@ -18,7 +18,7 @@ config/name="CounterSpell"
 config/description="A spiritual successor FPS inspired by the Shadowrun universe. Cyberpunk meets urban fantasy in fast-paced first-person combat."
 config/version="0.1.0-dev"
 config/tags=PackedStringArray("fps", "multiplayer", "steam", "cyberpunk", "fantasy")
-run/main_scene="uid://dw6cwjpm00cs8"
+run/main_scene="res://scenes/ui/main_menu.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
 
@@ -28,6 +28,7 @@ SteamManager="*res://scripts/steamworks.gd"
 McpInteractionServer="*res://scripts/dev/mcp_interaction_server.gd"
 InputTrace="*res://scripts/dev/input_trace.gd"
 MatchConfig="*res://scripts/config/match_config.gd"
+InputBindings="*res://scripts/config/input_bindings.gd"
 SessionManager="*res://scripts/session/session_manager.gd"
 NetworkTime="*uid://cnqdxyjptkfvp"
 NetworkTimeSynchronizer="*uid://5rmn2ik3kjo8"
@@ -39,6 +40,7 @@ NetworkSimulator="*uid://1y2ey1e6qjwr"
 PingService="*res://scripts/abilities/ping_service.gd"
 DisplayConfig="*res://scripts/config/display_settings.gd"
 PlaytestViz="*res://scripts/dev/playtest_viz.gd"
+PlaytestFxBus="*res://scripts/dev/playtest_fx_bus.gd"
 ShaderPrewarm="*res://scripts/dev/shader_prewarm.gd"
 
 [counterspell]
@@ -51,9 +53,11 @@ file_logging/enable_file_logging=true
 
 [display]
 
-window/size/viewport_width=2880
-window/size/viewport_height=1620
+window/size/viewport_height=1080
 window/size/initial_position_type=2
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+#Design/stretchbase(2DUIlayout).Runtimeresolutionchangeswindowsize#viaDisplayConfig#3Dalwaysrendersattherealwindowpixelsize.window/size/viewport_width=1920
 
 [editor_plugins]
 

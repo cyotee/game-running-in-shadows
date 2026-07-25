@@ -102,6 +102,10 @@ func _attach_playtest_range() -> void:
 		return
 	var radius := MatchConfig.get_value(key)
 	var color := _range_viz_color()
+	# Blend base field color with stable owner accent so multi-caster fields
+	# are attributable in playtests.
+	var owner_c := PlaytestViz.owner_color(caster_peer)
+	color = color.lerp(Color(owner_c.r, owner_c.g, owner_c.b, color.a), 0.45)
 	# Disc = ground footprint; sphere = full 3D radius (both MatchConfig-accurate).
 	PlaytestViz.attach_disc(self, radius, color)
 	PlaytestViz.attach_sphere(self, radius, Color(color.r, color.g, color.b, color.a * 0.55))

@@ -21,6 +21,7 @@ var _display_syncing: bool = false
 @onready var _scale_option: OptionButton = %ScaleOption
 @onready var _fullscreen: CheckButton = %Fullscreen
 @onready var _display_info: Label = %DisplayInfo
+var _viz_check: CheckButton
 
 
 func _ready() -> void:
@@ -34,7 +35,30 @@ func _ready() -> void:
 		InputMap.action_add_event(TOGGLE_ACTION, ev)
 	_ensure_economy()
 	_setup_display_controls()
+	_setup_playtest_viz_toggle()
 	_rebuild_catalog()
+	_refresh()
+
+
+func _setup_playtest_viz_toggle() -> void:
+	# Dev-only: toggle MatchConfig debug.playtest_viz and re-publish host policy.
+	_viz_check = CheckButton.new()
+	_viz_check.name = "PlaytestVizCheck"
+	_viz_check.text = "Playtest Viz"
+	_viz_check.button_pressed = MatchConfig.get_value("debug.playtest_viz") > 0.5
+	_viz_check.toggled.connect(_on_playtest_viz_toggled)
+	# Attach under panel if present; otherwise root.
+	var host: Node = _root_panel if _root_panel != null else self
+	host.add_child(_viz_check)
+
+
+func _on_playtest_viz_toggled(pressed: bool) -> void:
+	MatchConfig.set_value("debug.playtest_viz", 1.0 if pressed else 0.0)
+	# Host re-broadcasts session policy so clients match.
+	var bus := get_node_or_null("/root/PlaytestFxBus")
+	if bus != null and bus.has_method("host_publish_policy"):
+		bus.call("host_publish_policy")
+	_status = "Playtest Viz %s" % ("ON" if pressed else "OFF")
 	_refresh()
 
 

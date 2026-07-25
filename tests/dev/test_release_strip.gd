@@ -33,6 +33,12 @@ func test_input_trace_records_when_enabled() -> void:
 	assert_int(recent[0]["tick"]).is_equal(42)
 
 
+func test_playtest_viz_disabled_in_release() -> void:
+	OS.set_environment("COUNTERSPELL_RELEASE", "1")
+	assert_bool(PlaytestViz.enabled()).is_false()
+	OS.set_environment("COUNTERSPELL_RELEASE", "")
+
+
 func test_mcp_release_mode_helper_reads_project_setting() -> void:
 	# Autoload already constructed; exercise the same release predicate the
 	# server uses so strip policy is not vaporware.

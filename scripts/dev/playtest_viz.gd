@@ -19,6 +19,10 @@ func enabled() -> bool:
 		return false
 	if _release_mode():
 		return false
+	# Host-forced session policy (PlaytestFxBus) overrides local MatchConfig.
+	var bus := get_node_or_null("/root/PlaytestFxBus")
+	if bus != null and bus.has_method("session_active") and bus.session_active():
+		return bus.session_viz_on()
 	return MatchConfig.get_value("debug.playtest_viz") > 0.5
 
 
