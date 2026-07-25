@@ -202,6 +202,21 @@ const DEFAULTS: Dictionary = {
 	"input.slowdown_range_m": 40.0,
 	# --- Playtest viz (translucent radii / tracers; 0 = off) ---
 	"debug.playtest_viz": 1.0,
+	"debug.viz.tracer_duration_s": 0.28,
+	"debug.viz.hit_marker_duration_s": 0.2,
+	"debug.viz.muzzle_duration_s": 0.07,
+	"debug.viz.show_damage_pips": 1.0,
+	"debug.viz.combat_log_lines": 8.0,
+	"debug.viz.max_active_fx": 64.0,
+	"debug.viz.max_tracers_per_tick": 12.0,
+	"debug.viz.replicate": 1.0,
+	"debug.viz.show_state_silhouettes": 1.0,
+	"debug.viz.show_slip_ghost": 1.0,
+	"debug.viz.host_force_session": 1.0,
+	"debug.viz.show_smart_rig_wedge": 1.0,
+	"debug.viz.smart_rig_wedge_deg": 20.0,
+	"debug.viz.smart_rig_wedge_range_m": 40.0,
+	"debug.viz.grenade_trail_interval_s": 0.08,
 }
 
 var _values: Dictionary = {}

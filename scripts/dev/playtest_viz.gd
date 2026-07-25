@@ -8,7 +8,14 @@ extends Node
 func enabled() -> bool:
 	if DisplayServer.get_name() == "headless":
 		return false
+	if _release_mode():
+		return false
 	return MatchConfig.get_value("debug.playtest_viz") > 0.5
+
+
+func _release_mode() -> bool:
+	return OS.get_environment("COUNTERSPELL_RELEASE") == "1" \
+		or bool(ProjectSettings.get_setting("counterspell/release_build", false))
 
 
 func unshaded_mat(color: Color) -> StandardMaterial3D:
