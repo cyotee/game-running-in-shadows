@@ -63,6 +63,12 @@ func _controller() -> FPSController:
 	return _rig._controller
 
 
+func _controller_or_null() -> FPSController:
+	if _rig == null:
+		return null
+	return _rig._controller
+
+
 func supports_ads() -> bool:
 	return false
 
@@ -150,6 +156,9 @@ func _hitscan(direction: Vector3, tick: int, is_fresh: bool = false) -> void:
 	var result := me.get_world_3d().direct_space_state.intersect_ray(query)
 	var hit_pos: Vector3 = end if result.is_empty() else result.position
 	var hit_player := false
+	# Confirmed post-falloff damage float passed into the damage API (not zone mult).
+	var applied_damage := 0.0
+	var zone_name := ""
 	if not result.is_empty():
 		var collider: Object = result.collider
 		# Tangle blocks direct fire: the ray stops at the vortex, no damage past.
@@ -161,14 +170,65 @@ func _hitscan(direction: Vector3, tick: int, is_fresh: bool = false) -> void:
 			if fam != null and not fam._is_dead():
 				var fam_dmg := config("damage") * _falloff(from.distance_to(result.position))
 				fam.take_familiar_damage(fam_dmg)
+				applied_damage = fam_dmg
+				zone_name = "body"
 				hit_player = true
 		elif collider is Area3D and collider.has_meta("player"):
 			var victim: FPSController = collider.get_meta("player")
 			if victim != me:
 				var dmg := config("damage") * _falloff(from.distance_to(result.position))
-				victim.take_zone_damage(dmg, weapon_key, str(collider.get_meta("zone")), me, tick)
+				zone_name = str(collider.get_meta("zone"))
+				victim.take_zone_damage(dmg, weapon_key, zone_name, me, tick)
 				NetworkRollback.mutate(victim)
+				applied_damage = dmg
 				hit_player = true
-	if is_fresh:
-		var col := Color(1.0, 0.9, 0.2, 0.9) if hit_player else Color(0.7, 0.75, 0.85, 0.55)
-		PlaytestViz.flash_line(me.get_tree(), from, hit_pos, col)
+	# Local presentation only on fresh sim frames (rollback resim must not spam FX).
+	_present_hitscan_fx(from, hit_pos, zone_name, applied_damage, hit_player, is_fresh)
+
+
+## Local playtest FX after a confirmed hitscan apply. is_fresh=false skips all draw.
+## Returns true when presentation was attempted (fresh frame), false when skipped.
+func _present_hitscan_fx(
+		from: Vector3, hit_pos: Vector3, zone: String, damage: float,
+		hit_player: bool, is_fresh: bool = true
+) -> bool:
+	if not is_fresh:
+		return false
+	# Optional Task 4 bus — resolve by path so missing autoload never parse-errors.
+	_notify_hitscan_bus(from, hit_pos, zone, damage, hit_player)
+	if not PlaytestViz.enabled():
+		return true
+	var me := _controller_or_null()
+	if me == null:
+		return true
+	var tree := me.get_tree()
+	if tree == null:
+		return true
+	var col := PlaytestViz.zone_tracer_color(zone, hit_player)
+	PlaytestViz.flash_line(tree, from, hit_pos, col)
+	PlaytestViz.flash_muzzle(tree, from)
+	if hit_player and damage > 0.0:
+		PlaytestViz.flash_hit_marker(
+			tree, hit_pos, damage, zone if zone != "" else "body"
+		)
+	return true
+
+
+## Optional Task 4 bus — never hard-require the autoload (no parse-time symbol).
+func _notify_hitscan_bus(
+		from: Vector3, hit_pos: Vector3, zone: String, damage: float, hit_player: bool
+) -> void:
+	var me := _controller_or_null()
+	if me == null:
+		return
+	var tree := me.get_tree()
+	if tree == null:
+		return
+	var bus := tree.root.get_node_or_null("PlaytestFxBus")
+	if bus == null or not bus.has_method("notify_hitscan"):
+		return
+	var owner_peer := me.get_multiplayer_authority()
+	bus.call(
+		"notify_hitscan",
+		owner_peer, from, hit_pos, zone, damage, hit_player, weapon_key
+	)
