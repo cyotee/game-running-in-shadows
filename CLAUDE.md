@@ -13,8 +13,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 There is no build step or linter — the project runs through the Godot editor/binary. On macOS, launch from the app bundle to get full logs:
 
 ```bash
-# Run the project (main scene: scenes/levels/test_arena.tscn)
+# Run the project (main scene: scenes/ui/main_menu.tscn)
 /Applications/Godot.app/Contents/MacOS/Godot --path .
+
+# Arena directly (skip menu)
+/Applications/Godot.app/Contents/MacOS/Godot --path . res://scenes/levels/test_arena.tscn
 
 # Verbose logs (useful for GDExtension/Steam init issues)
 /Applications/Godot.app/Contents/MacOS/Godot --verbose --path .
@@ -62,6 +65,7 @@ GODOT_BIN=/Applications/Godot.app/Contents/MacOS/Godot \
 - Headless runs have no Steam client; tests must tolerate failed Steam init.
 - Reports go to `reports/` (gitignored). Exit code is non-zero on failure.
 - The `godot` MCP server (`.mcp.json`, project scope) provides live-game interaction: run the project, then use `game_input_action` / `game_key_press` / `game_eval` / `game_get_property` / `game_screenshot` etc. to drive and inspect it. The game-side half is the `McpInteractionServer` autoload (`scripts/dev/mcp_interaction_server.gd`, TCP on 127.0.0.1:9090 — dev only, must not ship in release builds). The Node server is vendored gitignored at `tools/godot-mcp/`; rebuild with `npm install && npm run build` there. See `docs/TESTING.md`.
+- The `blender` MCP server (same `.mcp.json`) drives a **live Blender 4.5 LTS** session via [ahujasid/blender-mcp](https://github.com/ahujasid/blender-mcp) (`uvx blender-mcp` → socket `localhost:9876`). Install the vendored addon once from `tools/blender-mcp/addon.py`, then in Blender: sidebar (N) → **BlenderMCP** → **Connect**. Setup: `tools/blender-mcp/README.md`. Skills: `.grok/skills/blender-mcp/` (MCP ops) and `.grok/skills/godot-blender-models/` (glTF export, scale, `models/` layout for Compatibility). Preferred game assets: **`.glb`** under `models/characters|weapons|props|…`; review with `res://scenes/dev/model_review.tscn`.
 
 ## Architecture
 

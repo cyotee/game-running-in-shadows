@@ -17,6 +17,7 @@ func after_test() -> void:
 func test_pulse_sight_reserves_and_expires() -> void:
 	var runner := scene_runner(CONTROLLER_SCENE)
 	var p: FPSController = runner.scene()
+	await equip_kit(p, ["pulse_sight"])
 	var before := p.resonance.reserved
 	press(p.input, &"pulse_sight")
 	await await_ticks(6)
@@ -38,6 +39,7 @@ func test_pulse_sight_reveals_nearby_enemy() -> void:
 	p.get_parent().add_child(enemy)
 	enemy.input.set_multiplayer_authority(2)
 	enemy.global_position = p.global_position + Vector3(10, 0, 0)
+	await equip_kit(p, ["pulse_sight"])
 	press(p.input, &"pulse_sight")
 	await await_ticks(6)
 	var peers := p.pulse_sight_revealed_peers()
@@ -53,6 +55,7 @@ func test_smart_rig_toggles_and_tracks() -> void:
 	enemy.input.set_multiplayer_authority(2)
 	enemy.global_position = p.global_position + Vector3(5, 0, -5)
 	p.input.local_yaw = 0.0
+	await equip_kit(p, ["smart_rig"])
 	press(p.input, &"smart_rig")
 	await await_ticks(8)
 	assert_bool(p.smart_rig_active).is_true()
@@ -70,6 +73,7 @@ func test_smart_rig_toggles_and_tracks() -> void:
 func test_overclock_active_drains_after_grace() -> void:
 	var runner := scene_runner(CONTROLLER_SCENE)
 	var p: FPSController = runner.scene()
+	await equip_kit(p, ["overclock"])
 	var hp0 := p.health
 	press(p.input, &"overclock")
 	await await_ticks(6)
@@ -86,6 +90,7 @@ func test_overclock_active_drains_after_grace() -> void:
 func test_overclock_boosts_move_mult() -> void:
 	var runner := scene_runner(CONTROLLER_SCENE)
 	var p: FPSController = runner.scene()
+	await equip_kit(p, ["overclock"])
 	assert_float(p._overclock_move_mult()).is_equal_approx(1.0, 0.01)
 	press(p.input, &"overclock")
 	await await_ticks(6)

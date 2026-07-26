@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://playerhud1" path="res://scenes/ui/player_hud.tscn" id="4_player_hud"]
 [ext_resource type="Script" uid="uid://d1mtvjhran5d0" path="res://scripts/weapons/projectile_spawner.gd" id="5_projectiles"]
 [ext_resource type="PackedScene" uid="uid://devarsenal1" path="res://scenes/ui/dev_arsenal.tscn" id="6_arsenal"]
+[ext_resource type="PackedScene" uid="uid://dom6mgmv6feqq" path="res://scenes/ui/pause_menu.tscn" id="7_pause"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_Floor"]
 size = Vector3(60, 1, 60)
@@ -85,9 +86,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 [node name="DebugLabel" type="Label3D" parent="." unique_id=1232092388]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, -20)
 text = "WASD to move | Space jump | Shift sprint | Mouse look
-LMB fire | RMB ADS | E Repulse | G Glide | R reload | 1/2 weapon slots
-Look DOWN + Repulse then G = big upward launch combo!
-ESC mouse | F10 Dev Arsenal (buy / refund kits) | CounterSpell arena"
+LMB fire | RMB ADS | R reload | 1/2 weapon slots | free: Pistol + 2 grenades
+Buy Repulse/Glide (and other kit) via F10 Dev Arsenal
+Look DOWN + Repulse then G = launch combo (after purchase)
+ESC mouse | CounterSpell arena"
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=968424811]
 
@@ -104,3 +106,5 @@ script = ExtResource("2_steamstatus_script")
 [node name="PlayerHud" parent="." unique_id=1008854756 instance=ExtResource("4_player_hud")]
 
 [node name="DevArsenal" parent="." unique_id=214391271 instance=ExtResource("6_arsenal")]
+
+[node name="PauseMenu" parent="." unique_id=1802931286 instance=ExtResource("7_pause")]

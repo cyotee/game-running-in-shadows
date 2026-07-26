@@ -57,12 +57,14 @@ the real one.
 1. Wait until the active scene has a `Camera3D`; run **once per process**.
 2. Skip if `DisplayServer.get_name() == "headless"` or `not PlaytestViz.enabled()`.
 3. Build a temporary container parented to the active camera at local
-   `(0, 0, -0.3)`, scaled tiny (sub-pixel), so it is inside the frustum (draws →
-   compiles) but imperceptible. Children:
-   - `SphereMesh` + `PlaytestViz.unshaded_mat(...)` — covers the sphere **and**
-     disc aura (same variant: unshaded / alpha / cull-disabled).
-   - `ImmediateMesh` line + the tracer material (`vertex_color_use_as_albedo`).
-4. `await` 2–3 `RenderingServer.frame_post_draw` so each variant actually draws.
+   `(0, 0, -1.2)`, **full scale (no sub-pixel)**. Sub-pixel meshes were culled
+   and never compiled — first real `flash_line` still stalled ~1.4s. Children
+   cover every mesh class gameplay draws, with low-alpha materials so the pass
+   is nearly invisible:
+   - `SphereMesh` / `CylinderMesh` / `CapsuleMesh` / `BoxMesh` + aura mat
+   - `ImmediateMesh` `PRIMITIVE_LINES` + `PlaytestViz.tracer_mat(...)`
+   Materials come from `PlaytestViz`’s cache (same resources as fire/ability FX).
+4. `await` 5× `RenderingServer.frame_post_draw` so each variant actually draws.
 5. Free the container.
 
 ### Separation of concerns (for testability)

@@ -17,6 +17,7 @@ func after_test() -> void:
 func test_airborne_jump_deploys_glide_once() -> void:
 	var runner := scene_runner(CONTROLLER_SCENE)
 	var controller: FPSController = runner.scene()
+	await grant_movement_kit(controller)
 	press(controller.input, &"jump")
 	await await_ticks(10)
 	assert_bool(controller.is_gliding).is_true()
@@ -28,6 +29,7 @@ func test_second_air_jump_does_not_reboost_upward() -> void:
 	# further presses must not re-apply free upward impulse after glide ends.
 	var runner := scene_runner(CONTROLLER_SCENE)
 	var controller: FPSController = runner.scene()
+	await grant_movement_kit(controller)
 	controller.glide_duration = 0.15  # ~9 ticks at 60Hz; plain export, not rollback state
 	press(controller.input, &"jump")
 	await await_ticks(4)
@@ -41,20 +43,22 @@ func test_second_air_jump_does_not_reboost_upward() -> void:
 	assert_float(controller.velocity.y).is_less_equal(y_before + 0.5)
 
 
-func test_glide_jump_boost_only_once_per_glide() -> void:
+func test_jump_while_gliding_does_not_boost_upward() -> void:
+	# Jump is only a second glide-activate path while airborne; once gliding,
+	# jump must not add free vertical impulse. Upward launch is combo-only.
 	var runner := scene_runner(CONTROLLER_SCENE)
 	var controller: FPSController = runner.scene()
+	await grant_movement_kit(controller)
 	controller.glide_duration = 2.0
 	press(controller.input, &"glide")
 	await await_ticks(4)
 	assert_bool(controller.is_gliding).is_true()
+	var y_before := controller.velocity.y
 	press(controller.input, &"jump")
 	await await_ticks(4)
-	assert_bool(controller.glide_boost_used).is_true()
-	var y_after_first := controller.velocity.y
-	press(controller.input, &"jump")
-	await await_ticks(4)
-	assert_float(controller.velocity.y).is_less_equal(y_after_first + 0.1)
+	assert_bool(controller.is_gliding).is_true()
+	# Allow small numerical drift / reduced gravity; no +9 jump boost.
+	assert_float(controller.velocity.y).is_less_equal(y_before + 0.5)
 
 
 func test_ground_jump_sets_disarm_until_land() -> void:
@@ -62,6 +66,7 @@ func test_ground_jump_sets_disarm_until_land() -> void:
 	# jump_armed starts true but is_on_floor is false so jump does not launch.
 	var runner := scene_runner(CONTROLLER_SCENE)
 	var controller: FPSController = runner.scene()
+	await grant_movement_kit(controller)
 	var y0 := controller.velocity.y
 	# Ensure we are treated as airborne (no floor under empty scene runner).
 	await await_ticks(2)

@@ -22,8 +22,8 @@ const DEFAULT_LOADOUT: Array[String] = ["rifle", "smg"]
 # Catalog keys the buy menu / tests know about (weapons + priced abilities).
 const CATALOG: Array[String] = [
 	"pistol", "smg", "shotgun", "rifle", "sniper", "blade",
-	"slip", "wraith", "grenades", "lifebloom", "tangle", "null_charge",
-	"reclaim", "familiar", "pulse_sight", "smart_rig", "overclock",
+	"repulse", "glide", "slip", "wraith", "grenades", "lifebloom", "tangle",
+	"null_charge", "reclaim", "familiar", "pulse_sight", "smart_rig", "overclock",
 ]
 
 var money: Dictionary = {}
@@ -50,10 +50,14 @@ func register_player(peer_id: int) -> void:
 	if not is_authority() or money.has(peer_id):
 		return
 	money[peer_id] = int(MatchConfig.get_value("economy.start_money"))
-	owned[peer_id] = {"pistol": true}
+	# Free starters only: sidearm + 2 grenades. Repulse/Glide and the rest are bought.
+	owned[peer_id] = {"pistol": true, "grenades": true}
 	cyber_slots_used[peer_id] = {}
 	round_kills[peer_id] = 0
 	_sync_money(peer_id)
+	# Deliver free kit when a player node already exists (arena / late register).
+	_deliver(peer_id, "pistol")
+	_deliver(peer_id, "grenades")
 
 
 func money_of(peer_id: int) -> int:
@@ -134,8 +138,8 @@ func give_money(peer_id: int, amount: int) -> void:
 func refund(peer_id: int, item: String, refund_cash: bool = true) -> bool:
 	if not is_authority() or not owns(peer_id, item):
 		return false
-	if item == "pistol":
-		return false  # free sidearm is always owned in MVP
+	if item == "pistol" or item == "grenades":
+		return false  # free starters cannot be refunded
 	if refund_cash and MatchConfig.DEFAULTS.has("price.%s" % item):
 		money[peer_id] = money.get(peer_id, 0) + int(MatchConfig.get_value("price.%s" % item))
 	owned[peer_id].erase(item)
@@ -179,26 +183,15 @@ func _deliver(peer_id: int, item: String) -> void:
 	var player := _player_for(peer_id)
 	if player == null:
 		return
-	# Weapons: pistol -> slot 2, everything else -> slot 1. Abilities/augments
-	# are currently always-castable; ownership is tracked for buy/refund UX.
-	if MatchConfig.DEFAULTS.has("weapon.%s.damage" % item):
-		player.queue_grant(item, 2 if item == "pistol" else 1)
-	elif item == "grenades":
-		player.queue_set_grenade_stock(int(MatchConfig.get_value("ability.grenade_stock")))
-	elif item == "null_charge":
-		player.queue_set_null_stock(int(MatchConfig.get_value("ability.null_stock")))
+	# One path: equip into player kit (weapons, abilities, consumables).
+	player.queue_grant_kit(item)
 
 
 func _undeliver(peer_id: int, item: String) -> void:
 	var player := _player_for(peer_id)
 	if player == null:
 		return
-	if MatchConfig.DEFAULTS.has("weapon.%s.damage" % item):
-		player.queue_clear_weapon(item)
-	elif item == "grenades":
-		player.queue_set_grenade_stock(0)
-	elif item == "null_charge":
-		player.queue_set_null_stock(0)
+	player.queue_revoke_kit(item)
 
 
 @rpc("any_peer", "call_remote", "reliable")

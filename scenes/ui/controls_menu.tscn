@@ -1,0 +1,141 @@
+[gd_scene format=3 uid="uid://biaibficjfh3y"]
+
+[ext_resource type="Script" path="res://scripts/ui/controls_menu.gd" id="1_ctrl"]
+
+[node name="ControlsMenu" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_ctrl")
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -420.0
+offset_top = -300.0
+offset_right = 420.0
+offset_bottom = 300.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 12
+
+[node name="VBox" type="VBoxContainer" parent="Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Controls"
+horizontal_alignment = 1
+
+[node name="DeviceBar" type="HBoxContainer" parent="Panel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+alignment = 1
+
+[node name="CategoryBar" type="HBoxContainer" parent="Panel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+alignment = 1
+
+[node name="Scroll" type="ScrollContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+custom_minimum_size = Vector2(0, 280)
+
+[node name="ActionList" type="VBoxContainer" parent="Panel/Margin/VBox/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="FeelTitle" type="Label" parent="Panel/Margin/VBox"]
+layout_mode = 2
+text = "Look feel"
+
+[node name="FeelGrid" type="GridContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+columns = 2
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 4
+
+[node name="MouseSensLabel" type="Label" parent="Panel/Margin/VBox/FeelGrid"]
+layout_mode = 2
+text = "Mouse sens"
+
+[node name="MouseSensSlider" type="HSlider" parent="Panel/Margin/VBox/FeelGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="InvertLabel" type="Label" parent="Panel/Margin/VBox/FeelGrid"]
+layout_mode = 2
+text = "Invert Y"
+
+[node name="InvertYCheck" type="CheckBox" parent="Panel/Margin/VBox/FeelGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "On"
+
+[node name="YawLabel" type="Label" parent="Panel/Margin/VBox/FeelGrid"]
+layout_mode = 2
+text = "Stick yaw °/s"
+
+[node name="YawRateSlider" type="HSlider" parent="Panel/Margin/VBox/FeelGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PitchLabel" type="Label" parent="Panel/Margin/VBox/FeelGrid"]
+layout_mode = 2
+text = "Stick pitch °/s"
+
+[node name="PitchRateSlider" type="HSlider" parent="Panel/Margin/VBox/FeelGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="AssistLabel" type="Label" parent="Panel/Margin/VBox/FeelGrid"]
+layout_mode = 2
+text = "Aim assist mult"
+
+[node name="AssistSlider" type="HSlider" parent="Panel/Margin/VBox/FeelGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StatusLabel" type="Label" parent="Panel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = ""
+autowrap_mode = 2
+
+[node name="Buttons" type="HBoxContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 12
+
+[node name="ResetButton" type="Button" parent="Panel/Margin/VBox/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Reset to defaults"
+
+[node name="BackButton" type="Button" parent="Panel/Margin/VBox/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Back"

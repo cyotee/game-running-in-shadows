@@ -152,7 +152,7 @@ Players buy abilities in a pre-round phase and equip a limited number (currently
 
 | Name | Buy Cost | Resonance Impact | Type | Core Effect | Key Interactions |
 |------|----------|--------------|------|-------------|------------------|
-| **Glide Harness** | $1800 | 2 reserved | Mobility | Deploys wings for high, floaty jumps and safe falls. | **Repulse ground + deploy** = powerful launch (the signature combo). Repulse while gliding slams you down. |
+| **Glide Harness** | $1800 | 2 reserved | Mobility | Deploys wings for floaty descent and safe falls. Activate with the glide key or jump while airborne (no free air-jump). | **Look down + Repulse + deploy** = powerful launch (the only intentional upward while gliding; enemy Repulse hits still apply force). Self-Repulse while gliding slams you down. |
 | **Pulse Sight** | $1700 | 3 reserved | Intel | Briefly reveals all enemies in a large radius through walls. | Wraith hides targets (limited range ping remains). |
 | **Smart Rig** | $1700 | 2 reserved | Combat | Passive extra zoom on all weapons. Active: improved tracking + no friendly fire from direct fire. | Disabled vs Wraith. Laser sight reveals position. |
 | **Null Charge** | $1400 | — (starts with limited stock) | Denial | Throwable device that sticks and projects an anti-awakening field. Destroys active Manifestations and drains Resonance. | Core counter to casters. Disrupts Slip even outside visual radius sometimes. |
@@ -188,7 +188,7 @@ Players buy abilities in a pre-round phase and equip a limited number (currently
 - **Familiar** — **ping-targeted hunt**: caster pings an enemy to send the Familiar after them (requires the ping system); otherwise follows the caster. Destroyed by Null charges and Dwarves; minions fight each other.
 
 **Augments**
-- **Glide Harness** — as implemented (netfox plan). Reservation 2 × tech multiplier.
+- **Glide Harness** — as implemented (netfox plan). Reservation 2 × tech multiplier. Deploy via glide key or airborne jump; no mid-air jump boost while gliding. Upward launch only from Repulse+Glide combo (external Repulse hits still apply force).
 - **Null Charge** — persistent sticky field: sticks where thrown, ~5 m radius, ~10 s; destroys Manifestation effects inside, drains enemy Resonance (~1/s), suppresses casting within; has a small HP pool (shootable). Limited stock per round.
 - **Pulse Sight** (Eye) — active ~5 s wall-reveal in a large radius, **self-only, except teammates who own Pulse Sight or Smart Rig also see the reveal** (chrome-networked intel; rewards coordinated cyber builds). Wraithed players: faint short-range ping only.
 - **Smart Rig** (Eye + Full Body) — passive: zoom on all weapons. Active: **forced view tracking ("legal aimbot")** — the user's view is magnetically dragged to the nearest target's center of mass; headshots become very difficult (view pinned to center mass); if the target moves, the user's view is forced to turn and track them. Shots cannot hurt teammates while active; the targeting laser reveals the user's position; disabled vs Wraith. Sniper + Smart Rig should feel like cheating — intended. Lore: the rig is too predictable — hence the blade counter.
@@ -448,6 +448,12 @@ Loadouts are **ordered shopping lists, not classes or kits**. They never restric
 - **Aim assist:** mild slowdown-on-target, controller only (reticle friction over enemies; no magnetism). PC mouse gets nothing; Smart Rig remains the only hard tracking for anyone. Assist is local input shaping — no netcode surface.
 - **Default layout (rebindable):** LS move / LS-click sprint · RS look / RS-click reserved (melee quick) · RT fire · LT ADS/block · RB Repulse · LB reserved (ability radial) · **A jump → glide when airborne (contextual, implemented as a simulation rule; keyboard G unchanged)** · X reload · Y weapon swap · B reserved (interact/loot) · **D-pad Up = ping/comms (G7)**, **D-pad Left = Reclaim (G5 W3)**, **D-pad Right = Familiar (G5 W3)**, rest of D-pad reserved for abilities · Start menu · Select scoreboard. **PC ping = middle-mouse / P; PC Reclaim = H; PC Familiar = N (all rebindable).**
 - **Timing:** implemented immediately after the netfox integration plan so all subsequent mechanics get controller-tested as they land.
+
+**Controls rebind menu (added 2026-07-23)**
+- In-game **Settings → Controls** (main menu) and **Pause → Settings** (`menu` / Esc / Start).
+- **Listen-to-rebind:** select a command → **+ Add** → press key, mouse button, or controller input.
+- **Multi-bind:** one command may hold many events (KBM + pad together). Conflict = steal with status toast.
+- Local persistence: `user://input_bindings.json` via `InputBindings` autoload. Factory reset restores project defaults. Look feel (mouse sens, invert Y, stick rates, aim-assist mult) is local — not MatchConfig host sync.
 
 **Terminology Notes**
 - Archetypes: Human, Elf, Dwarf, Troll (common mythological terms).

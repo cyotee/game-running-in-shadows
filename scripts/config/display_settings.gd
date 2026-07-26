@@ -1,39 +1,58 @@
-# Runtime display preferences for playtesting (window size, mode, UI scale).
-# Autoload singleton name: DisplayConfig (registered in project.godot).
-# No class_name — avoids "hides an autoload singleton" / analyzer conflicts.
-# Persists to user://display_settings.json.
-# Cmdline user args: --window-size=1920x1080  --ui-scale=1.5  --fullscreen  --windowed
+# Runtime display preferences (window size + UI scale).
+# Autoload: DisplayConfig. Persists to user://display_settings.json.
+#
+# Godot model (official "Multiple resolutions" docs + common desktop pattern):
+#   - Project base size (content_scale_size) = design size for 2D/UI layout.
+#   - Stretch mode canvas_items + aspect expand → 2D UI scales to the window.
+#   - 3D always renders at the real window pixel size (fills the window).
+#   - "Resolution" option changes the OS window size only (get_window().size).
+#   - "UI scale" is content_scale_factor (extra magnification).
+#
+# Editor embed: OS window size is locked by the Game dock. Prefs still save;
+# turn off Game → Embed Game on Next Play for window resize to work.
 extends Node
 
 const SAVE_PATH := "user://display_settings.json"
 
-## Named window sizes. w/h of 0 means "usable screen size" (native).
+## Design / stretch base size (matches project.godot viewport). Not the user resolution.
+const BASE_SIZE := Vector2i(1920, 1080)
+
 const PRESETS: Array[Dictionary] = [
-	{"label": "1280x720", "w": 1280, "h": 720},
+	{"label": "1280x720 (720p)", "w": 1280, "h": 720},
 	{"label": "1600x900", "w": 1600, "h": 900},
-	{"label": "1920x1080", "w": 1920, "h": 1080},
-	{"label": "2560x1440", "w": 2560, "h": 1440},
+	{"label": "1920x1080 (1080p)", "w": 1920, "h": 1080},
+	{"label": "2560x1440 (1440p)", "w": 2560, "h": 1440},
 	{"label": "2880x1620", "w": 2880, "h": 1620},
+	{"label": "3200x1800", "w": 3200, "h": 1800},
+	{"label": "3840x2160 (4K)", "w": 3840, "h": 2160},
 	{"label": "Native screen", "w": 0, "h": 0},
 ]
 
-const UI_SCALE_STEPS: Array[float] = [1.0, 1.25, 1.5, 1.75, 2.0, 2.5]
+const UI_SCALE_STEPS: Array[float] = [1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0]
 
-# Default is 1920x1080 + 50% (playtest readability).
-var width: int = 2880
-var height: int = 1620
-var ui_scale: float = 1.25
+const DEFAULT_WIDTH: int = 1920
+const DEFAULT_HEIGHT: int = 1080
+const DEFAULT_UI_SCALE: float = 1.5
+
+var width: int = DEFAULT_WIDTH
+var height: int = DEFAULT_HEIGHT
+var ui_scale: float = DEFAULT_UI_SCALE
 var fullscreen: bool = false
 
-## Last human-readable apply result (for Dev Arsenal status).
 var last_apply_message: String = ""
+var last_apply_window_locked: bool = false
 
 
 func _ready() -> void:
 	_load()
 	_apply_cmdline_user_args()
-	# Window may not be ready on the first frame in the editor.
-	call_deferred("apply")
+	_apply_when_ready()
+
+
+func _apply_when_ready() -> void:
+	for _i in 4:
+		await get_tree().process_frame
+	apply()
 
 
 func is_embedded() -> bool:
@@ -42,85 +61,109 @@ func is_embedded() -> bool:
 	return false
 
 
+func get_root_window() -> Window:
+	return get_tree().root as Window
+
+
 func apply() -> bool:
+	last_apply_window_locked = false
 	if DisplayServer.get_name() == "headless":
 		last_apply_message = "headless — display apply skipped"
 		return false
 
-	# Embedded Game tab cannot change OS window size; only UI scale works.
+	var win := get_root_window()
+	if win == null:
+		last_apply_message = "no root window yet"
+		return false
+
+	# 1) Stretch setup: fixed design base + expand → 2D fills window, no letterbox panel.
+	#    3D uses real window pixels (always fills).
+	_apply_stretch(win)
+
+	var requested := resolve_size()
+	var id := win.get_window_id()
+
 	if is_embedded():
-		var root_emb := get_tree().root as Window
-		if root_emb != null:
-			_apply_ui_scale_only(root_emb)
+		last_apply_window_locked = true
 		last_apply_message = (
-			"Game is embedded in the editor — window size locked. "
-			+ "Turn off Game > Embed Game on Next Play, or run outside the editor. "
-			+ "UI scale still applied (x%s)." % str(ui_scale)
-		)
+			"Prefs saved: %dx%d, UI x%s. "
+			+ "EDITOR EMBED is ON — the Game dock owns the window size, so "
+			+ "resolution cannot change the OS window. "
+			+ "In the Game panel menu, set size to Stretch to Fit and turn OFF "
+			+ "'Embed Game on Next Play', then press Play again. "
+			+ "UI stretch/scale still applied inside the dock."
+		) % [requested.x, requested.y, str(ui_scale)]
 		push_warning("DisplayConfig: %s" % last_apply_message)
 		return false
 
-	var root := get_tree().root as Window
-	if root == null:
-		last_apply_message = "no root window"
-		return false
-
-	var size := resolve_size()
-	var id := root.get_window_id()
-
-	# DisplayServer signatures (Godot 4): size/position FIRST, optional window_id last.
-	# window_set_size(size: Vector2i, window_id: int = 0)
-	# window_set_position(position: Vector2i, window_id: int = 0)
-	# window_set_mode(mode: WindowMode, window_id: int = 0)
 	if fullscreen:
-		# Exclusive fullscreen uses the monitor's native mode; size is N/A.
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN, id)
-		_apply_ui_scale_only(root)
-		var actual_fs := DisplayServer.window_get_size(id)
-		last_apply_message = "Fullscreen (display %dx%d, UI x%s)" % [
-			actual_fs.x, actual_fs.y, str(ui_scale)]
+		win.mode = Window.MODE_EXCLUSIVE_FULLSCREEN
+		await get_tree().process_frame
+		_apply_stretch(win)
+		var fs := win.size
+		last_apply_message = "Exclusive fullscreen %dx%d · UI x%s (stretch base %dx%d)" % [
+			fs.x, fs.y, str(ui_scale), BASE_SIZE.x, BASE_SIZE.y]
+		print("DisplayConfig: %s" % last_apply_message)
 		return true
 
-	# Size is ignored while maximized/fullscreen — leave those modes first.
-	var mode := DisplayServer.window_get_mode(id)
-	if mode != DisplayServer.WINDOW_MODE_WINDOWED:
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED, id)
-	root.borderless = false
-	root.unresizable = false
+	# Windowed: leave exclusive/maximized so size sticks.
+	if win.mode != Window.MODE_WINDOWED:
+		win.mode = Window.MODE_WINDOWED
+		await get_tree().process_frame
 
-	# DisplayServer is the reliable path across platforms; also set Window.size.
-	DisplayServer.window_set_size(size, id)
-	root.size = size
+	win.borderless = false
+	win.unresizable = false
+	win.min_size = Vector2i(640, 360)
 
-	# Center on the current screen so a smaller res is not stuck off-screen.
-	var screen := root.current_screen
+	var screen := win.current_screen
 	var usable := DisplayServer.screen_get_usable_rect(screen)
-	var pos := usable.position + (usable.size - size) / 2
+	var target := requested
+	var fitted := false
+	if target.x > usable.size.x or target.y > usable.size.y:
+		var s := minf(
+			float(usable.size.x) / float(target.x),
+			float(usable.size.y) / float(target.y)
+		)
+		target = Vector2i(
+			maxi(640, int(round(float(target.x) * s))),
+			maxi(360, int(round(float(target.y) * s)))
+		)
+		fitted = true
+
+	# Official/runtime pattern: set Window.size (root Viewport size + OS window).
+	# DisplayServer alone is unreliable on some platforms; set both.
+	win.size = target
+	DisplayServer.window_set_size(target, id)
+	await get_tree().process_frame
+
+	var pos := usable.position + (usable.size - win.size) / 2
 	pos.x = maxi(usable.position.x, pos.x)
 	pos.y = maxi(usable.position.y, pos.y)
+	win.position = pos
 	DisplayServer.window_set_position(pos, id)
 
-	# Base content size = chosen resolution; factor scales UI/HUD on top.
-	root.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
-	root.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
-	root.content_scale_size = size
-	root.content_scale_factor = clampf(ui_scale, 0.5, 4.0)
+	# Re-apply stretch after size settles.
+	_apply_stretch(win)
 
-	# Read back what the OS actually applied (clamped by min size / DPI).
-	var actual := DisplayServer.window_get_size(id)
-	last_apply_message = "Window %dx%d (requested %dx%d), UI x%s" % [
-		actual.x, actual.y, size.x, size.y, str(ui_scale)]
-	if actual != size:
-		last_apply_message += " — OS adjusted size (DPI / min constraints)"
+	var actual := win.size
+	last_apply_message = "Window %dx%d (requested %dx%d) · UI x%s · stretch base %dx%d" % [
+		actual.x, actual.y, requested.x, requested.y, str(ui_scale),
+		BASE_SIZE.x, BASE_SIZE.y]
+	if fitted:
+		last_apply_message += " — fitted to usable screen"
+	elif actual != target:
+		last_apply_message += " — OS adjusted size"
+	print("DisplayConfig: %s" % last_apply_message)
 	return true
 
 
-func _apply_ui_scale_only(root: Window) -> void:
-	root.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
-	root.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
-	if root.content_scale_size == Vector2i.ZERO:
-		root.content_scale_size = resolve_size()
-	root.content_scale_factor = clampf(ui_scale, 0.5, 4.0)
+func _apply_stretch(win: Window) -> void:
+	# Design size stays fixed (1920x1080). Window size is independent.
+	# canvas_items + expand: 2D/UI scales to fill the window without black bars.
+	win.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
+	win.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
+	win.content_scale_size = BASE_SIZE
+	win.content_scale_factor = clampf(ui_scale, 0.5, 4.0)
 
 
 func resolve_size() -> Vector2i:
@@ -131,26 +174,26 @@ func resolve_size() -> Vector2i:
 	return Vector2i(maxi(640, width), maxi(360, height))
 
 
-func set_resolution(w: int, h: int, persist: bool = true) -> bool:
+func set_resolution(w: int, h: int, persist: bool = true) -> void:
 	width = w
 	height = h
 	if persist:
 		save()
-	return apply()
+	apply()
 
 
-func set_ui_scale(scale: float, persist: bool = true) -> bool:
+func set_ui_scale(scale: float, persist: bool = true) -> void:
 	ui_scale = clampf(scale, 0.5, 4.0)
 	if persist:
 		save()
-	return apply()
+	apply()
 
 
-func set_fullscreen(enabled: bool, persist: bool = true) -> bool:
+func set_fullscreen(enabled: bool, persist: bool = true) -> void:
 	fullscreen = enabled
 	if persist:
 		save()
-	return apply()
+	apply()
 
 
 func cycle_ui_scale(delta_steps: int = 1) -> void:
@@ -185,16 +228,24 @@ func save() -> void:
 		push_warning("DisplayConfig: cannot write %s" % SAVE_PATH)
 		return
 	f.store_string(JSON.stringify(data, "\t"))
+	f.close()
+	print("DisplayConfig: saved %dx%d UI x%s → %s" % [
+		width, height, str(ui_scale), SAVE_PATH])
 
 
 func _load() -> void:
 	if not FileAccess.file_exists(SAVE_PATH):
+		print("DisplayConfig: no save — defaults %dx%d UI x%s" % [
+			width, height, str(ui_scale)])
 		return
 	var f := FileAccess.open(SAVE_PATH, FileAccess.READ)
 	if f == null:
 		return
-	var parsed: Variant = JSON.parse_string(f.get_as_text())
+	var text := f.get_as_text()
+	f.close()
+	var parsed: Variant = JSON.parse_string(text)
 	if parsed is not Dictionary:
+		push_warning("DisplayConfig: invalid JSON at %s" % SAVE_PATH)
 		return
 	var d: Dictionary = parsed
 	if d.has("width"):
@@ -205,6 +256,8 @@ func _load() -> void:
 		ui_scale = float(d["ui_scale"])
 	if d.has("fullscreen"):
 		fullscreen = bool(d["fullscreen"])
+	print("DisplayConfig: loaded %dx%d UI x%s from %s" % [
+		width, height, str(ui_scale), SAVE_PATH])
 
 
 func _apply_cmdline_user_args() -> void:
@@ -227,7 +280,6 @@ func _apply_cmdline_user_args() -> void:
 			fullscreen = false
 
 
-## Test helper: apply a dict without touching the real save file.
 func apply_dict_for_test(d: Dictionary) -> void:
 	if d.has("width"):
 		width = int(d["width"])

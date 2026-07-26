@@ -38,6 +38,22 @@ func after_test() -> void:
 func test_registration_gives_start_money_and_pistol() -> void:
 	assert_int(economy.money_of(10)).is_equal(800)
 	assert_bool(economy.owns(10, "pistol")).is_true()
+	assert_bool(economy.owns(10, "grenades")).is_true()
+	assert_bool(economy.owns(10, "repulse")).is_false()
+	assert_bool(economy.owns(10, "glide")).is_false()
+
+
+func test_buy_repulse_and_glide() -> void:
+	economy.give_money(10, 5000)
+	assert_bool(economy.try_buy(10, "repulse")).is_true()
+	assert_bool(economy.owns(10, "repulse")).is_true()
+	assert_int(economy.money_of(10)).is_equal(800 + 5000 - 1600)
+	assert_bool(economy.try_buy(10, "glide")).is_true()
+	assert_bool(economy.owns(10, "glide")).is_true()
+	assert_int(economy.money_of(10)).is_equal(800 + 5000 - 1600 - 1800)
+	# Free starters cannot be refunded.
+	assert_bool(economy.refund(10, "grenades", true)).is_false()
+	assert_bool(economy.owns(10, "grenades")).is_true()
 
 
 func test_buy_deducts_and_rejects_when_poor_or_owned() -> void:

@@ -157,6 +157,7 @@ func test_null_field_suppresses_casting() -> void:
 	field.setup(controller.global_position, 2, 200.0, 6000)
 	await await_ticks(3)
 
+	await equip_kit(controller, ["repulse"])
 	var denials: Array = []
 	controller.cast_denied.connect(func() -> void: denials.append(true))
 	var res_before := controller.resonance.current
@@ -188,10 +189,15 @@ func test_null_destroys_lifebloom_inside() -> void:
 
 
 func test_null_cast_consumes_stock() -> void:
+	# Arena has ProjectileSpawner (needed for place_field).
 	var runner := scene_runner(ARENA_SCENE)
-	await await_ticks(5)
 	var controller: FPSController = runner.scene().get_node("FPSController")
+	# Equip immediately on first frames so stock enters history like free grenades.
+	controller.grant_kit("null_charge")
+	controller.queue_set_null_stock(int(MatchConfig.get_value("ability.null_stock")))
+	await await_ticks(5)
 	var stock0 := controller.null_stock
+	assert_int(stock0).is_greater(0)
 
 	press(controller.input, &"null_charge")
 	await await_ticks(8)
@@ -204,6 +210,7 @@ func test_cast_lifebloom_places_field_and_holds_reservation() -> void:
 	var runner := scene_runner(ARENA_SCENE)
 	await await_ticks(5)
 	var controller: FPSController = runner.scene().get_node("FPSController")
+	await equip_kit(controller, ["lifebloom"])
 	var reserved_before := controller.resonance.reserved
 
 	press(controller.input, &"lifebloom")
