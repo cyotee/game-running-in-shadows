@@ -55,6 +55,7 @@ func test_cast_summons_familiar_and_reserves() -> void:
 	var runner := scene_runner(ARENA_SCENE)
 	await await_ticks(5)
 	var caster: FPSController = runner.scene().get_node("FPSController")
+	await equip_kit(caster, ["familiar"])
 	var before := caster.resonance.reserved
 
 	press(caster.input, &"familiar")
@@ -72,6 +73,7 @@ func test_cast_denied_with_insufficient_resonance() -> void:
 	var runner := scene_runner(ARENA_SCENE)
 	await await_ticks(5)
 	var caster: FPSController = runner.scene().get_node("FPSController")
+	await equip_kit(caster, ["familiar"])
 	# Mid-tick writes to Resonance rollback state are restored — raise the cost
 	# via MatchConfig instead so the cast path is denied for real.
 	MatchConfig.set_value("resonance.familiar_cost", 999.0)
@@ -90,6 +92,7 @@ func test_re_mode_does_not_double_reserve() -> void:
 	var runner := scene_runner(ARENA_SCENE)
 	await await_ticks(5)
 	var caster: FPSController = runner.scene().get_node("FPSController")
+	await equip_kit(caster, ["familiar"])
 	press(caster.input, &"familiar")
 	await await_ticks(8)
 	assert_bool(caster.familiar_reserved).is_true()
@@ -107,6 +110,7 @@ func test_reservation_releases_when_familiar_dies() -> void:
 	var runner := scene_runner(ARENA_SCENE)
 	await await_ticks(5)
 	var caster: FPSController = runner.scene().get_node("FPSController")
+	await equip_kit(caster, ["familiar"])
 	var reserved_before := caster.resonance.reserved
 	press(caster.input, &"familiar")
 	await await_ticks(8)

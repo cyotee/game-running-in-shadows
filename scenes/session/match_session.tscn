@@ -7,6 +7,7 @@
 [ext_resource type="Script" path="res://scripts/ui/buy_menu.gd" id="5_buymenu"]
 [ext_resource type="PackedScene" uid="uid://playerhud1" path="res://scenes/ui/player_hud.tscn" id="6_playerhud"]
 [ext_resource type="Script" path="res://scripts/weapons/projectile_spawner.gd" id="7_projectiles"]
+[ext_resource type="PackedScene" uid="uid://pausemenu0001" path="res://scenes/ui/pause_menu.tscn" id="8_pause"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_Floor"]
 size = Vector3(80, 1, 80)
@@ -92,6 +93,8 @@ unique_name_in_owner = true
 text = "Buy Default Loadout"
 
 [node name="PlayerHud" parent="." instance=ExtResource("6_playerhud")]
+
+[node name="PauseMenu" parent="." instance=ExtResource("8_pause")]
 
 [node name="SpawnPoints" type="Node3D" parent="."]
 

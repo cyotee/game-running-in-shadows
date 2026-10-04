@@ -19,11 +19,12 @@ func test_spawns_with_default_loadout() -> void:
 	var controller: FPSController = runner.scene()
 	var rig: WeaponRig = controller.weapon_rig
 
-	assert_str(rig.slot1).is_equal("rifle")
+	# Free kit: pistol only (slot 2); primary slot empty until purchase.
+	assert_str(rig.slot1).is_equal("")
 	assert_str(rig.slot2).is_equal("pistol")
-	assert_int(rig.active_slot).is_equal(1)
+	assert_int(rig.active_slot).is_equal(2)
 	assert_float(rig.weapon_by_key("pistol").mag).is_equal(12.0)
-	assert_float(rig.weapon_by_key("rifle").reserve).is_equal(72.0)
+	assert_str(controller.weapon_rig.active_weapon().weapon_key).is_equal("pistol")
 
 
 func test_slot_switch_via_input() -> void:
@@ -51,6 +52,8 @@ func test_clear_key_frees_slot_for_replacement() -> void:
 	var runner := scene_runner(CONTROLLER_SCENE)
 	var controller: FPSController = runner.scene()
 	var rig: WeaponRig = controller.weapon_rig
+	rig.grant("rifle", 1)
+	rig.active_slot = 1
 	assert_str(rig.slot1).is_equal("rifle")
 	rig.clear_key("rifle")
 	assert_str(rig.slot1).is_equal("")

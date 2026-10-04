@@ -21,7 +21,8 @@ extends CharacterBody3D
 @export var combo_launch_velocity: float = 28.0
 @export var combo_window: float = 0.7
 @export var archetype: StringName = &"human"
-@export var default_slot1: String = "rifle"
+## Free loadout: pistol only (slot 2). Slot 1 stays empty until buy.
+@export var default_slot1: String = ""
 @export var default_slot2: String = "pistol"
 
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
@@ -33,8 +34,6 @@ var glide_ticks_remaining: int = 0
 var jump_armed: bool = true
 # One contextual jump→glide per airborne period (not unlimited multi-jump).
 var air_glide_from_jump_available: bool = true
-# One upward boost from jump while a single glide is active.
-var glide_boost_used: bool = false
 var last_down_repulse_tick: int = -(1 << 30)
 var health: float = 100.0
 var bleed_ticks_remaining: int = 0
@@ -42,9 +41,12 @@ var bleed_hp_per_s: float = 0.0
 var is_dead: bool = false
 var is_wraithed: bool = false
 var is_dragging: bool = false
-var grenade_stock: int = 2
+var grenade_stock: int = 0
 var grenade_cook_ticks: int = 0
-var null_stock: int = 4
+var null_stock: int = 0
+## Purchased kit flags (view + cast gates). Not rollback state — buy/refund
+## apply via queue on fresh ticks, same pattern as weapon grants.
+var kit_owned: Dictionary = {}
 var lifebloom_reserved: bool = false
 var tangle_reserved: bool = false
 var lifebloom_cast_tick: int = -(1 << 30)
@@ -85,6 +87,8 @@ var _pending_grants: Array[Array] = []
 var _pending_clear_keys: Array[String] = []
 var _pending_grenade_stock: int = -1
 var _pending_null_stock: int = -1
+var _pending_kit_grants: Array[String] = []
+var _pending_kit_revokes: Array[String] = []
 
 # Damage queued to apply inside the tick. Out-of-band health writes are
 # discarded by the rollback state restore, so external/test-initiated damage
@@ -104,6 +108,12 @@ signal cast_denied()
 @onready var third_person_rig: Node3D = $ThirdPersonRig
 @onready var third_person_camera: Camera3D = $ThirdPersonRig/SpringArm3D/ThirdPersonCamera
 
+# View-only blade prop poses (not rollback state).
+const _BLADE_REST_ROT := Vector3(-0.26, -0.61, 0.35)  # ~(-15, -35, 20) deg
+const _BLADE_WINDUP_ROT := Vector3(-0.44, 0.96, 0.52)  # ~(-25, 55, 30) deg
+const _BLADE_FOLLOW_ROT := Vector3(0.09, -1.66, -0.17)  # ~(5, -95, -10) deg
+var _blade_swing_tween: Tween
+
 
 func _ready() -> void:
 	add_to_group("players")
@@ -112,28 +122,36 @@ func _ready() -> void:
 		zone_area.set_meta("player", self)
 	_apply_archetype_config()
 	weapon_rig.setup(self)
-	weapon_rig.grant(default_slot2, 2)
+	if default_slot2 != "":
+		weapon_rig.grant(default_slot2, 2)
 	if default_slot1 != "":
 		weapon_rig.grant(default_slot1, 1)
+	# Prefer primary when present; otherwise hold free pistol in slot 2.
+	if weapon_rig.slot1 == "" and weapon_rig.slot2 != "":
+		weapon_rig.active_slot = 2
 	# Input authority may have been reassigned by a spawner before _ready.
 	rollback_synchronizer.process_settings()
 	var is_local := input.is_multiplayer_authority()
 	camera.current = is_local
 	if is_local and DisplayServer.get_name() != "headless":
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	# Free kit only: pistol + 2 grenades. Everything else is purchased.
+	grant_free_starters()
 	_setup_playtest_body_mesh(is_local)
 
 
 func _process(_delta: float) -> void:
 	# Camera pitch is view-only (never rolled back); yaw is applied to the
 	# body in _rollback_tick from recorded input.
+	var active := weapon_rig.active_weapon() if weapon_rig != null else null
+	var blade_out := active != null and active.weapon_key == "blade"
+
 	if input.is_multiplayer_authority():
 		# Smart Rig forced view is local input shaping (like stick look).
-		if smart_rig_active:
+		if smart_rig_active and has_equipped("smart_rig"):
 			_apply_smart_rig_view(_delta)
 		camera.rotation.x = input.local_pitch
 		# ADS zoom is view-only feedback.
-		var active := weapon_rig.active_weapon() if weapon_rig != null else null
 		var target_fov := 75.0
 		if active != null and input.ads and active.supports_ads():
 			var zoom := active.ads_zoom()
@@ -142,7 +160,6 @@ func _process(_delta: float) -> void:
 			target_fov = 75.0 / zoom
 		camera.fov = lerpf(camera.fov, target_fov, minf(10.0 * _delta, 1.0))
 		# Blade wields in third person (view-only camera swap).
-		var blade_out := active != null and active.weapon_key == "blade"
 		if blade_out != third_person_camera.current:
 			third_person_camera.current = blade_out
 			camera.current = not blade_out
@@ -150,11 +167,18 @@ func _process(_delta: float) -> void:
 			third_person_rig.rotation = Vector3(input.local_pitch * 0.5, 0, 0)
 		# Controller-only aim assist: reticle friction while an enemy is in
 		# view. Mouse look never reads look_rate_scale (decided design).
+		# Mult/range come from local InputBindings prefs (Controls menu).
+		var slow_mult := InputBindings.stick_slowdown_mult
+		var slow_range := InputBindings.stick_slowdown_range_m
 		input.look_rate_scale = (
-			MatchConfig.get_value("input.slowdown_mult")
-			if enemy_under_reticle(MatchConfig.get_value("input.slowdown_range_m"))
-			else 1.0
+			slow_mult if enemy_under_reticle(slow_range) else 1.0
 		)
+
+	# Local FP hides the capsule; blade TP shows body + stick. Remotes always
+	# keep the capsule; stick only while blade is equipped.
+	_sync_playtest_body_for_view(blade_out)
+	_update_playtest_state_silhouette()
+	_update_smart_rig_wedge()
 
 
 func enemy_under_reticle(max_range: float) -> bool:
@@ -229,15 +253,21 @@ func _apply_archetype_config() -> void:
 	resonance.combat_timeout_ticks = int(roundf(
 		MatchConfig.get_value("resonance.combat_timeout_s") * NetworkTime.tickrate))
 	resonance.reserved = 0.0
-	# Glide Harness is always equipped in the prototype; reservation scales
-	# with the archetype tech multiplier (decided 2026-07-16).
-	resonance.reserve(
-		MatchConfig.get_value("resonance.glide_harness_reservation") * _config("tech_mult"))
+	# Glide Harness reservation only while equipped.
+	if has_equipped("glide"):
+		resonance.reserve(_glide_harness_reserve_amount())
 	resonance.fill_to_cap()
 	health = _config("max_health")
-	grenade_stock = int(MatchConfig.get_value("ability.grenade_stock"))
+	# Restock only equipped consumables (free grenades always equipped at start).
 	grenade_cook_ticks = 0
-	null_stock = int(MatchConfig.get_value("ability.null_stock"))
+	if has_equipped("grenades"):
+		grenade_stock = int(MatchConfig.get_value("ability.grenade_stock"))
+	else:
+		grenade_stock = 0
+	if has_equipped("null_charge"):
+		null_stock = int(MatchConfig.get_value("ability.null_stock"))
+	else:
+		null_stock = 0
 
 
 func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
@@ -259,6 +289,14 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 	if _pending_null_stock >= 0 and is_fresh:
 		null_stock = _pending_null_stock
 		_pending_null_stock = -1
+	if is_fresh and not _pending_kit_grants.is_empty():
+		for item in _pending_kit_grants:
+			_apply_kit_grant(item)
+		_pending_kit_grants.clear()
+	if is_fresh and not _pending_kit_revokes.is_empty():
+		for item in _pending_kit_revokes:
+			_apply_kit_revoke(item)
+		_pending_kit_revokes.clear()
 
 	# Death is simulation state: a dead body freezes where it fell (full
 	# body persistence is a pillar; the corpse system extends this later).
@@ -300,70 +338,12 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 
 	# Press-tick inputs match exactly one simulated tick (see PlayerInput).
 	var jump_pressed := input.jump_press_tick == tick
-	# One glide-boost per glide activation (not unlimited climb-mashing).
-	var jump_for_boost := jump_pressed and is_gliding and not glide_boost_used
 
-	# Wraith (toggle phase form). While phased: casts/weapons/glide locked,
-	# walk speed only, bullet + fall immunity (see take_damage).
-	if input.wraith_press_tick == tick:
-		_toggle_wraith(is_fresh)
-	if is_wraithed:
-		resonance.drain(MatchConfig.get_value("resonance.wraith_drain_per_s") * delta)
-		if resonance.current <= 0.0:
-			is_wraithed = false  # forced out on empty pool
-
-	if not is_wraithed and input.repulse_press_tick == tick:
-		if not _in_null_field() and resonance.try_spend(MatchConfig.get_value("resonance.repulse_cost")):
-			_cast_repulse(tick, is_fresh)
-		elif is_fresh:
-			# Hard block (decided): no overdraft; Null suppresses casting.
-			cast_denied.emit()
-	if not is_wraithed and input.slip_press_tick == tick:
-		_try_slip(is_fresh)
-	# Grenade cook (while held) + throw (on release).
-	var cook_max := int(roundf(MatchConfig.get_value("ability.grenade_cook_max_s") * NetworkTime.tickrate))
-	if not is_wraithed and input.grenade_held and grenade_stock > 0:
-		grenade_cook_ticks = mini(grenade_cook_ticks + 1, cook_max)
-	if not is_wraithed and input.grenade_press_tick == tick and grenade_stock > 0:
-		_throw_grenade(is_fresh, cook_max)
-	# Placed fields (instant placement at an aimed point; held reservations).
-	if not is_wraithed and input.lifebloom_press_tick == tick:
-		_cast_lifebloom(tick, is_fresh)
-	if not is_wraithed and input.tangle_press_tick == tick:
-		_cast_tangle(tick, is_fresh)
-	if not is_wraithed and input.null_press_tick == tick and null_stock > 0:
-		null_stock -= 1
-		if is_fresh:
-			_place_field("null_charge")
-	if not is_wraithed and input.reclaim_press_tick == tick:
-		_cast_reclaim(tick, is_fresh)
-	if not is_wraithed and input.familiar_press_tick == tick:
-		_cast_familiar(tick, is_fresh)
-	if not is_wraithed and input.pulse_sight_press_tick == tick:
-		_cast_pulse_sight(tick, is_fresh)
-	if not is_wraithed and input.smart_rig_press_tick == tick:
-		_toggle_smart_rig(is_fresh)
-	if not is_wraithed and input.overclock_press_tick == tick:
-		_toggle_overclock(is_fresh)
-	_process_pulse_sight_tick()
-	_process_smart_rig_tick(delta)
-	_process_overclock_tick(delta)
+	# All Manifestations / Augments / equipment: only if purchased into kit.
+	_process_equipped_kit(delta, tick, is_fresh, jump_pressed)
 	_reconcile_field_reservations(tick)
 	_process_reclaim_bleedout()
 	_process_interact(tick, is_fresh)
-	# Glide power: dedicated key always; jump→glide only once per airborne period
-	# (no multi-jump climb by re-deploying glide / mashing jump in air).
-	var jump_wants_air_glide := (
-		jump_pressed and not is_on_floor() and not is_gliding
-		and air_glide_from_jump_available
-	)
-	var wants_glide := not is_wraithed and (
-		input.glide_press_tick == tick or jump_wants_air_glide
-	)
-	if wants_glide and not is_gliding:
-		if jump_wants_air_glide:
-			air_glide_from_jump_available = false
-		_try_deploy_glide(tick)
 
 	var base_speed := walk_speed if is_wraithed else (sprint_speed if input.sprint else walk_speed)
 	var speed := base_speed * weapon_rig.carry_weight_mult() * _overclock_move_mult()
@@ -377,14 +357,14 @@ func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:
 		if glide_ticks_remaining <= 0 or (is_on_floor() and velocity.y <= 0.01):
 			is_gliding = false
 		else:
+			# Glide only softens fall + air control. Upward impulse comes only
+			# from Repulse+Glide combo launch (or external forces like an
+			# enemy Repulse hit) — never from jump while gliding.
 			velocity.y -= gravity * delta * glide_gravity_mult
 			if direction:
 				velocity.x = move_toward(velocity.x, direction.x * glide_speed, glide_air_control * delta)
 				velocity.z = move_toward(velocity.z, direction.z * glide_speed, glide_air_control * delta)
 			velocity.y = maxf(velocity.y, -6.0)
-			if jump_for_boost:
-				velocity.y = maxf(velocity.y + 9.0, 9.0)
-				glide_boost_used = true
 	else:
 		if not is_on_floor():
 			velocity.y -= gravity * delta
@@ -512,6 +492,188 @@ func queue_set_grenade_stock(amount: int) -> void:
 
 func queue_set_null_stock(amount: int) -> void:
 	_pending_null_stock = amount
+
+
+## Purchased + delivered gear is "equipped" for this life (buy = equip).
+func has_equipped(item: String) -> bool:
+	return kit_owned.has(item)
+
+
+## Alias kept for tests / call sites written against owns_kit.
+func owns_kit(item: String) -> bool:
+	return has_equipped(item)
+
+
+## Free starter loadout: pistol + grenades only (no primary / no abilities).
+func grant_free_starters() -> void:
+	_apply_kit_grant("grenades")
+	if default_slot2 != "":
+		kit_owned[default_slot2] = true
+
+
+## Immediate equip (tests / offline). Economy buy path uses queue_grant_kit.
+func grant_kit(item: String) -> void:
+	_apply_kit_grant(item)
+
+
+func queue_grant_kit(item: String) -> void:
+	_pending_kit_grants.append(item)
+
+
+func queue_revoke_kit(item: String) -> void:
+	_pending_kit_revokes.append(item)
+
+
+func _glide_harness_reserve_amount() -> float:
+	return MatchConfig.get_value("resonance.glide_harness_reservation") * _config("tech_mult")
+
+
+func _is_weapon_item(item: String) -> bool:
+	return MatchConfig.DEFAULTS.has("weapon.%s.damage" % item)
+
+
+## True when this press-tick fires *and* the item is equipped.
+## Unowned press on a fresh tick emits cast_denied (feedback for locked binds).
+func _kit_press(item: String, press_tick: int, tick: int, is_fresh: bool) -> bool:
+	if press_tick != tick:
+		return false
+	if has_equipped(item):
+		return true
+	if is_fresh:
+		cast_denied.emit()
+	return false
+
+
+## Single path for all kit gear: presses, consumables, glide, sustained augments.
+func _process_equipped_kit(
+		delta: float, tick: int, is_fresh: bool, jump_pressed: bool
+) -> void:
+	# Wraith: enter/exit only if equipped; forced out if unequipped mid-form.
+	if _kit_press("wraith", input.wraith_press_tick, tick, is_fresh):
+		_toggle_wraith(is_fresh)
+	if is_wraithed:
+		if not has_equipped("wraith"):
+			is_wraithed = false
+		else:
+			resonance.drain(MatchConfig.get_value("resonance.wraith_drain_per_s") * delta)
+			if resonance.current <= 0.0:
+				is_wraithed = false
+
+	if not is_wraithed:
+		if _kit_press("repulse", input.repulse_press_tick, tick, is_fresh):
+			_try_cast_repulse(tick, is_fresh)
+		if _kit_press("slip", input.slip_press_tick, tick, is_fresh):
+			_try_slip(is_fresh)
+		if has_equipped("grenades"):
+			var cook_max := int(roundf(
+				MatchConfig.get_value("ability.grenade_cook_max_s") * NetworkTime.tickrate))
+			if input.grenade_held and grenade_stock > 0:
+				grenade_cook_ticks = mini(grenade_cook_ticks + 1, cook_max)
+			if input.grenade_press_tick == tick and grenade_stock > 0:
+				_throw_grenade(is_fresh, cook_max)
+		else:
+			grenade_cook_ticks = 0
+		if _kit_press("lifebloom", input.lifebloom_press_tick, tick, is_fresh):
+			_cast_lifebloom(tick, is_fresh)
+		if _kit_press("tangle", input.tangle_press_tick, tick, is_fresh):
+			_cast_tangle(tick, is_fresh)
+		if _kit_press("null_charge", input.null_press_tick, tick, is_fresh):
+			if null_stock > 0:
+				null_stock -= 1
+				if is_fresh:
+					_place_field("null_charge")
+			elif is_fresh:
+				cast_denied.emit()
+		if _kit_press("reclaim", input.reclaim_press_tick, tick, is_fresh):
+			_cast_reclaim(tick, is_fresh)
+		if _kit_press("familiar", input.familiar_press_tick, tick, is_fresh):
+			_cast_familiar(tick, is_fresh)
+		if _kit_press("pulse_sight", input.pulse_sight_press_tick, tick, is_fresh):
+			_cast_pulse_sight(tick, is_fresh)
+		if _kit_press("smart_rig", input.smart_rig_press_tick, tick, is_fresh):
+			_toggle_smart_rig(is_fresh)
+		if _kit_press("overclock", input.overclock_press_tick, tick, is_fresh):
+			_toggle_overclock(is_fresh)
+
+	# Sustained augment ticks only while that gear remains equipped.
+	if has_equipped("pulse_sight"):
+		_process_pulse_sight_tick()
+	if has_equipped("smart_rig"):
+		_process_smart_rig_tick(delta)
+	if has_equipped("overclock"):
+		_process_overclock_tick(delta)
+
+	# Glide Harness: key press or one contextual jump→glide while airborne.
+	if not is_wraithed and has_equipped("glide"):
+		var jump_wants_air_glide := (
+			jump_pressed and not is_on_floor() and not is_gliding
+			and air_glide_from_jump_available
+		)
+		var wants_glide := input.glide_press_tick == tick or jump_wants_air_glide
+		if wants_glide and not is_gliding:
+			if jump_wants_air_glide:
+				air_glide_from_jump_available = false
+			_try_deploy_glide(tick)
+
+
+func _try_cast_repulse(tick: int, is_fresh: bool) -> void:
+	if not _in_null_field() and resonance.try_spend(
+			MatchConfig.get_value("resonance.repulse_cost")):
+		_cast_repulse(tick, is_fresh)
+	elif is_fresh:
+		# Hard block (decided): no overdraft; Null suppresses casting.
+		cast_denied.emit()
+
+
+func _apply_kit_grant(item: String) -> void:
+	var first_equip := not kit_owned.has(item)
+	kit_owned[item] = true
+	if _is_weapon_item(item):
+		# Always refresh ammo on grant (buy / re-deliver).
+		weapon_rig.grant(item, 2 if item == "pistol" else 1)
+	elif item == "glide":
+		if first_equip:
+			resonance.reserve(_glide_harness_reserve_amount())
+	elif item == "grenades":
+		grenade_stock = int(MatchConfig.get_value("ability.grenade_stock"))
+	elif item == "null_charge":
+		null_stock = int(MatchConfig.get_value("ability.null_stock"))
+
+
+func _apply_kit_revoke(item: String) -> void:
+	if not kit_owned.has(item):
+		return
+	if _is_weapon_item(item):
+		weapon_rig.clear_key(item)
+	elif item == "glide":
+		resonance.release(_glide_harness_reserve_amount())
+		is_gliding = false
+		glide_ticks_remaining = 0
+	elif item == "grenades":
+		grenade_stock = 0
+		grenade_cook_ticks = 0
+	elif item == "null_charge":
+		null_stock = 0
+	elif item == "wraith":
+		is_wraithed = false
+	elif item == "pulse_sight":
+		if pulse_sight_reserved:
+			resonance.release(MatchConfig.get_value("resonance.pulse_sight_cost"))
+		pulse_sight_ticks_remaining = 0
+		pulse_sight_reserved = false
+	elif item == "smart_rig":
+		if smart_rig_reserved:
+			resonance.release(MatchConfig.get_value("resonance.smart_rig_cost"))
+		smart_rig_active = false
+		smart_rig_reserved = false
+	elif item == "overclock":
+		if overclock_reserved:
+			resonance.release(MatchConfig.get_value("resonance.overclock_cost"))
+		overclock_active = false
+		overclock_reserved = false
+		overclock_grace_ticks = 0
+		overclock_reset_ticks = 0
+	kit_owned.erase(item)
 
 
 func reset_for_round(spawn_position: Vector3) -> void:
@@ -672,6 +834,13 @@ func _cast_reclaim(tick: int, is_fresh: bool) -> void:
 	resonance.reserve(cost)
 	reclaim_reserved = true
 	reclaim_cast_tick = tick
+	if is_fresh and PlaytestViz.enabled():
+		var r := MatchConfig.get_value("reclaim.radius_m")
+		PlaytestViz.flash_sphere(get_tree(), global_position, r,
+			Color(0.4, 0.95, 0.55, 0.28), 0.45)
+		var bus := get_node_or_null("/root/PlaytestFxBus")
+		if bus != null and bus.has_method("push_log"):
+			bus.call("push_log", "reclaim cast")
 
 
 func _reclaim_targets(radius: float) -> Array:
@@ -1171,8 +1340,21 @@ func _try_slip(is_fresh: bool) -> void:
 	var destination := global_position + dir * MatchConfig.get_value("ability.slip_distance_m")
 
 	if _slip_destination_clear(destination):
+		var start_pos := global_position
 		resonance.try_spend(cost)
 		global_position = destination
+		if is_fresh and PlaytestViz.enabled() \
+				and MatchConfig.get_value("debug.viz.show_slip_ghost") > 0.5:
+			PlaytestViz.flash_line(get_tree(), start_pos, global_position,
+				Color(0.2, 1.0, 0.4, 0.7))
+			PlaytestViz.flash_slip_ghost(get_tree(), global_position)
+			var bus := get_node_or_null("/root/PlaytestFxBus")
+			if bus != null and bus.has_method("notify_generic"):
+				bus.call("notify_generic", &"slip", {
+					"from": start_pos,
+					"to": global_position,
+					"peer": input.get_multiplayer_authority(),
+				})
 	elif is_fresh:
 		cast_denied.emit()
 
@@ -1243,26 +1425,28 @@ func _push_nearby_bodies(cast_dir: Vector3) -> void:
 
 
 func _try_deploy_glide(tick: int) -> void:
+	if not has_equipped("glide"):
+		return
 	var window_ticks := int(roundf(combo_window * NetworkTime.tickrate))
 	var is_combo := (tick - last_down_repulse_tick <= window_ticks) and input.aim_pitch < -0.4
 
 	is_gliding = true
 	glide_ticks_remaining = int(roundf(glide_duration * NetworkTime.tickrate))
-	glide_boost_used = false
 
 	if is_combo:
 		velocity.y = combo_launch_velocity
 		print(">>> GLIDE LAUNCH COMBO! (tick=%d)" % tick)
 	else:
-		# Soften fall only — never grant free upward impulse on redeploy
-		# (that allowed climb-mashing jump/glide in mid-air).
+		# Soften fall only — never grant free upward impulse on deploy
+		# (jump or key). Vertical launch is combo-only.
 		if velocity.y < 0.0:
 			velocity.y *= 0.3
 		print("Glide deployed (tick=%d)" % tick)
 
 
-## Capsule body + simple viewmodel so targets and third-person have a silhouette.
-## Local FP hides the body mesh (camera is inside it); remotes stay visible.
+## Capsule body + held-blade stick + simple viewmodel for playtest silhouettes.
+## Local FP starts with body hidden (camera is inside it); remotes stay visible.
+## Blade equip toggles local body + stick via _sync_playtest_body_for_view.
 func _setup_playtest_body_mesh(is_local: bool) -> void:
 	if not PlaytestViz.enabled():
 		return
@@ -1277,10 +1461,12 @@ func _setup_playtest_body_mesh(is_local: bool) -> void:
 	body.position = Vector3(0.0, 0.9, 0.0)
 	body.material_override = PlaytestViz.unshaded_mat(Color(0.35, 0.55, 0.85, 0.85))
 	body.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	# First-person: hide capsule so it doesn't fill the camera.
+	# Local starts first-person: hide capsule so it doesn't fill the camera.
+	# Remotes always show a silhouette.
 	body.visible = not is_local
 	add_child(body)
-	# Simple viewmodel box so fire feels aimed (local only).
+	_setup_playtest_blade_prop(body)
+	# Simple viewmodel box so fire feels aimed (local only; hidden in blade TP).
 	if is_local and weapon_rig != null:
 		var stub := MeshInstance3D.new()
 		stub.name = "PlaytestViewmodel"
@@ -1291,3 +1477,137 @@ func _setup_playtest_body_mesh(is_local: bool) -> void:
 		stub.material_override = PlaytestViz.unshaded_mat(Color(0.2, 0.2, 0.22, 1.0))
 		stub.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		weapon_rig.add_child(stub)
+
+
+## Thin stick on the right side of the capsule (visible when blade is equipped).
+func _setup_playtest_blade_prop(body: MeshInstance3D) -> void:
+	var pivot := Node3D.new()
+	pivot.name = "PlaytestBladePivot"
+	# Right hand-ish relative to body mesh center.
+	pivot.position = Vector3(0.38, 0.12, 0.08)
+	pivot.rotation = _BLADE_REST_ROT
+	pivot.visible = false
+	body.add_child(pivot)
+	var blade := MeshInstance3D.new()
+	blade.name = "PlaytestBlade"
+	var stick := BoxMesh.new()
+	# Long axis along local -Z (character forward).
+	stick.size = Vector3(0.04, 0.055, 1.05)
+	blade.mesh = stick
+	blade.position = Vector3(0.0, 0.0, -0.52)
+	blade.material_override = PlaytestViz.unshaded_mat(Color(0.72, 0.74, 0.8, 1.0))
+	blade.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	pivot.add_child(blade)
+
+
+## View-only: body/stick/viewmodel follow blade equip + camera mode.
+func _sync_playtest_body_for_view(blade_out: bool) -> void:
+	var is_local := input.is_multiplayer_authority()
+	var body := get_node_or_null("PlaytestBody") as MeshInstance3D
+	if body != null:
+		# Remotes always keep a silhouette; local only when blade third-person.
+		body.visible = blade_out if is_local else true
+		var pivot := body.get_node_or_null("PlaytestBladePivot") as Node3D
+		if pivot != null:
+			pivot.visible = blade_out
+	if not is_local or weapon_rig == null:
+		return
+	var stub := weapon_rig.get_node_or_null("PlaytestViewmodel") as MeshInstance3D
+	if stub != null:
+		stub.visible = not blade_out
+
+
+## View-only: tint PlaytestBody for Wraith / Glide / Overclock state readability.
+func _update_playtest_state_silhouette() -> void:
+	if not PlaytestViz.enabled():
+		return
+	if MatchConfig.get_value("debug.viz.show_state_silhouettes") <= 0.5:
+		return
+	var body := get_node_or_null("PlaytestBody") as MeshInstance3D
+	if body == null:
+		return
+	var col := Color(0.35, 0.55, 0.85, 0.85)
+	if is_wraithed:
+		col = Color(0.45, 0.55, 0.75, 0.35)
+	elif overclock_active:
+		col = Color(1.0, 0.45, 0.15, 0.9)
+	elif is_gliding:
+		col = Color(0.35, 0.9, 1.0, 0.75)
+	body.material_override = PlaytestViz.unshaded_mat(col)
+	# Soft ring while gliding (recreated cheaply via flash is too noisy; use child).
+	var ring := get_node_or_null("PlaytestGlideRing") as MeshInstance3D
+	if is_gliding:
+		if ring == null:
+			ring = MeshInstance3D.new()
+			ring.name = "PlaytestGlideRing"
+			var tor := TorusMesh.new()
+			tor.inner_radius = 0.55
+			tor.outer_radius = 0.7
+			ring.mesh = tor
+			ring.position = Vector3(0.0, 0.15, 0.0)
+			ring.material_override = PlaytestViz.unshaded_mat(Color(0.4, 0.95, 1.0, 0.35))
+			ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			add_child(ring)
+		ring.visible = true
+	elif ring != null:
+		ring.visible = false
+
+
+## View-only Smart Rig aim wedge (Phase B) — does not deal damage.
+func _update_smart_rig_wedge() -> void:
+	var wedge := get_node_or_null("PlaytestSmartRigWedge") as MeshInstance3D
+	var show := PlaytestViz.enabled() \
+			and MatchConfig.get_value("debug.viz.show_smart_rig_wedge") > 0.5 \
+			and smart_rig_active and has_equipped("smart_rig")
+	if not show:
+		if wedge != null:
+			wedge.visible = false
+		return
+	if wedge == null:
+		wedge = MeshInstance3D.new()
+		wedge.name = "PlaytestSmartRigWedge"
+		wedge.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(wedge)
+	var range_m := MatchConfig.get_value("debug.viz.smart_rig_wedge_range_m")
+	var half_deg := MatchConfig.get_value("debug.viz.smart_rig_wedge_deg") * 0.5
+	var im := ImmediateMesh.new()
+	im.surface_begin(Mesh.PRIMITIVE_LINES)
+	im.surface_set_color(Color(1.0, 0.35, 0.2, 0.75))
+	var origin := Vector3(0.0, 1.5, 0.0)
+	var yaw := input.aim_yaw if input != null else rotation.y
+	var pitch := input.local_pitch if input != null else 0.0
+	var basis := Basis(Vector3.UP, yaw) * Basis(Vector3.RIGHT, pitch)
+	var forward := basis * Vector3.FORWARD
+	var right := basis * Vector3.RIGHT
+	var left_dir := (forward * cos(deg_to_rad(half_deg)) - right * sin(deg_to_rad(half_deg))).normalized()
+	var right_dir := (forward * cos(deg_to_rad(half_deg)) + right * sin(deg_to_rad(half_deg))).normalized()
+	im.surface_add_vertex(origin)
+	im.surface_add_vertex(origin + left_dir * range_m)
+	im.surface_add_vertex(origin)
+	im.surface_add_vertex(origin + right_dir * range_m)
+	im.surface_add_vertex(origin + left_dir * range_m)
+	im.surface_add_vertex(origin + right_dir * range_m)
+	im.surface_end()
+	wedge.mesh = im
+	wedge.material_override = PlaytestViz.tracer_mat(Color(1.0, 0.35, 0.2, 0.75))
+	wedge.visible = true
+	# Keep wedge in world-aligned local space under player root.
+	wedge.global_position = global_position
+
+
+## View-only slash on the playtest stick (triggered from BladeWeapon on fresh fire).
+func play_blade_swing_fx() -> void:
+	var body := get_node_or_null("PlaytestBody") as MeshInstance3D
+	if body == null:
+		return
+	var pivot := body.get_node_or_null("PlaytestBladePivot") as Node3D
+	if pivot == null:
+		return
+	if _blade_swing_tween != null and is_instance_valid(_blade_swing_tween):
+		_blade_swing_tween.kill()
+	pivot.rotation = _BLADE_WINDUP_ROT
+	_blade_swing_tween = create_tween()
+	_blade_swing_tween.tween_property(pivot, "rotation", _BLADE_FOLLOW_ROT, 0.1) \
+		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_blade_swing_tween.tween_property(pivot, "rotation", _BLADE_REST_ROT, 0.22) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)

@@ -25,6 +25,8 @@ func _fire(tick: int, is_fresh: bool = false) -> void:
 	var arc := deg_to_rad(config("arc_deg")) * 0.5
 	var range_m := config("range_m")
 	var any_hit := false
+	var last_hit_pos := Vector3.ZERO
+	var last_damage := 0.0
 	for node in me.get_tree().get_nodes_in_group("players"):
 		var victim := node as FPSController
 		if victim == null or victim == me:
@@ -34,16 +36,20 @@ func _fire(tick: int, is_fresh: bool = false) -> void:
 			continue
 		if forward.angle_to(to_victim.normalized()) > arc:
 			continue
-		_strike(victim, me, tick)
+		var applied := _strike(victim, me, tick)
 		any_hit = true
+		last_hit_pos = victim.global_position + Vector3(0, 1.2, 0)
+		last_damage = applied
+	var tip := origin + forward * range_m
+	# Local presentation only on fresh sim frames.
+	_present_blade_fx(origin, tip, last_hit_pos, last_damage, any_hit, is_fresh)
 	if is_fresh:
-		# Arc range disc edge marker: short line along aim at blade reach.
-		var tip := origin + forward * range_m
-		var col := Color(1.0, 0.35, 0.35, 0.9) if any_hit else Color(0.8, 0.5, 0.5, 0.55)
-		PlaytestViz.flash_line(me.get_tree(), origin, tip, col)
+		# View-only stick slash (not rollback state).
+		me.play_blade_swing_fx()
 
 
-func _strike(victim: FPSController, me: FPSController, tick: int) -> void:
+## Returns the confirmed damage float passed into take_damage (post mults).
+func _strike(victim: FPSController, me: FPSController, tick: int) -> float:
 	var damage := config("damage") * me._config("melee_mult")
 	var victim_back := -(victim.transform.basis * Vector3.FORWARD)
 	var from_victim := (me.global_position - victim.global_position).normalized()
@@ -57,3 +63,29 @@ func _strike(victim: FPSController, me: FPSController, tick: int) -> void:
 	if is_backstab:
 		victim.apply_bleed(config("bleed_hp_s"), config("bleed_duration_s"))
 	NetworkRollback.mutate(victim)
+	return damage
+
+
+## Local blade swing FX. is_fresh=false skips draw (rollback resim safe).
+## Returns true when presentation was attempted, false when skipped.
+func _present_blade_fx(
+		origin: Vector3, tip: Vector3, hit_pos: Vector3, damage: float,
+		hit_player: bool, is_fresh: bool = true
+) -> bool:
+	if not is_fresh:
+		return false
+	if not PlaytestViz.enabled():
+		return true
+	var me := _controller_or_null()
+	if me == null:
+		return true
+	var tree := me.get_tree()
+	if tree == null:
+		return true
+	# Melee uses body palette for hits; miss uses the miss tracer color.
+	var zone := "body" if hit_player else ""
+	var col := PlaytestViz.zone_tracer_color(zone, hit_player)
+	PlaytestViz.flash_line(tree, origin, tip, col)
+	if hit_player and damage > 0.0:
+		PlaytestViz.flash_hit_marker(tree, hit_pos, damage, "body")
+	return true

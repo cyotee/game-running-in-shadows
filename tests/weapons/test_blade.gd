@@ -51,6 +51,65 @@ func test_blade_switches_to_third_person_camera() -> void:
 	assert_bool(controller.third_person_camera.current).is_false()
 
 
+func test_local_playtest_body_visible_in_blade_third_person() -> void:
+	# Headless PlaytestViz.enabled() is false, so inject the same nodes the
+	# runtime setup creates; _process still drives visibility with camera mode.
+	var runner := scene_runner(CONTROLLER_SCENE)
+	var controller: FPSController = runner.scene()
+	var body := MeshInstance3D.new()
+	body.name = "PlaytestBody"
+	body.visible = false
+	controller.add_child(body)
+	var pivot := Node3D.new()
+	pivot.name = "PlaytestBladePivot"
+	pivot.visible = false
+	body.add_child(pivot)
+	var stub := MeshInstance3D.new()
+	stub.name = "PlaytestViewmodel"
+	stub.visible = true
+	controller.weapon_rig.add_child(stub)
+
+	controller.weapon_rig.grant("blade", 1)
+	controller.weapon_rig.active_slot = 1
+	await runner.simulate_frames(10)
+
+	assert_bool(controller.third_person_camera.current).is_true()
+	assert_bool(body.visible).is_true()
+	assert_bool(pivot.visible).is_true()
+	assert_bool(stub.visible).is_false()
+
+	select_slot(controller.input, 2)
+	await await_ticks(5)
+	await runner.simulate_frames(10)
+	assert_bool(controller.camera.current).is_true()
+	assert_bool(body.visible).is_false()
+	assert_bool(pivot.visible).is_false()
+	assert_bool(stub.visible).is_true()
+
+
+func test_play_blade_swing_fx_moves_pivot_off_rest() -> void:
+	var runner := scene_runner(CONTROLLER_SCENE)
+	var controller: FPSController = runner.scene()
+	var body := MeshInstance3D.new()
+	body.name = "PlaytestBody"
+	controller.add_child(body)
+	var pivot := Node3D.new()
+	pivot.name = "PlaytestBladePivot"
+	pivot.rotation = controller._BLADE_REST_ROT
+	body.add_child(pivot)
+
+	controller.play_blade_swing_fx()
+	# Immediate windup pose before the tween advances.
+	assert_vector(pivot.rotation).is_equal_approx(controller._BLADE_WINDUP_ROT, Vector3(0.001, 0.001, 0.001))
+	assert_that(controller._blade_swing_tween).is_not_null()
+	assert_bool(controller._blade_swing_tween.is_valid()).is_true()
+
+	# No-op when prop is missing (does not throw).
+	var bare: FPSController = auto_free((load(CONTROLLER_SCENE) as PackedScene).instantiate())
+	add_child(bare)
+	bare.play_blade_swing_fx()
+
+
 func test_frontal_swing_damages_without_bleed() -> void:
 	var trio := _blade_duel()
 	var runner: GdUnitSceneRunner = trio[0]

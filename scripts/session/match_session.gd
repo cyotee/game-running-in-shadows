@@ -38,6 +38,9 @@ func _ready() -> void:
 		match_state.assign_team(1)
 		_do_spawn(1)
 		match_state.start_match()
+		var bus_off := get_node_or_null("/root/PlaytestFxBus")
+		if bus_off != null and bus_off.has_method("host_publish_policy"):
+			bus_off.call("host_publish_policy")
 		_setup_ctf_objectives()
 		return
 	if multiplayer.is_server():
@@ -49,6 +52,9 @@ func _ready() -> void:
 		multiplayer.peer_connected.connect(_admit_peer)
 		multiplayer.peer_disconnected.connect(_despawn)
 		match_state.start_match()
+		var bus_host := get_node_or_null("/root/PlaytestFxBus")
+		if bus_host != null and bus_host.has_method("host_publish_policy"):
+			bus_host.call("host_publish_policy")
 		_setup_ctf_objectives()
 
 

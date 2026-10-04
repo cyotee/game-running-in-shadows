@@ -44,6 +44,7 @@ func _corpse_at(host: FPSController, offset: Vector3, owner_peer: int) -> Corpse
 func test_reclaim_denied_with_no_corpse() -> void:
 	var runner := scene_runner(CONTROLLER_SCENE)
 	var caster: FPSController = runner.scene()
+	await equip_kit(caster, ["reclaim"])
 	var before := caster.resonance.reserved
 	press(caster.input, &"reclaim")
 	await await_ticks(6)
@@ -94,6 +95,7 @@ func test_corpse_consumed_by_reclaim_destroy() -> void:
 func test_reclaim_cast_reserves_and_consumes_corpse() -> void:
 	var runner := scene_runner(CONTROLLER_SCENE)
 	var caster: FPSController = runner.scene()
+	await equip_kit(caster, ["reclaim"])
 	var _ally := _static_dead_ally(caster, Vector3(1.5, 0, 0), 2)
 	var corpse := _corpse_at(caster, Vector3(1.5, 0, 0), 2)
 	await await_ticks(2)
@@ -110,6 +112,7 @@ func test_reclaim_cast_reserves_and_consumes_corpse() -> void:
 func test_out_of_range_corpse_not_reserved() -> void:
 	var runner := scene_runner(CONTROLLER_SCENE)
 	var caster: FPSController = runner.scene()
+	await equip_kit(caster, ["reclaim"])
 	var _ally := _static_dead_ally(caster, Vector3(50, 0, 0), 2)
 	var corpse := _corpse_at(caster, Vector3(50, 0, 0), 2)
 	await await_ticks(2)
@@ -134,6 +137,7 @@ func _static_revived_ally(host: FPSController, peer: int, reviver: int) -> FPSCo
 func test_reclaim_reservation_held_while_revived_ally_alive() -> void:
 	var runner := scene_runner(CONTROLLER_SCENE)
 	var caster: FPSController = runner.scene()
+	await equip_kit(caster, ["reclaim"])
 	var caster_peer := caster.input.get_multiplayer_authority()
 	var _dead := _static_dead_ally(caster, Vector3(1.5, 0, 0), 2)
 	var _corpse := _corpse_at(caster, Vector3(1.5, 0, 0), 2)
@@ -150,6 +154,7 @@ func test_reclaim_reservation_held_while_revived_ally_alive() -> void:
 func test_reclaim_reservation_released_when_no_revived_ally() -> void:
 	var runner := scene_runner(CONTROLLER_SCENE)
 	var caster: FPSController = runner.scene()
+	await equip_kit(caster, ["reclaim"])
 	var _dead := _static_dead_ally(caster, Vector3(1.5, 0, 0), 2)
 	var _corpse := _corpse_at(caster, Vector3(1.5, 0, 0), 2)
 	await await_ticks(2)

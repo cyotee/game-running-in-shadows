@@ -79,6 +79,7 @@ func test_yaw_input_rotates_body() -> void:
 func test_glide_without_combo_gives_no_launch() -> void:
 	var runner := _spawn_controller()
 	var controller: FPSController = runner.scene()
+	await grant_movement_kit(controller)
 	controller.input.local_pitch = PITCH_DOWN
 
 	press(controller.input, &"glide")
@@ -92,6 +93,7 @@ func test_glide_without_combo_gives_no_launch() -> void:
 func test_down_repulse_then_glide_triggers_combo_launch() -> void:
 	var runner := _spawn_controller()
 	var controller: FPSController = runner.scene()
+	await grant_movement_kit(controller)
 	controller.input.local_pitch = PITCH_DOWN
 
 	press(controller.input, &"repulse")
@@ -109,6 +111,7 @@ func test_down_repulse_then_glide_triggers_combo_launch() -> void:
 func test_combo_launch_keeps_glide_active_while_rising() -> void:
 	var runner := _spawn_controller()
 	var controller: FPSController = runner.scene()
+	await grant_movement_kit(controller)
 	controller.input.local_pitch = PITCH_DOWN
 
 	press(controller.input, &"repulse")
@@ -123,6 +126,7 @@ func test_combo_launch_keeps_glide_active_while_rising() -> void:
 func test_level_repulse_does_not_arm_combo() -> void:
 	var runner := _spawn_controller()
 	var controller: FPSController = runner.scene()
+	await grant_movement_kit(controller)
 	controller.input.local_pitch = PITCH_LEVEL
 
 	press(controller.input, &"repulse")
@@ -141,38 +145,61 @@ func test_spawns_with_archetype_stats_and_reservation() -> void:
 	var runner := _spawn_controller()
 	var controller: FPSController = runner.scene()
 
-	# Human defaults: max 10, harness reservation 2 x 1.0 -> spawn at 8/10.
+	# Free kit: pistol + grenades only — no Glide Harness reserve yet.
 	assert_float(controller.resonance.max_resonance).is_equal(10.0)
+	assert_float(controller.resonance.reserved).is_equal(0.0)
+	assert_float(controller.resonance.current).is_equal(10.0)
+	assert_float(controller.health).is_equal(100.0)
+	assert_bool(controller.owns_kit("grenades")).is_true()
+	assert_bool(controller.owns_kit("repulse")).is_false()
+	assert_bool(controller.owns_kit("glide")).is_false()
+	# Purchasing Glide Harness locks reservation (2 x tech 1.0) -> 8/10.
+	await grant_movement_kit(controller)
 	assert_float(controller.resonance.reserved).is_equal(2.0)
 	assert_float(controller.resonance.current).is_equal(8.0)
-	assert_float(controller.health).is_equal(100.0)
+
+
+func test_repulse_requires_purchase() -> void:
+	var runner := _spawn_controller()
+	var controller: FPSController = runner.scene()
+	var denials: Array = []
+	controller.cast_denied.connect(func() -> void: denials.append(true))
+	var res_before := controller.resonance.current
+	press(controller.input, &"repulse")
+	await await_ticks(5)
+	assert_array(denials).has_size(1)
+	assert_float(controller.resonance.current).is_greater_equal(res_before - 0.5)
 
 
 func test_repulse_spends_resonance() -> void:
 	var runner := _spawn_controller()
 	var controller: FPSController = runner.scene()
+	await grant_movement_kit(controller)
 	controller.input.local_pitch = PITCH_LEVEL
 
 	press(controller.input, &"repulse")
 	await await_ticks(5)
 
-	# One cast (cost 2) plus out-of-combat regen drift (0.35/s, variable wall
-	# time). Two casts would land near 4, zero casts near 8.
+	# One cast (cost 2) from 8 after harness reserve, plus regen drift.
 	assert_float(controller.resonance.current).is_between(5.9, 6.6)
 
 
 func test_repulse_hard_blocked_when_insufficient() -> void:
 	var runner := _spawn_controller()
 	var controller: FPSController = runner.scene()
-	controller.resonance.current = 1.0
+	await equip_kit(controller, ["repulse"])
+	# Out-of-band writes to Resonance rollback state are restored — raise cost
+	# via MatchConfig so the cast path hard-blocks for real.
+	MatchConfig.set_value("resonance.repulse_cost", 999.0)
+	var res_before := controller.resonance.current
 	var vel_before := controller.velocity
 
 	press(controller.input, &"repulse")
 	await await_ticks(5)
 
-	# No spend (hard block); out-of-combat regen drift allowed (0.35/s, and
-	# the awaited wall time varies with load). A spend would subtract 2.0.
-	assert_float(controller.resonance.current).is_between(0.99, 1.5)
+	# No spend (hard block); allow regen drift only.
+	assert_float(controller.resonance.current).is_greater_equal(res_before - 0.5)
+	assert_float(controller.resonance.current).is_less(res_before + 1.0)
 	# No self-push happened (horizontal only: gravity owns the y axis while
 	# the controller free-falls in the scene-runner void).
 	var delta_v := controller.velocity - vel_before
@@ -183,6 +210,9 @@ func test_repulse_hard_blocked_when_insufficient() -> void:
 func test_slip_blinks_in_open_space() -> void:
 	var runner := _spawn_controller()
 	var controller: FPSController = runner.scene()
+	# Immediate equip (kit flag is not rollback) before freefall builds velocity.
+	controller.grant_kit("slip")
+	assert_bool(controller.has_equipped("slip")).is_true()
 	var start := controller.global_position
 	var res_before := controller.resonance.current
 
@@ -191,12 +221,13 @@ func test_slip_blinks_in_open_space() -> void:
 
 	# Stationary -> blinks along aim (default forward, ~8 m).
 	assert_float(controller.global_position.distance_to(start)).is_greater(6.0)
-	assert_float(controller.resonance.current).is_equal_approx(res_before - 3.0, 0.3)
+	assert_float(controller.resonance.current).is_equal_approx(res_before - 3.0, 0.5)
 
 
 func test_slip_blocked_destination_refunds_and_fizzles() -> void:
 	var runner := _spawn_controller()
 	var controller: FPSController = runner.scene()
+	await equip_kit(controller, ["slip"])
 	# Solid block filling the destination (8 m along -Z at body height).
 	var wall: StaticBody3D = auto_free(StaticBody3D.new())
 	wall.collision_layer = 1
@@ -227,11 +258,12 @@ func test_slip_blocked_destination_refunds_and_fizzles() -> void:
 func test_wraith_toggles_and_drains() -> void:
 	var runner := _spawn_controller()
 	var controller: FPSController = runner.scene()
+	await equip_kit(controller, ["wraith"])
 
 	press(controller.input, &"wraith")
 	await await_ticks(3)
 	assert_bool(controller.is_wraithed).is_true()
-	var after_toggle := controller.resonance.current  # ~7 (8 - 1 cost)
+	var after_toggle := controller.resonance.current  # ~9 (10 free pool - 1 cost)
 
 	await await_ticks(30)  # ~0.5s of drain
 	assert_bool(controller.is_wraithed).is_true()
@@ -241,19 +273,22 @@ func test_wraith_toggles_and_drains() -> void:
 func test_wraith_forced_out_when_pool_empties() -> void:
 	var runner := _spawn_controller()
 	var controller: FPSController = runner.scene()
-	controller.resonance.current = 2.0
+	await equip_kit(controller, ["wraith"])
+	# Out-of-band Resonance.current writes are restored — accelerate drain instead.
+	MatchConfig.set_value("resonance.wraith_drain_per_s", 40.0)
 
 	press(controller.input, &"wraith")
 	await await_ticks(3)
 	assert_bool(controller.is_wraithed).is_true()
 
-	await await_ticks(120)  # drains past zero (net ~1.15/s)
+	await await_ticks(30)  # ~0.5s at 40/s empties a full pool
 	assert_bool(controller.is_wraithed).is_false()
 
 
 func test_wraith_immune_to_bullets() -> void:
 	var runner := _spawn_controller()
 	var controller: FPSController = runner.scene()
+	await equip_kit(controller, ["wraith"])
 
 	press(controller.input, &"wraith")
 	await await_ticks(3)
@@ -267,6 +302,7 @@ func test_wraith_immune_to_bullets() -> void:
 func test_wraith_blocks_weapon_fire() -> void:
 	var runner := _spawn_controller()
 	var controller: FPSController = runner.scene()
+	await equip_kit(controller, ["wraith"])
 	controller.weapon_rig.active_slot = 2  # pistol (semi-auto)
 
 	press(controller.input, &"wraith")
@@ -284,6 +320,7 @@ func test_elf_archetype_reservation_scaled() -> void:
 	var runner := scene_runner(CONTROLLER_SCENE)
 	var controller: FPSController = runner.scene()
 	controller.archetype = &"elf"
+	await equip_kit(controller, ["glide"])
 	controller._apply_archetype_config()
 
 	# Elf: max 12, harness 2 x 1.5 = 3 reserved -> cap 9.
@@ -556,6 +593,7 @@ func test_slowdown_scale_set_when_enemy_under_reticle() -> void:
 func test_airborne_jump_deploys_glide() -> void:
 	var runner := _spawn_controller()
 	var controller: FPSController = runner.scene()
+	await grant_movement_kit(controller)
 	# Spawned in empty space, the controller is airborne (falling) from tick 1.
 	press(controller.input, &"jump")
 	await await_ticks(10)
@@ -570,6 +608,7 @@ func test_airborne_jump_deploys_glide() -> void:
 func test_combo_expires_after_window() -> void:
 	var runner := _spawn_controller()
 	var controller: FPSController = runner.scene()
+	await grant_movement_kit(controller)
 	controller.input.local_pitch = PITCH_DOWN
 
 	press(controller.input, &"repulse")

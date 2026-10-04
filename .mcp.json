@@ -9,6 +9,17 @@
         "GODOT_PATH": "/Applications/Godot.app/Contents/MacOS/Godot",
         "GODOT_MCP_PORT": "9292"
       }
+    },
+    "blender": {
+      "command": "/Users/cyotee/.local/bin/uvx",
+      "args": [
+        "blender-mcp"
+      ],
+      "env": {
+        "BLENDER_HOST": "localhost",
+        "BLENDER_PORT": "9876",
+        "DISABLE_TELEMETRY": "true"
+      }
     }
   }
 }

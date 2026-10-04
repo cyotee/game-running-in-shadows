@@ -99,8 +99,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not is_multiplayer_authority():
 		return
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-		local_yaw = wrapf(local_yaw - event.relative.x * mouse_sensitivity, -PI, PI)
-		local_pitch = clampf(local_pitch - event.relative.y * mouse_sensitivity, -PI / 2.0, PI / 2.0)
+		var sens := _mouse_sens()
+		var pitch_sign := -1.0 if _invert_y() else 1.0
+		local_yaw = wrapf(local_yaw - event.relative.x * sens, -PI, PI)
+		local_pitch = clampf(
+			local_pitch - event.relative.y * sens * pitch_sign, -PI / 2.0, PI / 2.0)
+
 	if event.is_action_pressed("toggle_mouse"):
 		if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -178,21 +182,63 @@ func _process(delta: float) -> void:
 	var stick_x := _remap_stick(Input.get_joy_axis(0, JOY_AXIS_RIGHT_X))
 	var stick_y := _remap_stick(Input.get_joy_axis(0, JOY_AXIS_RIGHT_Y))
 	if stick_x != 0.0 or stick_y != 0.0:
-		var yaw_rate := deg_to_rad(MatchConfig.get_value("input.look_max_yaw_deg_s"))
-		var pitch_rate := deg_to_rad(MatchConfig.get_value("input.look_max_pitch_deg_s"))
+		var yaw_rate := deg_to_rad(_stick_yaw_deg_s())
+		var pitch_rate := deg_to_rad(_stick_pitch_deg_s())
+		var pitch_sign := -1.0 if _invert_y() else 1.0
 		local_yaw = wrapf(local_yaw - stick_x * yaw_rate * look_rate_scale * delta, -PI, PI)
-		local_pitch = clampf(local_pitch - stick_y * pitch_rate * look_rate_scale * delta,
+		local_pitch = clampf(
+			local_pitch - stick_y * pitch_rate * look_rate_scale * delta * pitch_sign,
 			-PI / 2.0, PI / 2.0)
 
 
+func _mouse_sens() -> float:
+	var ib := _input_bindings()
+	if ib != null:
+		return ib.mouse_sensitivity
+	return mouse_sensitivity
+
+
+func _invert_y() -> bool:
+	var ib := _input_bindings()
+	return ib != null and ib.invert_y
+
+
+func _stick_yaw_deg_s() -> float:
+	var ib := _input_bindings()
+	if ib != null:
+		return ib.stick_look_max_yaw_deg_s
+	return MatchConfig.get_value("input.look_max_yaw_deg_s")
+
+
+func _stick_pitch_deg_s() -> float:
+	var ib := _input_bindings()
+	if ib != null:
+		return ib.stick_look_max_pitch_deg_s
+	return MatchConfig.get_value("input.look_max_pitch_deg_s")
+
+
+func _input_bindings() -> Node:
+	return get_node_or_null("/root/InputBindings")
+
+
 func _remap_stick(value: float) -> float:
-	var inner := MatchConfig.get_value("input.stick_deadzone_inner")
-	var outer := MatchConfig.get_value("input.stick_deadzone_outer")
+	var ib := _input_bindings()
+	var inner: float
+	var outer: float
+	var curve: float
+	if ib != null:
+		inner = float(ib.get("stick_deadzone_inner"))
+		outer = float(ib.get("stick_deadzone_outer"))
+		curve = float(ib.get("stick_look_curve_exponent"))
+	else:
+		inner = MatchConfig.get_value("input.stick_deadzone_inner")
+		outer = MatchConfig.get_value("input.stick_deadzone_outer")
+		curve = MatchConfig.get_value("input.look_curve_exponent")
 	var mag := absf(value)
 	if mag < inner:
 		return 0.0
-	var normalized := clampf((mag - inner) / (outer - inner), 0.0, 1.0)
-	return signf(value) * pow(normalized, MatchConfig.get_value("input.look_curve_exponent"))
+	var normalized := clampf((mag - inner) / maxf(outer - inner, 0.001), 0.0, 1.0)
+	return signf(value) * pow(normalized, curve)
 
 
 func _gather() -> void:

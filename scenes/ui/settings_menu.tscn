@@ -1,0 +1,76 @@
+[gd_scene format=3 uid="uid://cbx4uhnklipjg"]
+
+[ext_resource type="Script" path="res://scripts/ui/settings_menu.gd" id="1_set"]
+
+[node name="SettingsMenu" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_set")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.55)
+
+[node name="Shell" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 40.0
+offset_top = 40.0
+offset_right = -40.0
+offset_bottom = -40.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="Shell"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="VBox" type="VBoxContainer" parent="Shell/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Header" type="HBoxContainer" parent="Shell/Margin/VBox"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="Shell/Margin/VBox/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Settings"
+
+[node name="DisplayTab" type="Button" parent="Shell/Margin/VBox/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Display"
+
+[node name="ControlsTab" type="Button" parent="Shell/Margin/VBox/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Controls"
+
+[node name="BackButton" type="Button" parent="Shell/Margin/VBox/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Close"
+
+[node name="ContentHost" type="Control" parent="Shell/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+custom_minimum_size = Vector2(0, 500)

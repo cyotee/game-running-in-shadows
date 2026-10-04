@@ -315,6 +315,32 @@ Current prototype has basic raycast hitscan. Need real damage, spread, recoil, e
 
 ## 9. Investigations & Playtest Tracker
 
+**Playtest combat viz suite (2026-07-25)**
+
+- Implemented full visual-only combat debug suite per `docs/PRD_PLAYTEST_COMBAT_VIZ.md` / plan `2026-07-25-playtest-combat-viz.md`.
+- Host-forced multiplayer FX via `PlaytestFxBus`; confirmed damage pips; Smart Rig wedge in ability wave.
+- Master gate: `debug.playtest_viz` + release strip. See README playtest viz table + `debug.viz.*` MatchConfig keys.
+
+**Vertical-loop playtest pass (2026-07-25 — agent, arena MCP)**
+
+- **Scene:** `res://scenes/levels/test_arena.tscn` via Godot 4.7.1 + McpInteractionServer TCP (`127.0.0.1:9090`). Log: instrumented walk/sprint/crouch, Repulse+Glide attempt, pistol fire, Slip, Wraith; MatchConfig-derived TTK/economy metrics.
+- **Measured (pre-change):** walk 5.0 m/s, sprint 8.0 m/s, crouch 2.75 m/s (`movement.crouch_speed_mult` 0.55 ✓). Slip ~9.9 m horizontal (cost ~3). Blade bleed vs Elf heal delta **0** (equilibrium holds). Pistol TTK human ~2.8 s; SMG ~1.12 s (slow/arena intent OK).
+- **Worst-feel findings:**
+  1. Human OOC Repulse recovery **5.7 s** at `regen_per_s` 0.35 for cost 2 — signature mobility tax too high between engagements.
+  2. Lifebloom full heal on 100 HP **16.7 s** at 6 HP/s — weak payoff for 3 held Resonance.
+  3. Familiar DPS **15** (12 / 0.8 s) vs pistol DPS **34** — minion underpays for 4 held.
+  4. *Deferred (not MatchConfig):* `glide_speed` export 4.0 &lt; walk 5.0 — float feels sluggish; MCP down-Repulse+Glide did not produce vertical launch (press-tick/input path); log only.
+- **Number changes (`scripts/config/match_config.gd` DEFAULTS):**
+
+  | Key | Before | After | Why |
+  |-----|--------|-------|-----|
+  | `archetype.human.regen_per_s` | 0.35 | **0.5** | Bring OOC Repulse recover to **4.0 s** (matches combat timeout pacing; early sheet proposal ~0.5/s). Still slower than Elf 0.8. |
+  | `ability.lifebloom_heal_per_s` | 6.0 | **8.0** | Full human heal **12.5 s** — more decisive sustain without instant full-heal. |
+  | `familiar.melee_damage` | 12.0 | **16.0** | Familiar DPS **20** — more threat for 4 held; still below SMG burst. |
+  | `archetype.dwarf.drain_per_enemy_per_s` | 0.5 | **0.75** | After human regen 0.5, old drain netted **0** OOC vs Human — aura no longer a counter. 0.75 keeps net −0.25/s vs Human, −0.05 vs Elf. |
+
+- **Re-test note:** Live `MatchConfig.set_value` to new defaults → metrics 4.0 s / 12.5 s / 20 DPS; walk still 5.0 m/s; res 8→10 over ~2 s OOC. GdUnit `test_playtest_pass_2026_07_25_tuned_defaults` locks DEFAULTS + derived targets. No TTK philosophy flip; Elf bleed equilibrium unchanged.
+
 **Steam sessions — pending owner verification (2026-07-19)**
 - Plan 6 is code-complete: GodotSteam 4.20.1 boots, `SteamMultiplayerPeer` class present, session state machine + lobby browser tested with fakes, three-peer ENet E2E green.
 - **PENDING (owner, needs Steam client + second machine/account):** Host (Public) → lobby appears in browser with correct n/16 → Join → both load match_session over Steam relay → movement + Repulse/Glide replicate; third account joins mid-session → spectator camera → host presses F9 → body spawns. Record latency feel + drops here.
@@ -385,7 +411,7 @@ Record stable decisions that have been moved out of this sheet.
 | Tunable | Human | Elf | Dwarf | Troll |
 |---------|-------|-----|-------|-------|
 | Max Resonance | 10 | 12 | 14 | 8 |
-| Regen (per s, out of combat) | 0.35 | 0.8 | 0.15 | 0 |
+| Regen (per s, out of combat) | 0.5 | 0.8 | 0.15 | 0 |
 | Tech multiplier (reservation scaling) | 1.0 | 1.5 | 2.0 | 1.25 |
 | Max health | 100 | 78 | 95 | 135 |
 
@@ -420,7 +446,7 @@ These four express how ability combinations should FEEL. Use them as tuning nort
 - Stick deadzone: 0.15 (inner), 0.98 (outer) · look response curve exponent: 2.0
 - Max look rate: 240°/s yaw, 180°/s pitch (at full deflection, hip); ADS scales by 1/zoom
 - Slowdown-on-target (controller only): sensitivity ×0.6 while reticle is over an enemy within 40 m; ×1.0 otherwise; no effect on mouse
-- Contextual A-button: jump on floor · deploy glide when airborne · glide boost while gliding
+- Contextual A-button: jump on floor · deploy glide when airborne (no upward impulse; combo launch is Repulse+Glide only)
 
 **Ability baselines (2026-07-16 — provisional numbers for §4.A decisions; ALL MatchConfig tunables)**
 

@@ -131,6 +131,10 @@ def main() -> int:
         # that drop persists on the host's authoritative copy of the client's
         # player. (Glide would self-cancel the next grounded tick, giving no
         # stable state to observe — Repulse's Resonance spend is durable.)
+        # Repulse is purchased kit — grant on both peers' copies of the body.
+        grant_code = f"get_node('{path}').grant_kit('repulse'); return true"
+        host.cmd("eval", {"code": grant_code})
+        client.cmd("eval", {"code": grant_code})
         res_code = f"return get_node('{path}/Resonance').current"
 
         def try_repulse() -> bool:

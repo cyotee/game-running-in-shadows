@@ -37,21 +37,21 @@ On macOS, prefer launching from the app bundle for full logs:
 | **F6** | Run **currently open** scene |
 | **F8** | Stop |
 
-**Default main scene:** `scenes/levels/test_arena.tscn` (FPS prototype arena).
+**Default main scene:** `scenes/ui/main_menu.tscn` (Settings, lobbies, **Test Arena** button).
 
 ### Scene cheat sheet
 
 | What you want to test | Open this scene | Run with |
 |----------------------|-----------------|----------|
-| **FPS sandbox** (movement, guns, abilities) | `scenes/levels/test_arena.tscn` | F5 or F6 |
+| **Main menu / Settings / lobbies** | `scenes/ui/main_menu.tscn` | **F5** (default) |
+| **FPS sandbox** (movement, guns, abilities) | `scenes/levels/test_arena.tscn` | F6, or main menu → Test Arena |
 | **CTF greybox** (flag, goals) | `scenes/levels/map_objective.tscn` | F6 |
 | **Close-quarters map** | `scenes/levels/map_close_quarters.tscn` | F6 |
 | **Full match session** (spawn, MatchState, economy hooks) | `scenes/session/match_session.tscn` | F6 |
-| **Main menu / lobby UI** | `scenes/ui/main_menu.tscn`, `scenes/ui/lobby_browser.tscn` | F6 |
 | **Two-instance netcode** (latency) | `scenes/dev/net_test.tscn` | Prefer shell E2E (below) |
 | **Placeholder art review** | `scenes/dev/model_review.tscn` | F6 |
 
-**Tip:** For day-to-day ability feel, use **test_arena** (F5). For CTF, open **map_objective** and press **F6**.
+**Tip:** Day-to-day play: **F5** → **Settings** or **Test Arena (dev)**. Skip the menu with F6 on `test_arena`, or CLI `res://scenes/levels/test_arena.tscn`.
 
 ---
 
@@ -119,21 +119,26 @@ Controller (joypad) events are also bound for many actions — see Input Map for
 2. If a blade is equipped: switching to it should go third-person; swing with fire / ADS as bound.
 3. **Dev Arsenal (F10)** in `test_arena` — give money, buy catalog gear, **refund/remove** so you can buy a replacement (see below).
 
-### Playtest visualization (ranges / tracers)
+### Playtest visualization (combat suite)
 
-Mechanics ship before art. For tuning, translucent **MatchConfig-accurate** volumes are on by default (`debug.playtest_viz` = 1 in MatchConfig):
+Mechanics ship before art. For tuning, translucent **MatchConfig-accurate** volumes and combat feedback are on by default (`debug.playtest_viz` = 1). **Dev/playtest only** — forced off when `COUNTERSPELL_RELEASE=1` or `counterspell/release_build`. Multiplayer: **host-forced** session policy so all peers share tracers when the host has viz on (`PlaytestFxBus`).
 
 | What | Visual |
 |------|--------|
-| Lifebloom / Tangle / Null | Disc + sphere = heal/pull/suppress **radius in meters** |
-| Grenade detonation | Outer blast + inner falloff shells |
+| Lifebloom / Tangle / Null | Disc + sphere (owner-colored accent) |
+| Grenade | In-flight trail pips + outer/inner detonation shells |
 | Repulse | Sphere at push volume (`repulse_range`) |
-| Hitscan | Short tracer (yellow = body hit, grey = world/miss) |
-| Familiar | Aggro disc + melee sphere |
+| Hitscan | Longer tracer; **head / body / limb / miss** colors; muzzle stub; **confirmed** damage pip |
+| Blade | Swing line + hit marker on connect |
+| Familiar | Aggro disc + melee sphere + FOLLOW/GUARD/HUNT label |
+| Slip / Reclaim | Destination ghost + cast radius flash |
+| Smart Rig | Debug aim wedge (no damage) |
+| States | Capsule tint: Wraith / Glide / Overclock |
+| Combat log | Last N events on HUD (left side) |
 | Corpse | Loot range disc |
-| Players | Capsule silhouette for remotes; simple viewmodel for local FP |
+| Players | Capsule silhouette; simple viewmodel for local FP |
 
-Turn off: set `debug.playtest_viz` to `0` in MatchConfig / `user://match_config.json`. Full art is Milestone D; placeholders stay in `models/placeholders/` for later.
+Turn off: `debug.playtest_viz` = `0` in MatchConfig / `user://match_config.json`, or Dev Arsenal (F10) **Playtest Viz** checkbox. Tunables: `debug.viz.*`. Full art is Milestone D.
 
 ### Dev Arsenal (F10) — kit testing in the arena
 

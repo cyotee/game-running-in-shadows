@@ -1,9 +1,9 @@
-[gd_scene load_steps=3 format=3 uid="uid://mainmenustub"]
+[gd_scene format=3 uid="uid://mainmenustub"]
 
-[ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="1_menu"]
-[ext_resource type="PackedScene" uid="uid://lobbybrowser1" path="res://scenes/ui/lobby_browser.tscn" id="2_browser"]
+[ext_resource type="Script" uid="uid://bdg58ctwnutfx" path="res://scripts/ui/main_menu.gd" id="1_menu"]
+[ext_resource type="PackedScene" uid="uid://dxhkr6w6senai" path="res://scenes/ui/lobby_browser.tscn" id="2_browser"]
 
-[node name="MainMenu" type="Control"]
+[node name="MainMenu" type="Control" unique_id=867019042]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -12,7 +12,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_menu")
 
-[node name="Title" type="Label" parent="."]
+[node name="Title" type="Label" parent="." unique_id=184558340]
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
@@ -22,69 +22,75 @@ offset_top = 80.0
 offset_right = 300.0
 offset_bottom = 140.0
 grow_horizontal = 2
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 56
 text = "COUNTERSPELL"
 horizontal_alignment = 1
 
-[node name="Subtitle" type="Label" parent="."]
+[node name="Subtitle" type="Label" parent="." unique_id=518735017]
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -300.0
-offset_top = 140.0
-offset_right = 300.0
-offset_bottom = 170.0
+offset_left = -360.0
+offset_top = 150.0
+offset_right = 360.0
+offset_bottom = 190.0
 grow_horizontal = 2
+theme_override_font_sizes/font_size = 22
 text = "guns + Manifestations + Augments"
 horizontal_alignment = 1
 
-[node name="Buttons" type="VBoxContainer" parent="."]
+[node name="Buttons" type="VBoxContainer" parent="." unique_id=457568448]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -140.0
-offset_top = -110.0
-offset_right = 140.0
-offset_bottom = 110.0
+offset_left = -180.0
+offset_top = -140.0
+offset_right = 180.0
+offset_bottom = 160.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 14
 
-[node name="HostFriendsButton" type="Button" parent="Buttons"]
+[node name="HostFriendsButton" type="Button" parent="Buttons" unique_id=787342412]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Host (Friends)"
 
-[node name="HostPublicButton" type="Button" parent="Buttons"]
+[node name="HostPublicButton" type="Button" parent="Buttons" unique_id=1524288765]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Host (Public)"
 
-[node name="BrowseButton" type="Button" parent="Buttons"]
+[node name="BrowseButton" type="Button" parent="Buttons" unique_id=513667715]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Browse Lobbies"
 
-[node name="InviteButton" type="Button" parent="Buttons"]
+[node name="InviteButton" type="Button" parent="Buttons" unique_id=1134301531]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Invite Friends"
 
-[node name="ArenaButton" type="Button" parent="Buttons"]
+[node name="ArenaButton" type="Button" parent="Buttons" unique_id=1967166615]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Test Arena (dev)"
 
-[node name="QuitButton" type="Button" parent="Buttons"]
+[node name="SettingsButton" type="Button" parent="Buttons" unique_id=417596483]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Settings"
+
+[node name="QuitButton" type="Button" parent="Buttons" unique_id=839746115]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Quit"
 
-[node name="StatusLabel" type="Label" parent="."]
+[node name="StatusLabel" type="Label" parent="." unique_id=128730919]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 7
@@ -101,7 +107,7 @@ grow_vertical = 0
 text = "Steam: checking..."
 horizontal_alignment = 1
 
-[node name="LobbyBrowser" parent="." instance=ExtResource("2_browser")]
+[node name="LobbyBrowser" parent="." unique_id=1837939385 instance=ExtResource("2_browser")]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1

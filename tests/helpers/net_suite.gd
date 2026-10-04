@@ -62,3 +62,18 @@ func press(input: PlayerInput, action: StringName) -> void:
 
 func select_slot(input: PlayerInput, slot: int) -> void:
 	input._pending_slot = slot
+
+
+## Equip purchased kit items for tests (buy == equip).
+## Sets kit flags immediately (not rollback), then queues so consumable stock /
+## weapon slots apply on a fresh sim tick and enter history.
+func equip_kit(controller: FPSController, items: Array) -> void:
+	for item in items:
+		controller.grant_kit(str(item))
+		controller.queue_grant_kit(str(item))
+	await await_ticks(3)
+
+
+## Grant purchased movement kit (Repulse + Glide Harness) for ability tests.
+func grant_movement_kit(controller: FPSController) -> void:
+	await equip_kit(controller, ["repulse", "glide"])

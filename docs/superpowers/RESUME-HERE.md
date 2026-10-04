@@ -1,21 +1,22 @@
 # Resume Here — CounterSpell Implementation Progress
 
-**Last updated:** 2026-07-20 (Milestone C + D hooks **merged to `main`**)
-**Goal status:** Master plan Option C (PROMPT.md) — code complete for agent scope.
+**Last updated:** 2026-07-23 (Controls rebind menu implemented)
+**Goal status:** Master plan Option C (PROMPT.md) — code complete for agent scope;
+Controls rebind (listen-to-map, multi-bind KBM+pad) shipped.
 
 ---
 
 ## TL;DR
 
 1. **On `main`.** Familiar, Pulse Sight, Smart Rig, Overclock, CTF objective,
-   two greybox maps, G10 spike findings, G11 InputTrace, G12 Steam polish hooks,
-   G13 MCP/release strip — merged.
-2. **Gates:** Full GdUnit **156/156 exit 0**; `net_smoke` **PASS**; live InputMap
-   bindings verified (N/Y/U/O + pending-edge cast path).
+   two greybox maps, G10–G13, plus **Controls rebind** (`InputBindings` + Settings
+   UI + pause menu).
+2. **Controls:** Main menu → Settings → Controls; in-match Esc/Start → Settings.
+   Multi-bind + listen-to-rebind; `user://input_bindings.json`.
 3. **OWNER-only remaining:** two-machine Steam match; Deck/Windows feel; EOS/EAC
    SDK link (hooks only in-repo).
-4. **Next product work (post-playtest):** G10 remesh implementation if demanded;
-   ability ownership/buy gating; art pass; store marketing (non-code).
+4. **Next product work:** loadout-specific bind profiles; Steam Input Phase 2;
+   art pass.
 
 ## How to run
 

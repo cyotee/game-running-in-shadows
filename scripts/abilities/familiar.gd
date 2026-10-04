@@ -48,6 +48,32 @@ func _process(_delta: float) -> void:
 	if _is_dead() and not _freed:
 		_freed = true
 		queue_free()
+		return
+	_update_playtest_state_label()
+
+
+func _update_playtest_state_label() -> void:
+	if not PlaytestViz.enabled():
+		return
+	var label := get_node_or_null("PlaytestStateLabel") as Label3D
+	if label == null:
+		label = Label3D.new()
+		label.name = "PlaytestStateLabel"
+		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		label.font_size = 28
+		label.position = Vector3(0.0, 1.6, 0.0)
+		label.modulate = Color(1.0, 0.85, 0.4, 0.95)
+		add_child(label)
+	var mode_name := "FOLLOW"
+	match mode:
+		HUNT:
+			mode_name = "HUNT"
+		GUARD:
+			mode_name = "GUARD"
+	# Ping hunt overlay is not stored in mode — show HUNT when retargeted.
+	if PingService.latest_enemy_tag(caster_peer) != 0:
+		mode_name = "HUNT"
+	label.text = mode_name
 
 
 func _rollback_tick(delta: float, tick: int, is_fresh: bool) -> void:

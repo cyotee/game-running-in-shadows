@@ -16,6 +16,7 @@ var owner_peer: int = 0
 
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var _freed: bool = false
+var _trail_accum_s: float = 0.0
 
 @onready var rollback_synchronizer: RollbackSynchronizer = $RollbackSynchronizer
 
@@ -25,12 +26,23 @@ func _ready() -> void:
 	rollback_synchronizer.process_settings()
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	# Free once detonation is confirmed, in idle time — never during the
 	# rollback loop (freeing a rolled-back node mid-loop is unsafe).
 	if detonated and not _freed:
 		_freed = true
 		queue_free()
+		return
+	if detonated or not PlaytestViz.enabled():
+		return
+	_trail_accum_s += delta
+	var interval := MatchConfig.get_value("debug.viz.grenade_trail_interval_s")
+	if interval <= 0.0:
+		interval = 0.08
+	if _trail_accum_s >= interval:
+		_trail_accum_s = 0.0
+		PlaytestViz.flash_sphere(get_tree(), global_position, 0.12,
+			Color(1.0, 0.7, 0.2, 0.4), 0.15)
 
 
 func launch(spawn_position: Vector3, launch_velocity: Vector3, fuse_ticks: int,

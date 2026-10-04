@@ -78,6 +78,34 @@ Dedicated servers use the server variant of GodotSteam.
 
 ## 5. Git & Assets
 - Large assets → consider `git lfs track`.
+- Prefer shipping production meshes as **glTF Binary (`.glb`)** under `models/` (not only under `models/placeholders/`).
+- Temporary CC0 review packs: `models/placeholders/` — see that folder’s README and `ATTRIBUTION.md`.
+
+## 6. Blender (3D assets)
+
+Pinned DCC for art: **Blender 4.5 LTS** (this machine: `/Applications/Blender.app`).
+
+### Blender MCP (AI control of a live session)
+
+1. Install **uv** so `uvx` exists (`brew install uv` or https://docs.astral.sh/uv/).
+2. Repo `.mcp.json` already defines the `blender` server (`uvx blender-mcp`, port **9876**, telemetry off). Restart the AI client after editing MCP config.
+3. One-time: Blender → Preferences → Add-ons → Install → `tools/blender-mcp/addon.py` → enable **Blender MCP**.
+4. Each session: open Blender → N-panel → **BlenderMCP** → **Connect**.
+5. Details and troubleshooting: `tools/blender-mcp/README.md`.
+
+Agent skills (project): `.grok/skills/blender-mcp/` and `.grok/skills/godot-blender-models/`.
+
+### Godot import path
+
+- **Recommended:** export **`.glb`** from Blender into the project; Godot imports on focus.
+- **Optional:** direct `.blend` import — set Editor Settings → Filesystem → Import → Blender → **Blender Path** to  
+  `/Applications/Blender.app/Contents/MacOS/Blender` if needed. Requires Blender on every machine that opens the project.
+
+Official Lab MCP needs Blender **5.1+**; do not use it with 4.5 LTS.
+
+## 7. Godot MCP (live game control)
+
+See `docs/TESTING.md` and `.mcp.json` (`godot` server + `tools/godot-mcp/`).
 - Never commit personal `steam_appid.txt`.
 - Run `git status` before commits — `.godot/` and imports must stay ignored.
 
