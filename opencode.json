@@ -1,0 +1,28 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "higgsfield": {
+      "type": "remote",
+      "url": "https://mcp.higgsfield.ai/mcp",
+      "enabled": true,
+      "oauth": {
+        "callbackPort": 19877
+      }
+    },
+    "meshy": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@meshy-ai/meshy-mcp-server"
+      ],
+      "environment": {
+        "MESHY_API_KEY": "{env:MESHY_API_KEY}"
+      },
+      "enabled": true
+    },
+    "voltaire": {
+      "enabled": false
+    }
+  }
+}

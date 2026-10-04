@@ -6,7 +6,8 @@
         "tools/godot-mcp/build/index.js"
       ],
       "env": {
-        "GODOT_PATH": "/Applications/Godot.app/Contents/MacOS/Godot"
+        "GODOT_PATH": "/Applications/Godot.app/Contents/MacOS/Godot",
+        "GODOT_MCP_PORT": "9292"
       }
     }
   }

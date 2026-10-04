@@ -1,0 +1,17 @@
+# Project Grok MCP (OpenCode/Grok/Codex parity)
+
+[mcp_servers.higgsfield]
+command = "npx"
+args = ["-y", "mcp-remote", "https://mcp.higgsfield.ai/mcp"]
+startup_timeout_sec = 120
+enabled = true
+
+[mcp_servers.meshy]
+command = "npx"
+args = ["-y", "@meshy-ai/meshy-mcp-server"]
+enabled = true
+
+[mcp_servers.voltaire]
+url = "https://voltaire.tevm.sh/mcp"
+enabled = false
+

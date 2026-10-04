@@ -1,0 +1,20 @@
+# Project-scoped counterpart of .mcp.json. Keep command, port, and engine in sync.
+# If relocating this checkout, update cwd to its new absolute path.
+[mcp_servers.godot]
+command = "node"
+args = ["tools/godot-mcp/build/index.js"]
+cwd = "/Users/cyotee/Development/github-cyotee/game-running-in-shadows"
+startup_timeout_sec = 30
+tool_timeout_sec = 120
+
+[mcp_servers.godot.env]
+GODOT_PATH = "/Applications/Godot.app/Contents/MacOS/Godot"
+GODOT_MCP_PORT = "9292"
+[mcp_servers.higgsfield]
+url = "https://mcp.higgsfield.ai/mcp"
+
+[mcp_servers.meshy]
+command = "npx"
+args = ["-y", "@meshy-ai/meshy-mcp-server"]
+env = { MESHY_API_KEY = "{env:MESHY_API_KEY}" }
+

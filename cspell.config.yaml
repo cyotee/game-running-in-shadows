@@ -12,5 +12,6 @@ dictionaries:
   - custom-dictionary
 words:
   - Example
+  - gdignore
 ignoreWords: []
 import: []

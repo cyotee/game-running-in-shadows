@@ -80,7 +80,8 @@ errors, and inspect state while the game runs.
   - **Godot side**: `scripts/dev/mcp_interaction_server.gd` (copied from
     `tools/godot-mcp/build/scripts/`, committed) is registered as the
     `McpInteractionServer` autoload. It opens a TCP command server on
-    `127.0.0.1:9090` while the game runs.
+    `127.0.0.1:9090` while the game runs (override with env `GODOT_MCP_PORT`;
+    asset-work default in `.mcp.json` is **9292** so parallel agents can keep 9090).
   - **Claude Code**: configured at project scope in `.mcp.json`
     (`node tools/godot-mcp/build/index.js`, `GODOT_PATH` env set).
   - TODO before any public/release build: strip or feature-flag the

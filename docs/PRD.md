@@ -5,8 +5,8 @@
 
 **Project Codename / Repo:** game-running-in-shadows  
 **Working Title:** CounterSpell (named 2026-07-16 — a play on our Counter-Strike inspiration and the counter-web design)  
-**Status:** Draft v0.7  
-**Date:** 2026-07-16  
+**Status:** Draft v0.12\
+**Date:** 2026-09-07\
 **Owner:** [Project Lead]  
 **Engine:** Godot 4.7.1 (pinned)  
 **Distribution:** Steam (primary)
@@ -33,6 +33,9 @@ This is a **solo project built with AI agents** (Claude Code performs implementa
 - Evolve into a hybrid title with PvE "runs" and a single-player campaign over 1–3 years.  
 - Build a sustainable indie commercial title while respecting the source material as a loving spiritual successor (original IP and terminology).
 
+**Visual Style (locked 2026-09-07):**  
+Production character, weapon, and prop art uses **cell-shaded** stylized 3D: hard color regions, inked edge breaks, readable FPS silhouettes, charcoal kit with muted teal trim. Not photoreal PBR, not chibi/toon-shooter, not voxel. Runners wear light tactical clothing and small chrome accents; bulky webbing and backpacks are out of style. Canonical look: [`docs/assets/references/style/human_male_runner_tpose_front.png`](assets/references/style/human_male_runner_tpose_front.png). Future assets must match this reference. Quaternius CC0 models remain valid prototyping placeholders until replaced.
+
 ---
 
 ## 2. Background & Opportunity
@@ -51,6 +54,69 @@ This is a **spiritual successor using original IP**.
 ---
 
 ## 3. Goals & Success Metrics
+
+### Next Deliverable — Private Playtest (owner decisions, 2026-09-05)
+
+This milestone is a **private playtest**. It precedes the public Steam Playtest
+and paid Early Access milestones; the broader EA scope below remains future
+context. These decisions take precedence over older platform priorities for
+this milestone.
+
+- **Required platforms:** Intel-based macOS, including the owner's current
+  development computer, and modern Windows PCs.
+- **Optional platform:** Linux on Steam Deck is a nice-to-have and does not
+  block the private playtest. General Linux desktop support is not a required
+  platform for this milestone.
+- **Content:** Arena and Capture the Flag; two maps; all four lineages; the
+  currently implemented weapons and abilities; enforced purchases; saved
+  loadouts; and complete menus and HUD.
+- **Presentation and assets:** Cohesive placeholders are acceptable. Use only
+  free assets with suitable licenses or custom-made assets; purchased assets
+  and paid commissions are outside this milestone's asset scope. Keep asset
+  provenance and licensing documented. The owner can make Blender available
+  if custom asset production needs it; availability is not yet confirmed.
+- **Performance:** Target stable 60 FPS on the owner's current Intel Mac.
+  Benchmark resolution, quality settings, and a measurable frame-time
+  acceptance threshold remain to be established. Windows test hardware and
+  its performance acceptance target remain unconfirmed.
+- **Playtest progression:** Begin with two players. Once that works, expand
+  validation to three and then four players. This staged acceptance plan
+  does not change the broader 16-player design cap or establish that cap as
+  tested. Playtests run **over the internet**, not solely on a local network.
+- **Steam access:** The owner does not currently have a Steamworks Partner
+  account or a game-specific App ID and is willing to obtain them when
+  useful. Record when access becomes necessary in the implementation plan;
+  do not treat partner access or an App ID as already provisioned.
+- **Host loss:** Attempt to preserve the running match by migrating to a new
+  host. Continuity is the target behavior; graceful termination alone does
+  not demonstrate that target. If the match cannot be recovered, return the
+  remaining players to the lobby. Migration feasibility and both recovery
+  paths must be tested.
+- **Deferred for the first round of private playtests:** Achievements, cloud
+  saves, external anti-cheat integration, and cosmetic progression. Core
+  host-side gameplay validation, saved loadouts, and the in-match purchase
+  economy remain required.
+- **Communication:** Built-in voice and text chat are not required for this
+  private playtest.
+- **Input devices:** Include controller support on the required playtest
+  platforms if feasible. This is a best-effort target rather than a mandatory
+  playtest acceptance gate. Keyboard/mouse remains the baseline. Assess
+  controller bindings and menu navigation, resolve conflicting actions, and
+  verify with the controllers available to testers before claiming support.
+- **Two-player acceptance gate:** Complete a 30-minute internet playtest
+  covering Arena and CTF, completed matches, purchases and saved loadouts,
+  late joining, and a deliberate host departure, with no crashes or
+  unrecoverable stalls. The owner must approve movement and combat feel.
+  Verify migration preserves the running match when recovery succeeds and
+  returns remaining players to the lobby when recovery fails. Passing this
+  gate permits expansion to three- and four-player tests; it does not prove
+  larger-player-count stability.
+- **Validation:** Both required platforms must complete the private-playtest
+  acceptance checks. Exact OS versions, Windows hardware/performance targets,
+  Mac benchmark settings, audio-feedback requirements, controller feasibility,
+  and the remaining required subset of Steam features remain open decisions.
+
+### Early Access Goals
 
 **Primary Goals (MVP / First EA Release)**
 - Deliver responsive, fun FPS core gameplay (movement, gunplay, basic abilities) with **client prediction from day one** — movement tech is a pillar, so networked feel is non-negotiable.
@@ -84,6 +150,10 @@ This is a **spiritual successor using original IP**.
 - **Primary:** Fans of cyberpunk, Shadowrun TTRPG, and hybrid fantasy-shooters. Players who enjoy class/ability-based PvP (think older Team Fortress, modern The Finals, or Valorant with magic).
 - **Secondary:** FPS players looking for something different from military realism; Steam Deck / controller users.
 - **Platforms (Phase 1):** Windows + Linux via Steam. macOS secondary. Steam Deck as day-one consideration.
+- **Private-playtest platform priority (2026-09-05):** Intel macOS (including
+  the owner's current computer) and modern Windows are mandatory; Steam Deck
+  Linux is optional. This supersedes the preceding Phase 1 priority for the
+  next deliverable; it does not change the eventual EA platform scope.
 - **Monetization:** Initially premium purchase (or EA pricing). Later cosmetics / battle-pass style via Steam Inventory if desired. Avoid pay-to-win.
 
 ---
@@ -280,6 +350,12 @@ Detailed GodotSteam initialization, callbacks, lobbies, and multiplayer peer set
 
 ## 11. High-Level Timeline (Quality-Gated — Solo + AI Cadence)
 
+**Immediate milestone (owner decision, 2026-09-05):** Complete the private
+playtest defined in §3 on Intel macOS and modern Windows, with Steam Deck
+support optional. The historical milestones below describe the broader
+roadmap; recorded implementation completion does not establish playtest
+acceptance or verified host migration.
+
 Project start: June 2026. Milestones advance when their quality gate is met, not on calendar dates; the durations below are rough planning guides only.
 
 - **Milestone A — Predicted Core (next):** netfox spike passes — FPS controller rebuilt on predicted movement, Repulse + Glide combo feels right over simulated latency. Resonance resource + first weapon.
@@ -377,7 +453,7 @@ Mostly conventional FPS armaments: **pistol** (sidearm), **SMG**, **rifle**, **s
 - [Ability Tuning Sheet](ABILITY_TUNING_SHEET.md) — Live scratch pad for testing numbers, playtest notes, and investigations. Use to decide when to promote stable values.
 - Technical Design / Architecture doc
 - Game Design Document (GDD) with archetype kits, map specs, economy, and mode rules
-- Art bible / style guide
+- Art bible / style guide (cell-shaded lock in §1; canonical ref `docs/assets/references/style/`)
 - Contribution guide
 - Steam build & deployment runbook
 
@@ -387,6 +463,28 @@ Mostly conventional FPS armaments: **pistol** (sidearm), **SMG**, **rifle**, **s
 This document will evolve. Update version history below.
 
 **Version History**
+- v0.12 — 2026-09-07 — Locked production art to cell-shaded stylized 3D. Canonical Human male Runner T-pose reference lives at `docs/assets/references/style/human_male_runner_tpose_front.png`. Quaternius remains prototyping-only until replaced.
+- v0.11 — 2026-09-05 — Owner deferred cosmetic progression, excluded built-in
+  voice/text chat from the private playtest, and requested controller support
+  if feasible. Saved loadouts and the in-match economy remain in scope;
+  controller support is a best-effort target to validate on available devices.
+- v0.10 — 2026-09-05 — Owner confirmed internet playtests, return to lobby on
+  unrecoverable host migration, deferral of achievements/cloud saves/external
+  anti-cheat for the first playtests, and the 30-minute two-player acceptance
+  gate covering both modes, complete matches, purchases/saved loadouts, late
+  joining, deliberate host departure, stability, and approved movement/combat
+  feel. Progression scope remains unconfirmed.
+- v0.9 — 2026-09-05 — Owner accepted cohesive placeholders and restricted
+  assets to free or custom-made work; offered Blender if needed; set a stable
+  60 FPS target on the current Intel Mac; selected two-player testing followed
+  by three and four players after success; confirmed no current Steamworks
+  Partner account and willingness to obtain one and an App ID when useful.
+- v0.8 — 2026-09-05 — Owner selected a private playtest as the next deliverable;
+  confirmed Arena + CTF, two maps, four lineages, current weapons/abilities,
+  enforced purchases, saved loadouts, complete menus/HUD; required Intel macOS
+  and modern Windows, with Steam Deck Linux optional; requested preserving
+  the running match through host migration. Remaining acceptance decisions
+  are explicitly open in §3.
 - v0.1 — 2026-06-17 — Initial draft after research and requirement clarification. Focused on PvP starting point, Steam + Godot, spiritual successor approach, realistic scope warnings.
 - v0.2 — 2026-06-28 — Added Appendix 12.A: verified Source Game Mechanics Reference for Shadowrun (2007 FPS) — essence resource, races, magic, tech, weapons, modes, and economy — with cited sources, to inform original-IP mechanics design.
 - v0.3 — 2026-06-29 — Linked new [MECHANICS_REFERENCE.md](MECHANICS_REFERENCE.md) and clarified the role of Appendix 12.A as raw source data.
